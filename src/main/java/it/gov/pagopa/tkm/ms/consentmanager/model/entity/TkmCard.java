@@ -7,7 +7,7 @@ import javax.persistence.*;
 import java.util.*;
 
 @Entity
-@Table(name = "TKM_CARD")
+@Table(name = "CARD")
 @Data
 @Accessors(chain = true)
 public class TkmCard {

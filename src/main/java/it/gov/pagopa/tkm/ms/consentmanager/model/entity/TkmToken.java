@@ -6,7 +6,7 @@ import lombok.experimental.*;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "TKM_TOKEN")
+@Table(name = "TOKEN")
 @Data
 @Accessors(chain = true)
 public class TkmToken {
