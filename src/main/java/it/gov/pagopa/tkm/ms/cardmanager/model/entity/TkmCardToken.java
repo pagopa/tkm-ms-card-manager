@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.consentmanager.model.entity;
+package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 
 import lombok.*;
 import lombok.experimental.*;
@@ -6,10 +6,10 @@ import lombok.experimental.*;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "TOKEN")
+@Table(name = "CARD_TOKEN")
 @Data
 @Accessors(chain = true)
-public class TkmToken {
+public class TkmCardToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

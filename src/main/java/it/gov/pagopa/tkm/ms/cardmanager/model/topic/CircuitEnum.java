@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.consentmanager.model.topic;
+package it.gov.pagopa.tkm.ms.cardmanager.model.topic;
 
 public enum CircuitEnum {
 

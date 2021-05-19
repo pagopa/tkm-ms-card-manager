@@ -1,17 +1,15 @@
-package it.gov.pagopa.tkm.ms.consentmanager.service.impl;
+package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
-import it.gov.pagopa.tkm.ms.consentmanager.crypto.*;
-import lombok.extern.log4j.*;
+import it.gov.pagopa.tkm.ms.cardmanager.crypto.*;
 import org.bouncycastle.openpgp.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import static it.gov.pagopa.tkm.ms.consentmanager.constant.Constants.TKM_READ_TOKEN_PAR_PAN_TOPIC;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.Constants.TKM_READ_TOKEN_PAR_PAN_TOPIC;
 
 @Service
-@Log4j2
-public final class ProducerService {
+public class ProducerService {
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
@@ -22,7 +20,6 @@ public final class ProducerService {
     public void sendMessage(String message) throws PGPException {
         String encryptedMessage = new String(pgpUtils.encrypt(message.getBytes(), true));
         kafkaTemplate.send(TKM_READ_TOKEN_PAR_PAN_TOPIC, encryptedMessage);
-        log.info("Sent message: " + encryptedMessage);
     }
 
 }
