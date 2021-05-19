@@ -1,6 +1,8 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import com.fasterxml.jackson.databind.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.hash.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.hash.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.crypto.*;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
@@ -32,8 +34,8 @@ public class ConsumerService {
     @Autowired
     private TokenRepository tokenRepository;
 
-    @Value("${apim-url}")
-    private String apimUrl;
+    @Autowired
+    private ApimClient apimClient;
 
     @Transactional
     @KafkaListener(topics = TKM_READ_TOKEN_PAR_PAN_TOPIC)
@@ -76,8 +78,7 @@ public class ConsumerService {
     }
 
     private String callApimForHash(String pan) {
-        //TODO
-        return "ciao";
+        return apimClient.getHash(new WalletsHashingEvaluationInput(pan)).getHashPan();
     }
 
     private Set<TkmCardToken> queueTokensToTkmTokens(List<Token> tokens, TkmCard card) {
