@@ -1,15 +1,18 @@
-package it.gov.pagopa.tkm.ms.consentmanager.model.entity;
+package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.*;
 import lombok.*;
 import lombok.experimental.*;
 
 import javax.persistence.*;
+import java.time.*;
 import java.util.*;
 
 @Entity
 @Table(name = "CARD")
 @Data
 @Accessors(chain = true)
+@EqualsAndHashCode(exclude = "tokens")
 public class TkmCard {
 
     @Id
@@ -29,10 +32,17 @@ public class TkmCard {
     @Column(name = "PAR", nullable = false, length = 32)
     private String par;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "CIRCUIT", nullable = false, length = 32)
+    private CircuitEnum circuit;
+
+    @Column(name = "LAST_READ_DATE")
+    private Instant lastReadDate;
+
     @Column(name = "DELETED")
     private boolean deleted;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "token")
-    private Set<TkmToken> tokens = new HashSet<>();
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "card", cascade = CascadeType.ALL)
+    private Set<TkmCardToken> tokens = new HashSet<>();
 
 }

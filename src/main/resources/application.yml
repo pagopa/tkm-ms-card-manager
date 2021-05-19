@@ -46,3 +46,5 @@ azure:
 keyvault:
   readQueuePrvPgpKey: ${${profile:prod}-readQueuePrvPgpKey}
   readQueuePubPgpKey: ${${profile:prod}-readQueuePubPgpKey}
+
+apim-url: ${APIM_URL}

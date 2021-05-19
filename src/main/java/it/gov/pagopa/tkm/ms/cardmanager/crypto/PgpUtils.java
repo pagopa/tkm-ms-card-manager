@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.consentmanager.crypto;
+package it.gov.pagopa.tkm.ms.cardmanager.crypto;
 
 import io.micrometer.core.instrument.util.*;
 import org.bouncycastle.bcpg.ArmoredOutputStream;

@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.consentmanager;
+package it.gov.pagopa.tkm.ms.cardmanager;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
