@@ -8,10 +8,10 @@ import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
+import it.gov.pagopa.tkm.ms.cardmanager.service.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.*;
 
 import java.util.*;
 import java.util.stream.*;
@@ -20,7 +20,7 @@ import static it.gov.pagopa.tkm.ms.cardmanager.constant.Constants.*;
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
 
 @Service
-public class ConsumerService {
+public class ConsumerServiceImpl implements ConsumerService {
 
     @Autowired
     private PgpUtils pgpUtils;
@@ -37,7 +37,7 @@ public class ConsumerService {
     @Autowired
     private ApimClient apimClient;
 
-    @Transactional
+    @Override
     @KafkaListener(topics = TKM_READ_TOKEN_PAR_PAN_TOPIC)
     public void consume(String message) throws Exception {
         ReadQueue readQueue = mapper.readValue(pgpUtils.decrypt(message), ReadQueue.class);
