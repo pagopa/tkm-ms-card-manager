@@ -9,9 +9,9 @@ import java.util.*;
 
 public interface CardRepository extends JpaRepository<TkmCard, Long> {
 
-    TkmCard findByTaxCodeAndHpan(String taxCode, String hpan);
+    TkmCard findByTaxCodeAndHpanAndDeletedFalse(String taxCode, String hpan);
 
-    TkmCard findByTaxCodeAndPar(String taxCode, String par);
+    TkmCard findByTaxCodeAndParAndDeletedFalse(String taxCode, String par);
 
     List<TkmCard> findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
 

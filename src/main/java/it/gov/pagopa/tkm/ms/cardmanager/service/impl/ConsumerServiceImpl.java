@@ -32,9 +32,6 @@ public class ConsumerServiceImpl implements ConsumerService {
     private CardRepository cardRepository;
 
     @Autowired
-    private TokenRepository tokenRepository;
-
-    @Autowired
     private ApimClient apimClient;
 
     @Override
@@ -51,14 +48,14 @@ public class ConsumerServiceImpl implements ConsumerService {
         String hpan = readQueue.getHpan();
         String par = readQueue.getPar();
         if (hpan != null) {
-            card = cardRepository.findByTaxCodeAndHpan(taxCode, hpan);
+            card = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
         } else if (pan != null) {
             hpan = callApimForHash(pan);
-            card = cardRepository.findByTaxCodeAndHpan(taxCode, hpan);
+            card = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
         } else if (par != null) {
-            card = cardRepository.findByTaxCodeAndPar(taxCode, par);
+            card = cardRepository.findByTaxCodeAndParAndDeletedFalse(taxCode, par);
         } else {
-            throw new CardException(PAN_NOT_FOUND);
+            throw new CardException(PAN_MISSING);
         }
         if (card == null) {
             card = new TkmCard()
