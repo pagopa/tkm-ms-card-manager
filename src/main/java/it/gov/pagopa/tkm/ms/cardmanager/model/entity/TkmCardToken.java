@@ -9,6 +9,7 @@ import javax.persistence.*;
 @Table(name = "CARD_TOKEN")
 @Data
 @Accessors(chain = true)
+@EqualsAndHashCode(exclude = "id")
 public class TkmCardToken {
 
     @Id

@@ -13,6 +13,7 @@ import java.util.*;
 @Data
 @Accessors(chain = true)
 @EqualsAndHashCode(exclude = "tokens")
+@ToString(exclude = "tokens")
 public class TkmCard {
 
     @Id

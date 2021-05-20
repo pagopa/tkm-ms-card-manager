@@ -27,7 +27,7 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
   servlet:
-    context-path: /tkm-ms-card-manager
+    context-path: ${CONTEXT_PATH:/}
 
 logging:
   level:
