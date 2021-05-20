@@ -1,5 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.topic;
 
+import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

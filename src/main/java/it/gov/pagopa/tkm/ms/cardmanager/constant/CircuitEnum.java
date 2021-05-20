@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.cardmanager.model.topic;
+package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
 public enum CircuitEnum {
 

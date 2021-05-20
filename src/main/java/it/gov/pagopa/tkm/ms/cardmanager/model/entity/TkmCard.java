@@ -1,6 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.*;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import lombok.*;
 import lombok.experimental.*;
 

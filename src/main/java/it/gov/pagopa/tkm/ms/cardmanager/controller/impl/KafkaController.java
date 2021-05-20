@@ -2,6 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.controller.impl;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import org.bouncycastle.openpgp.*;
@@ -16,7 +17,10 @@ import java.util.*;
 public final class KafkaController {
 
     @Autowired
-    private ProducerService producerService;
+    private ProducerServiceImpl producerService;
+
+    @Autowired
+    private ObjectMapper mapper;
 
     @Autowired
     private ObjectMapper mapper;
