@@ -1,0 +1,101 @@
+openapi: 3.0.1
+info:
+  title: tkm-ms-card-manager
+  description: RESTful API provided for parless cards retrieval
+  version: 1.0.0
+servers:
+  - url: http://localhost:2000/tkm-ms-card-manager
+  - url: http://tkm-sit/tkm-ms-card-manager
+  - url: http://tkm-uat/tkm-ms-card-manager
+  - url: http://tkm-prod/tkm-ms-card-manager
+tags:
+  - name: authenticated
+    description: exposed via APIM
+  - name: restricted
+    description: only for internal use
+paths:
+  /parless-cards:
+    get:
+      tags:
+        - authenticated
+      summary: Returns a number of parless cards
+      operationId: getParlessCards
+      parameters:
+        - name: maxNumberOfCards
+          in: query
+          description: The number of cards to be returned
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Success
+          headers:
+            Request-Id:
+              schema:
+                type: string
+                minLength: 16
+                maxLength: 16
+                example: 937aee55bbabd29b
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParlessCardListResponse'
+        "400":
+          description: Bad Request
+          headers:
+            Request-Id:
+              schema:
+                type: string
+                minLength: 16
+                maxLength: 16
+                example: 937aee55bbabd29b
+              required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardError'
+        '500':
+          description: Internal Server Error
+          headers:
+            Request-Id:
+              schema:
+                type: string
+                minLength: 16
+                maxLength: 16
+                example: 937aee55bbabd29b
+              required: true
+components:
+  schemas:
+    ParlessCardListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ParlessCardResponse'
+    ParlessCardResponse:
+      type: object
+      properties:
+        taxCode:
+          type: string
+        pan:
+          type: string
+        circuit:
+          type: string
+        tokens:
+          type: array
+          items:
+            type: string
+    CardError:
+      required:
+        - errorCode
+        - description
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: The code identifies the error
+        description:
+          type: string
+          description: Error description
+          example: [maxNumberOfCards required]
