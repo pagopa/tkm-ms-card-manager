@@ -49,10 +49,10 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     private void updateOrCreateCard(ReadQueue readQueue) {
-        String taxCode = readQueue.getTaxCode();
+        String taxCode = readQueue.getTaxCode().toUpperCase();
         String pan = readQueue.getPan();
-        String hpan = readQueue.getHpan() == null ? callApimForHash(pan) : readQueue.getHpan();
-        String par = readQueue.getPar();
+        String hpan = readQueue.getHpan() == null ? callApimForHash(pan) : readQueue.getHpan().toLowerCase();
+        String par = readQueue.getPar().toLowerCase();
         List<Token> tokens = readQueue.getTokens();
         TkmCard card = findCard(taxCode, pan, hpan, par);
         if (card == null) {
@@ -106,7 +106,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         return tokens.stream().map(t -> new TkmCardToken()
                         .setCard(card)
                         .setToken(t.getToken())
-                        .setHtoken(t.getHToken() == null ? callApimForHash(t.getToken()) : t.getHToken())
+                        .setHtoken(t.getHToken() == null ? callApimForHash(t.getToken()) : t.getHToken().toLowerCase())
         ).collect(Collectors.toSet());
     }
 
