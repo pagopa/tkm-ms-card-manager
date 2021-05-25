@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.*;
 
 //TODO: REMOVE (TEST CONTROLLER)
 @RestController
-@RequestMapping("/kafka")
-public final class KafkaTestController {
+@RequestMapping("/kafkatest")
+public final class KafkaControllerTest {
 
     @Autowired
     private ProducerServiceImpl producerService;

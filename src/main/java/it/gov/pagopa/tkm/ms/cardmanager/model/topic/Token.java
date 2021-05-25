@@ -6,14 +6,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.*;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Token {
 
+    @NotNull
     private String token;
 
     @JsonDeserialize(using = ToLowerCaseDeserializer.class)
+    @Size(min = 64, max = 64)
     private String hToken;
 
 }
