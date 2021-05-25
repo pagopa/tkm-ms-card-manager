@@ -20,6 +20,7 @@ spring:
       enable-auto-commit: true
     producer:
       bootstrap-servers: ${KAFKA_SERVERS}
+      group-id: ${KAFKA_GROUP_ID}
       client-id: ${KAFKA_GROUP_ID}${INSTANCE_NUMBER:0}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
