@@ -24,6 +24,8 @@ spring:
       client-id: ${KAFKA_GROUP_ID}${INSTANCE_NUMBER:0}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    listener:
+      concurrency: ${KAFKA_MAX_NUMBER_OF_THREADS}
 
 server:
   port: ${SERVER_PORT:8080}
