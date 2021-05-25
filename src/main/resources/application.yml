@@ -9,19 +9,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   application:
-    name: Tkm Card Manager ${INSTANCE_NUMBER:0}
+    name: Tkm Card Manager ${HOSTNAME:0}
   kafka:
     consumer:
       bootstrap-servers: ${KAFKA_SERVERS}
       group-id: ${KAFKA_GROUP_ID}
-      client-id: ${KAFKA_GROUP_ID}${INSTANCE_NUMBER:0}
+      client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: true
     producer:
       bootstrap-servers: ${KAFKA_SERVERS}
       group-id: ${KAFKA_GROUP_ID}
-      client-id: ${KAFKA_GROUP_ID}${INSTANCE_NUMBER:0}
+      client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     listener:

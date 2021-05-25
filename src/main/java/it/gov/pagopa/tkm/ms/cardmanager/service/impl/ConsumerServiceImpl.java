@@ -45,19 +45,20 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     @KafkaListener(topics = TKM_READ_TOKEN_PAR_PAN_TOPIC)
-    public void consume(String message) throws Exception {
+    public void consume(String message) {
+        ReadQueue readQueue;
         try {
-            ReadQueue readQueue = mapper.readValue(pgpUtils.decrypt(message), ReadQueue.class);
-            validateReadQueue(readQueue);
-            updateOrCreateCard(readQueue);
-        } catch (PGPException e) {
-            log.error("Could not decrypt PGP message: " + message);
+            readQueue = mapper.readValue(pgpUtils.decrypt(message), ReadQueue.class);
+        } catch (Exception e) {
+            throw new CardException(MESSAGE_DECRYPTION_FAILED);
         }
+        validateReadQueue(readQueue);
+        updateOrCreateCard(readQueue);
     }
 
     private void validateReadQueue(ReadQueue readQueue) {
         if (!CollectionUtils.isEmpty(validator.validate(readQueue))) {
-            throw new CardException(REQUEST_VALIDATION_FAILED);
+            throw new CardException(MESSAGE_VALIDATION_FAILED);
         }
     }
 
@@ -82,13 +83,11 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     private TkmCard findCard(String taxCode, String hpan, String par) {
-        TkmCard card;
+        TkmCard card = null;
         if (hpan != null) {
             card = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
         } else if (par != null) {
             card = cardRepository.findByTaxCodeAndParAndDeletedFalse(taxCode, par);
-        } else {
-            throw new CardException(PAN_MISSING);
         }
         return card;
     }

@@ -13,7 +13,7 @@ import javax.validation.constraints.*;
 @NoArgsConstructor
 public class Token {
 
-    @NotNull
+    @NotEmpty
     private String token;
 
     @JsonDeserialize(using = ToLowerCaseDeserializer.class)

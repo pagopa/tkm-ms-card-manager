@@ -4,15 +4,14 @@ import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import lombok.*;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class CardException extends RuntimeException {
 
-    public CardException(){ }
     private ErrorCodeEnum errorCode;
 
-    public CardException(ErrorCodeEnum errorCode) {
-        super(errorCode.getErrorCode() + " - " + errorCode.getDescription());
-        this.setErrorCode(errorCode);
+    public CardException(ErrorCodeEnum ec) {
+        super(ec.getErrorCode() + " - " + ec.getDescription());
+        errorCode = ec;
     }
 
 }

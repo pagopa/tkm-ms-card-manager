@@ -7,8 +7,8 @@ import lombok.*;
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum ErrorCodeEnum {
 
-    PAN_MISSING("T1000", "Pan and par missing from queue message"),
-    REQUEST_VALIDATION_FAILED("T1001", "Request validation failed, check for errors in the request body or headers");
+    MESSAGE_VALIDATION_FAILED("T1000", "Message validation failed, check for errors in the message fields"),
+    MESSAGE_DECRYPTION_FAILED("T1001", "Message PGP decryption failed");
 
     @Getter
     private final String errorCode;

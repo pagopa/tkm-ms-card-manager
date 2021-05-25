@@ -17,10 +17,10 @@ import static it.gov.pagopa.tkm.constant.Constants.FISCAL_CODE_REGEX;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@CheckAtLeastOneNotNull(fieldNames = {"pan", "par"})
+@CheckAtLeastOneNotEmpty(fieldNames = {"pan", "par"})
 public class ReadQueue {
 
-    @NotNull
+    @NotEmpty
     @Pattern(regexp = FISCAL_CODE_REGEX)
     @JsonDeserialize(using = ToUpperCaseDeserializer.class)
     private String taxCode;

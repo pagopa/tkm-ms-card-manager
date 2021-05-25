@@ -24,7 +24,7 @@ public class ErrorHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class, MethodArgumentTypeMismatchException.class, ValidationException.class, InvalidFormatException.class})
     public ResponseEntity<ErrorCodeEnum> handleValidationException(Exception ve) {
         log.error(ve.getMessage());
-        return ResponseEntity.badRequest().body(ErrorCodeEnum.REQUEST_VALIDATION_FAILED);
+        return ResponseEntity.badRequest().body(ErrorCodeEnum.MESSAGE_VALIDATION_FAILED);
     }
 
     @ExceptionHandler(Exception.class)
