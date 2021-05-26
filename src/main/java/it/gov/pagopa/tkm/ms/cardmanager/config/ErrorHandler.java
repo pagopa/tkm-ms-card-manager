@@ -21,10 +21,10 @@ public class ErrorHandler {
         return ResponseEntity.badRequest().body(ce.getErrorCode());
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, MethodArgumentTypeMismatchException.class, ValidationException.class, InvalidFormatException.class})
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ErrorCodeEnum> handleValidationException(Exception ve) {
         log.error(ve.getMessage());
-        return ResponseEntity.badRequest().body(ErrorCodeEnum.MESSAGE_VALIDATION_FAILED);
+        return ResponseEntity.badRequest().body(ErrorCodeEnum.REQUEST_VALIDATION_FAILED);
     }
 
     @ExceptionHandler(Exception.class)
