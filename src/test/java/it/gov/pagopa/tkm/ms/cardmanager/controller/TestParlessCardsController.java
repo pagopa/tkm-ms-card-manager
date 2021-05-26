@@ -9,6 +9,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.*;
 import org.mockito.*;
 import org.mockito.junit.jupiter.*;
+import org.springframework.http.converter.*;
 import org.springframework.http.converter.json.*;
 import org.springframework.http.converter.xml.*;
 import org.springframework.test.web.servlet.*;
@@ -38,8 +39,12 @@ public class TestParlessCardsController {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(parlessCardsController)
                 .setMessageConverters(
+                        new ByteArrayHttpMessageConverter(),
+                        new StringHttpMessageConverter(),
+                        new ResourceHttpMessageConverter(),
+                        new FormHttpMessageConverter(),
                         new MappingJackson2HttpMessageConverter(),
-                        new MappingJackson2XmlHttpMessageConverter())
+                        new Jaxb2RootElementHttpMessageConverter())
                 .setControllerAdvice(new ErrorHandler())
                 .build();
         testBeans = new DefaultBeans();

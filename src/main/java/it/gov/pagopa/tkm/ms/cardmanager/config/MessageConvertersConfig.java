@@ -15,8 +15,12 @@ public class MessageConvertersConfig implements WebMvcConfigurer {
 
     @Override
     public void configureMessageConverters(@NotNull List<HttpMessageConverter<?>> converters) {
+        converters.add(new ByteArrayHttpMessageConverter());
+        converters.add(new StringHttpMessageConverter());
+        converters.add(new ResourceHttpMessageConverter());
+        converters.add(new FormHttpMessageConverter());
         converters.add(new MappingJackson2HttpMessageConverter());
-        converters.add(new MappingJackson2XmlHttpMessageConverter());
+        converters.add(new Jaxb2RootElementHttpMessageConverter());
     }
 
 }
