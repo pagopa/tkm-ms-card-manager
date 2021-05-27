@@ -7,6 +7,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.*;
 
 import javax.validation.*;
 import javax.validation.constraints.*;
@@ -17,6 +18,7 @@ import static it.gov.pagopa.tkm.constant.Constants.FISCAL_CODE_REGEX;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Accessors(chain = true)
 @CheckAtLeastOneNotEmpty(fieldNames = {"pan", "par"})
 public class ReadQueue {
 

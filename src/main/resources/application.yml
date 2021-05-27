@@ -47,7 +47,8 @@ azure:
     uri: ${AZURE_KEYVAULT_URI}
 
 keyvault:
-  readQueuePrvPgpKey: ${${profile:prod}-readQueuePrvPgpKey}
-  readQueuePubPgpKey: ${${profile:prod}-readQueuePubPgpKey}
+  eventhubLogSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-eventhubLogSaslJaasConfig}
+  readQueuePrvPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePrvPgpKey}
+  readQueuePubPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePubPgpKey}
 
 apim-url: ${APIM_URL}

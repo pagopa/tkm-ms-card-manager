@@ -11,7 +11,6 @@ import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.*;
 import lombok.extern.log4j.*;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.openpgp.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -45,13 +44,15 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     @KafkaListener(topics = TKM_READ_TOKEN_PAR_PAN_TOPIC)
-    public void consume(String message) {
+    public void consume(String message) throws JsonProcessingException {
         ReadQueue readQueue;
+        String decryptedMessage;
         try {
-            readQueue = mapper.readValue(pgpUtils.decrypt(message), ReadQueue.class);
+            decryptedMessage = pgpUtils.decrypt(message);
         } catch (Exception e) {
             throw new CardException(MESSAGE_DECRYPTION_FAILED);
         }
+        readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
         validateReadQueue(readQueue);
         updateOrCreateCard(readQueue);
     }
@@ -63,7 +64,6 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     private void updateOrCreateCard(ReadQueue readQueue) {
-        validator.validate(readQueue);
         String taxCode = readQueue.getTaxCode();
         String pan = readQueue.getPan();
         String hpan = readQueue.getHpan();
@@ -76,9 +76,12 @@ public class ConsumerServiceImpl implements ConsumerService {
         if (card == null) {
             card = new TkmCard()
                     .setTaxCode(taxCode)
-                    .setCircuit(readQueue.getCircuit());
+                    .setCircuit(readQueue.getCircuit())
+                    .setPan(pan)
+                    .setHpan(hpan)
+                    .setPar(par);
         }
-        updateCard(card, pan, hpan, par, tokens);
+        updateCard(card, hpan, par, tokens);
         cardRepository.save(card);
     }
 
@@ -92,14 +95,12 @@ public class ConsumerServiceImpl implements ConsumerService {
         return card;
     }
 
-    private void updateCard(TkmCard card, String pan, String hpan, String par, List<Token> tokens) {
+    private void updateCard(TkmCard card, String hpan, String par, List<Token> tokens) {
         TkmCard existingCard = null;
         if (par != null && card.getPar() == null) {
             existingCard = cardRepository.findByTaxCodeAndParAndDeletedFalse(card.getTaxCode(), par);
-            card.setPar(par);
-        } else if (pan != null && card.getPan() == null) {
+        } else if (hpan != null && card.getHpan() == null) {
             existingCard = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(card.getTaxCode(), hpan);
-            card.setPan(pan).setHpan(hpan);
         }
         if (existingCard != null) {
             mergeTokens(existingCard.getTokens(), card.getTokens());
@@ -122,7 +123,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         return tokens.stream().map(t -> new TkmCardToken()
                         .setCard(card)
                         .setToken(t.getToken())
-                        .setHtoken(StringUtils.firstNonBlank(t.getHToken(), callApimForHash(t.getToken())))
+                        .setHtoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callApimForHash(t.getToken()))
         ).collect(Collectors.toSet());
     }
 
