@@ -1,5 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.hash.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.hash.model.request.*;
@@ -80,8 +81,10 @@ public class ConsumerServiceImpl implements ConsumerService {
                     .setPan(pan)
                     .setHpan(hpan)
                     .setPar(par);
+            manageTokens(card, tokens);
+        } else {
+            updateCard(card, pan, hpan, par, tokens);
         }
-        updateCard(card, hpan, par, tokens);
         cardRepository.save(card);
     }
 
@@ -89,23 +92,30 @@ public class ConsumerServiceImpl implements ConsumerService {
         TkmCard card = null;
         if (hpan != null) {
             card = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
-        } else if (par != null) {
+        }
+        if (card == null && par != null) {
             card = cardRepository.findByTaxCodeAndParAndDeletedFalse(taxCode, par);
         }
         return card;
     }
 
-    private void updateCard(TkmCard card, String hpan, String par, List<Token> tokens) {
+    private void updateCard(TkmCard card, String pan, String hpan, String par, List<Token> tokens) {
         TkmCard existingCard = null;
         if (par != null && card.getPar() == null) {
             existingCard = cardRepository.findByTaxCodeAndParAndDeletedFalse(card.getTaxCode(), par);
+            card.setPar(par);
         } else if (hpan != null && card.getHpan() == null) {
             existingCard = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(card.getTaxCode(), hpan);
+            card.setPan(pan).setHpan(hpan);
         }
         if (existingCard != null) {
             mergeTokens(existingCard.getTokens(), card.getTokens());
             cardRepository.delete(existingCard);
         }
+        manageTokens(card, tokens);
+    }
+
+    private void manageTokens(TkmCard card, List<Token> tokens) {
         Set<TkmCardToken> newTokens = queueTokensToTkmTokens(tokens, card);
         mergeTokens(card.getTokens(), newTokens);
         card.getTokens().addAll(newTokens);
