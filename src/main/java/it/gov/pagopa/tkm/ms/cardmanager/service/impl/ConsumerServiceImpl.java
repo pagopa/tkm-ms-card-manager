@@ -66,13 +66,13 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private void updateOrCreateCard(ReadQueue readQueue) {
         String taxCode = readQueue.getTaxCode();
+        String par = readQueue.getPar();
+        List<Token> tokens = readQueue.getTokens();
         String pan = readQueue.getPan();
         String hpan = readQueue.getHpan();
         if (hpan == null && pan != null) {
             hpan = callApimForHash(pan);
         }
-        String par = readQueue.getPar();
-        List<Token> tokens = readQueue.getTokens();
         TkmCard card = findCard(taxCode, hpan, par);
         if (card == null) {
             card = new TkmCard()
@@ -99,20 +99,20 @@ public class ConsumerServiceImpl implements ConsumerService {
         return card;
     }
 
-    private void updateCard(TkmCard card, String pan, String hpan, String par, List<Token> tokens) {
-        TkmCard existingCard = null;
-        if (par != null && card.getPar() == null) {
-            existingCard = cardRepository.findByTaxCodeAndParAndDeletedFalse(card.getTaxCode(), par);
-            card.setPar(par);
-        } else if (hpan != null && card.getHpan() == null) {
-            existingCard = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(card.getTaxCode(), hpan);
-            card.setPan(pan).setHpan(hpan);
+    private void updateCard(TkmCard foundCard, String pan, String hpan, String par, List<Token> tokens) {
+        TkmCard preexistingCard = null;
+        if (par != null && foundCard.getPar() == null) {
+            preexistingCard = cardRepository.findByTaxCodeAndParAndDeletedFalse(foundCard.getTaxCode(), par);
+            foundCard.setPar(par);
+        } else if (hpan != null && foundCard.getHpan() == null) {
+            preexistingCard = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(foundCard.getTaxCode(), hpan);
+            foundCard.setPan(pan).setHpan(hpan);
         }
-        if (existingCard != null) {
-            mergeTokens(existingCard.getTokens(), card.getTokens());
-            cardRepository.delete(existingCard);
+        if (preexistingCard != null) {
+            mergeTokens(preexistingCard.getTokens(), foundCard.getTokens());
+            cardRepository.delete(preexistingCard);
         }
-        manageTokens(card, tokens);
+        manageTokens(foundCard, tokens);
     }
 
     private void manageTokens(TkmCard card, List<Token> tokens) {
