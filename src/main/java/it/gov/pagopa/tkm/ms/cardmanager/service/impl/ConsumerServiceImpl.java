@@ -46,14 +46,13 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Override
     @KafkaListener(topics = TKM_READ_TOKEN_PAR_PAN_TOPIC)
     public void consume(String message) throws JsonProcessingException {
-        ReadQueue readQueue;
         String decryptedMessage;
         try {
             decryptedMessage = pgpUtils.decrypt(message);
         } catch (Exception e) {
             throw new CardException(MESSAGE_DECRYPTION_FAILED);
         }
-        readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
+        ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
         validateReadQueue(readQueue);
         updateOrCreateCard(readQueue);
     }

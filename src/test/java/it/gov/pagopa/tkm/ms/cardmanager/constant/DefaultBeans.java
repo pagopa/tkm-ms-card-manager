@@ -40,8 +40,7 @@ public class DefaultBeans {
     public final TkmCardToken TKM_CARD_TOKEN_3 = new TkmCardToken()
             .setToken(TOKEN_3)
             .setHtoken(HTOKEN_3);
-    public  final Set<TkmCardToken> TKM_CARD_TOKENS_1 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2));
-    public  final Set<TkmCardToken> TKM_CARD_TOKENS_2 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_3));
+    public final Set<TkmCardToken> TKM_CARD_TOKENS_1 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2));
 
     public final TkmCard TKM_CARD_PAN_PAR_1 = new TkmCard()
             .setCircuit(CircuitEnum.AMEX)
