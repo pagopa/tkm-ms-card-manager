@@ -2,7 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
 
 import java.util.*;
 
@@ -70,11 +70,11 @@ public class DefaultBeans {
 
     public final List<TkmCard> TKM_CARD_LIST = Arrays.asList(TKM_CARD_PAN_PAR_1, TKM_CARD_PAN_PAR_2);
 
-    public final Token QUEUE_TOKEN_1 = new Token(TOKEN_1, HTOKEN_1);
-    public final Token QUEUE_TOKEN_2 = new Token(TOKEN_2, HTOKEN_2);
-    public final Token QUEUE_TOKEN_3 = new Token(TOKEN_3, HTOKEN_3);
-    public final List<Token> QUEUE_TOKEN_LIST_1 = Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_2);
-    public final List<Token> QUEUE_TOKEN_LIST_2 = Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_3);
+    public final ReadQueueToken QUEUE_TOKEN_1 = new ReadQueueToken(TOKEN_1, HTOKEN_1);
+    public final ReadQueueToken QUEUE_TOKEN_2 = new ReadQueueToken(TOKEN_2, HTOKEN_2);
+    public final ReadQueueToken QUEUE_TOKEN_3 = new ReadQueueToken(TOKEN_3, HTOKEN_3);
+    public final List<ReadQueueToken> QUEUE_TOKEN_LIST_1 = Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_2);
+    public final List<ReadQueueToken> QUEUE_TOKEN_LIST_2 = Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_3);
 
     public final ReadQueue READ_QUEUE_PAN_PAR_1 = new ReadQueue(
             TAX_CODE_1,

@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.hash.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.hash.model.request.*;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.crypto.*;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.*;
 import lombok.extern.log4j.*;
@@ -18,11 +20,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.*;
 
 import javax.validation.*;
+import java.time.*;
 import java.util.*;
 import java.util.stream.*;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.Constants.*;
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
+import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.*;
 
 @Service
 @Log4j2
@@ -42,6 +46,9 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Autowired
     private Validator validator;
+
+    @Autowired
+    private ProducerServiceImpl producerService;
 
     @Override
     @KafkaListener(topics = TKM_READ_TOKEN_PAR_PAN_TOPIC)
@@ -63,28 +70,22 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
     }
 
-    private void updateOrCreateCard(ReadQueue readQueue) {
+    private void updateOrCreateCard(ReadQueue readQueue) throws JsonProcessingException {
         String taxCode = readQueue.getTaxCode();
         String par = readQueue.getPar();
-        List<Token> tokens = readQueue.getTokens();
         String pan = readQueue.getPan();
-        String hpan = readQueue.getHpan();
-        if (hpan == null && pan != null) {
-            hpan = callApimForHash(pan);
-        }
+        String hpan = (readQueue.getHpan() == null && pan != null) ? callApimForHash(pan) : readQueue.getHpan();
         TkmCard card = findCard(taxCode, hpan, par);
+        Set<TkmCardToken> oldTokens = new HashSet<>();
         if (card == null) {
-            card = new TkmCard()
-                    .setTaxCode(taxCode)
-                    .setCircuit(readQueue.getCircuit())
-                    .setPan(pan)
-                    .setHpan(hpan)
-                    .setPar(par);
-            manageTokens(card, tokens);
+            card = createCard(taxCode, pan, hpan, par, readQueue.getCircuit());
         } else {
-            updateCard(card, pan, hpan, par, tokens);
+            oldTokens.addAll(card.getTokens());
+            updateCard(card, pan, hpan, par);
         }
+        manageTokens(card, readQueue.getTokens());
         cardRepository.save(card);
+        writeOnQueueIfComplete(card, oldTokens);
     }
 
     private TkmCard findCard(String taxCode, String hpan, String par) {
@@ -98,7 +99,16 @@ public class ConsumerServiceImpl implements ConsumerService {
         return card;
     }
 
-    private void updateCard(TkmCard foundCard, String pan, String hpan, String par, List<Token> tokens) {
+    private TkmCard createCard(String taxCode, String pan, String hpan, String par, CircuitEnum circuit) {
+        return new TkmCard()
+                .setTaxCode(taxCode)
+                .setCircuit(circuit)
+                .setPan(pan)
+                .setHpan(hpan)
+                .setPar(par);
+    }
+
+    private void updateCard(TkmCard foundCard, String pan, String hpan, String par) {
         TkmCard preexistingCard = null;
         if (par != null && foundCard.getPar() == null) {
             preexistingCard = cardRepository.findByTaxCodeAndParAndDeletedFalse(foundCard.getTaxCode(), par);
@@ -111,11 +121,10 @@ public class ConsumerServiceImpl implements ConsumerService {
             mergeTokens(preexistingCard.getTokens(), foundCard.getTokens());
             cardRepository.delete(preexistingCard);
         }
-        manageTokens(foundCard, tokens);
     }
 
-    private void manageTokens(TkmCard card, List<Token> tokens) {
-        Set<TkmCardToken> newTokens = queueTokensToTkmTokens(tokens, card);
+    private void manageTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
+        Set<TkmCardToken> newTokens = queueTokensToTkmTokens(card, readQueueTokens);
         mergeTokens(card.getTokens(), newTokens);
         card.getTokens().addAll(newTokens);
     }
@@ -128,12 +137,35 @@ public class ConsumerServiceImpl implements ConsumerService {
         return apimClient.getHash(new WalletsHashingEvaluationInput(pan)).getHashPan();
     }
 
-    private Set<TkmCardToken> queueTokensToTkmTokens(List<Token> tokens, TkmCard card) {
-        return tokens.stream().map(t -> new TkmCardToken()
+    private Set<TkmCardToken> queueTokensToTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
+        return readQueueTokens.stream().map(t -> new TkmCardToken()
                         .setCard(card)
                         .setToken(t.getToken())
                         .setHtoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callApimForHash(t.getToken()))
         ).collect(Collectors.toSet());
+    }
+
+    private void writeOnQueueIfComplete(TkmCard card, Set<TkmCardToken> oldTokens) throws JsonProcessingException {
+        if (StringUtils.isAnyBlank(card.getPan(), card.getPar())) {
+            return;
+        }
+
+        WriteQueueCard writeQueueCard = new WriteQueueCard(
+                card.getHpan(),
+                card.isDeleted() ? REVOKE : INSERT_UPDATE,
+                card.getPar(),
+                getTokensDiff(oldTokens, card.getTokens())
+        );
+        WriteQueue writeQueue = new WriteQueue(
+            card.getTaxCode(),
+            Instant.now(),
+            Collections.singleton(writeQueueCard)
+        );
+        producerService.sendMessage(writeQueue);
+    }
+
+    private Set<WriteQueueToken> getTokensDiff(Set<TkmCardToken> oldTokens, Set<TkmCardToken> newTokens) {
+        return newTokens.stream().filter(t -> t.isDeleted() || !oldTokens.contains(t)).map(WriteQueueToken::new).collect(Collectors.toSet());
     }
 
 }

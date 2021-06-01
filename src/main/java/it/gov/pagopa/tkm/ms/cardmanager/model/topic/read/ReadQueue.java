@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.cardmanager.model.topic;
+package it.gov.pagopa.tkm.ms.cardmanager.model.topic.read;
 
 import com.fasterxml.jackson.databind.annotation.*;
 import it.gov.pagopa.tkm.annotation.*;
@@ -40,7 +40,7 @@ public class ReadQueue {
     @NotNull
     private CircuitEnum circuit;
 
-    private List<@Valid Token> tokens = new ArrayList<>();
+    private List<@Valid ReadQueueToken> tokens = new ArrayList<>();
 
 }
 

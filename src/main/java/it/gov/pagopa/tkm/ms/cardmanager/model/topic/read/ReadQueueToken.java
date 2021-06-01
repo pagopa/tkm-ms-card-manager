@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.cardmanager.model.topic;
+package it.gov.pagopa.tkm.ms.cardmanager.model.topic.read;
 
 import com.fasterxml.jackson.databind.annotation.*;
 import it.gov.pagopa.tkm.jsondeserializer.*;
@@ -11,7 +11,7 @@ import javax.validation.constraints.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Token {
+public class ReadQueueToken {
 
     @NotEmpty
     private String token;

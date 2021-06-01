@@ -5,7 +5,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.client.hash.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.crypto.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import org.junit.jupiter.api.*;
