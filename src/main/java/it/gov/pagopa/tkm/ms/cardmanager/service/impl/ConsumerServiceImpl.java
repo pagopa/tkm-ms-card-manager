@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.hash.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.hash.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
-import it.gov.pagopa.tkm.ms.cardmanager.crypto.*;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.*;
+import it.gov.pagopa.tkm.service.*;
 import lombok.extern.log4j.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.*;
@@ -149,7 +149,6 @@ public class ConsumerServiceImpl implements ConsumerService {
         if (StringUtils.isAnyBlank(card.getPan(), card.getPar())) {
             return;
         }
-
         WriteQueueCard writeQueueCard = new WriteQueueCard(
                 card.getHpan(),
                 card.isDeleted() ? REVOKE : INSERT_UPDATE,

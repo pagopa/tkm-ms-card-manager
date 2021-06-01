@@ -1,5 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.crypto;
 
+import it.gov.pagopa.tkm.service.*;
 import org.apache.commons.io.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.*;
