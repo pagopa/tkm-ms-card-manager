@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams.*;
 
-@FeignClient(value = "consent", url = "${tkm-ms-urls.consent-manager}")
+@FeignClient(value = "consent", url = "${client-urls.consent-manager}")
 public interface ConsentClient {
 
     @GetMapping("/consent")

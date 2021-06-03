@@ -50,6 +50,9 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Autowired
     private ProducerServiceImpl producerService;
 
+    @Value("${keyvault.apimSubscriptionTkmRtd}")
+    private String apimRtdSubscriptionKey;
+
     @Override
     @KafkaListener(topics = TKM_READ_TOKEN_PAR_PAN_TOPIC)
     public void consume(String message) throws JsonProcessingException {
@@ -134,7 +137,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     private String callApimForHash(String pan) {
-        return apimClient.getHash(new WalletsHashingEvaluationInput(pan)).getHashPan();
+        return apimClient.getHash(new WalletsHashingEvaluationInput(pan), apimRtdSubscriptionKey).getHashPan();
     }
 
     private Set<TkmCardToken> queueTokensToTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
