@@ -72,8 +72,8 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private void updateOrCreateCard(ReadQueue readQueue) throws JsonProcessingException {
         String taxCode = readQueue.getTaxCode();
-        String par = readQueue.getPar();
-        String pan = readQueue.getPan();
+        String par = StringUtils.trimToNull(readQueue.getPar());
+        String pan = StringUtils.trimToNull(readQueue.getPan());
         String hpan = (readQueue.getHpan() == null && pan != null) ? callApimForHash(pan) : readQueue.getHpan();
         TkmCard card = findCard(taxCode, hpan, par);
         Set<TkmCardToken> oldTokens = new HashSet<>();
