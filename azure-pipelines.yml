@@ -1,0 +1,341 @@
+# Deploy to Azure Kubernetes Service
+# Build and push image to Azure Container Registry; Deploy to Azure Kubernetes Service
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+  branches:
+    include:
+      - master
+      - develop
+      - release/*
+      - hotfix/*
+pr: none
+
+variables:
+  dockerfileRelativePath: 'Dockerfile'
+
+  # Agent VM image name for Build
+  vmImageNameDefault: 'ubuntu-latest'
+
+  # Image Repository Name
+  imageRepository: 'tkmmscardmanager'
+
+  isToDeploy: $[ne(variables['Build.Reason'], 'PullRequest')]
+  isSIT: $[eq(variables['Build.SourceBranch'], 'refs/heads/release/sit')]
+  isUAT: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))]
+  isPROD: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release/sit') }}:
+    dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
+    containerRegistry: 'cstaruatregistry.azurecr.io'
+    deployment: deployment-sit
+    imagePullSecret: 'tkmsitregistry-auth'
+  ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')) }}:
+    containerRegistry: 'cstaruatregistry.azurecr.io'
+    deployment: deployment-uat
+    imagePullSecret: ''
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+    dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
+    containerRegistry: ''
+    deployment: ''
+    imagePullSecret: ''
+  ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
+    dockerRegistryServiceConnection: ''
+
+stages:
+  - stage: Test_Develop
+    displayName: Test Develop
+    condition: or(eq(variables.isPullRequest, true), and(ne(variables.isSIT, true), ne(variables.isUAT, true), ne(variables.isPROD, true)))
+    jobs:
+      - job: Test
+        displayName: Test
+        pool:
+          vmImage: $(vmImageNameDefault)
+        steps:
+          - task: DownloadSecureFile@1
+            displayName: 'download settings.xml for Maven'
+            name: settingsxml
+            inputs:
+              secureFile: 'settings.xml'
+              retryCount: '2'
+          - task: Maven@3
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'package'
+              options: '-B -s $(settingsxml.secureFilePath) -T1C -DskipTests=false'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.8'
+              mavenVersionOption: 'Default'
+              mavenOptions: '-Xmx3072m'
+              mavenAuthenticateFeed: false
+              effectivePomSkip: true
+              sonarQubeRunAnalysis: false
+
+  - stage: POM
+    displayName: POM
+    condition: eq(variables.isToDeploy, true)
+    jobs:
+      - job: POM
+        displayName: POM
+        pool:
+          vmImage: $(vmImageNameDefault)
+        steps:
+          - task: DownloadSecureFile@1
+            displayName: 'download settings.xml for Maven'
+            name: settingsxml
+            inputs:
+              secureFile: 'settings.xml'
+              retryCount: '2'
+          - task: Bash@3
+            displayName: Get POM version
+            name: getpomversion
+            condition:  eq(variables.isToDeploy, true)
+            inputs:
+              targetType: 'inline'
+              script: |
+                version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
+                echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$version"
+                echo "Current Project Version ${version}"
+              failOnStderr: true
+
+  - stage: SIT
+    displayName: SIT
+    dependsOn: POM
+    condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    variables:
+      pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
+    jobs:
+      - job: Build
+        displayName: Build
+        pool:
+          vmImage: $(vmImageNameDefault)
+        steps:
+          - task: DownloadSecureFile@1
+            displayName: 'download settings.xml for Maven'
+            name: settingsxml
+            inputs:
+              secureFile: 'settings.xml'
+              retryCount: '2'
+          - task: Maven@3
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'deploy'
+              options: '-B -s $(settingsxml.secureFilePath) -DskipTests=false'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.8'
+              mavenVersionOption: 'Default'
+              mavenOptions: '-Xmx3072m'
+              mavenAuthenticateFeed: false
+              effectivePomSkip: true
+              sonarQubeRunAnalysis: false
+          - task: Docker@2
+            displayName: Build and push an image to container registry
+            condition: succeeded()
+            inputs:
+              containerRegistry: '$(dockerRegistryServiceConnection)'
+              repository: '$(imageRepository)'
+              command: 'buildAndPush'
+              Dockerfile: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)'
+              buildContext: '$(Build.Repository.LocalPath)'
+              tags: |
+                $(Build.BuildId)
+                latest
+                $(pomversion)
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Atrifact manifests'
+            condition: and(succeeded(), eq(variables.isToDeploy, true))
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/manifests'
+              artifact: 'manifests'
+              publishLocation: 'pipeline'
+
+      - deployment: Deploy
+        displayName: Deploy
+        dependsOn: Build
+        condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+        pool:
+          name: uat_agent_pool
+        environment: 'sit'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: none
+                - task: DownloadPipelineArtifact@2
+                  inputs:
+                    buildType: 'current'
+                    artifactName: 'manifests'
+                    targetPath: '$(Pipeline.Workspace)/manifests'
+                - task: KubernetesManifest@0
+                  displayName: Deploy to Kubernetes cluster
+                  inputs:
+                    namespace: tkm-sit
+                    action: deploy
+                    kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
+                    manifests: |
+                      $(Pipeline.Workspace)/manifests/$(deployment).yml
+                      $(Pipeline.Workspace)/manifests/service.yml
+                    imagePullSecrets: |
+                      $(imagePullSecret)
+                    containers: |
+                      $(containerRegistry)/$(imageRepository):$(pomversion)
+
+  # - stage: UAT
+  #   displayName: UAT
+  #   dependsOn: POM
+  #   condition: and(eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+  #   variables:
+  #     pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
+  #   jobs:
+  #     - job: Build
+  #       displayName: Build
+  #       pool:
+  #         vmImage: $(vmImageNameDefault)
+  #       steps:
+
+  #         - task: DownloadSecureFile@1
+  #           displayName: 'download settings.xml for Maven'
+  #           name: settingsxml
+  #           inputs:
+  #             secureFile: 'settings.xml'
+  #             retryCount: '2'
+  #         - task: Maven@3
+  #           inputs:
+  #             mavenPomFile: 'pom.xml'
+  #             goals: 'package'
+  #             options: '-B -s $(settingsxml.secureFilePath) -DskipTests=false'
+  #             javaHomeOption: 'JDKVersion'
+  #             jdkVersionOption: '1.8'
+  #             mavenVersionOption: 'Default'
+  #             mavenOptions: '-Xmx3072m'
+  #             mavenAuthenticateFeed: false
+  #             effectivePomSkip: true
+  #             sonarQubeRunAnalysis: false
+  #         - task: Docker@2
+  #           displayName: Build and push an image to container registry
+  #           condition: succeeded()
+  #           inputs:
+  #             containerRegistry: '$(dockerRegistryServiceConnection)'
+  #             repository: '$(imageRepository)'
+  #             command: 'buildAndPush'
+  #             Dockerfile: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)'
+  #             buildContext: '$(Build.Repository.LocalPath)'
+  #             tags: |
+  #               $(Build.BuildId)
+  #               latest
+  #               $(pomversion)
+  #         - task: PublishPipelineArtifact@1
+  #           displayName: 'Publish Atrifact manifests'
+  #           condition: and(succeeded(), eq(variables.isToDeploy, true))
+  #           inputs:
+  #             targetPath: '$(Build.Repository.LocalPath)/manifests'
+  #             artifact: 'manifests'
+  #             publishLocation: 'pipeline'
+
+
+  #     - deployment: Deploy
+  #       displayName: Deploy
+  #       dependsOn: Build
+  #       pool:
+  #         name: uat_agent_pool
+  #       environment: 'uat'
+  #       strategy:
+  #         runOnce:
+  #           deploy:
+  #             steps:
+  #               - download: none
+  #               - task: DownloadPipelineArtifact@2
+  #                 inputs:
+  #                   buildType: 'current'
+  #                   artifactName: 'manifests'
+  #                   targetPath: '$(Pipeline.Workspace)/manifests'
+  #               - task: KubernetesManifest@0
+  #                 displayName: Deploy to Kubernetes cluster
+  #                 inputs:
+  #                   action: 'deploy'
+  #                   kubernetesServiceConnection: ''
+  #                   namespace: ''
+  #                   manifests: |
+  #                     $(Pipeline.Workspace)/manifests/$(deployment).yml
+  #                     $(Pipeline.Workspace)/manifests/service.yml
+  #                   containers: '$(containerRegistry)/$(imageRepository):$(pomversion)'
+  #                   imagePullSecrets: '$(imagePullSecret)'
+
+  # - stage: PROD
+  #   displayName: PROD
+  #   dependsOn: POM
+  #   condition: and(eq(variables.isToDeploy, true), eq(variables.isPROD, true))
+  #   variables:
+  #     pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
+  #   jobs:
+  #     - job: Build
+  #       displayName: Build
+  #       pool:
+  #         vmImage: $(vmImageNameDefault)
+  #       steps:
+  #         - task: DownloadSecureFile@1
+  #           displayName: 'download settings.xml for Maven'
+  #           name: settingsxml
+  #           inputs:
+  #             secureFile: 'settings.xml'
+  #             retryCount: '2'
+  #         - task: Maven@3
+  #           inputs:
+  #             mavenPomFile: 'pom.xml'
+  #             goals: 'deploy'
+  #             options: '-B -s $(settingsxml.secureFilePath) -DskipTests=true'
+  #             javaHomeOption: 'JDKVersion'
+  #             jdkVersionOption: '1.8'
+  #             mavenVersionOption: 'Default'
+  #             mavenOptions: '-Xmx3072m'
+  #             mavenAuthenticateFeed: false
+  #             effectivePomSkip: true
+  #             sonarQubeRunAnalysis: false
+  #         - task: Docker@2
+  #           displayName: Build and push an image to container registry
+  #           condition: succeeded()
+  #           inputs:
+  #             containerRegistry: '$(dockerRegistryServiceConnection)'
+  #             repository: '$(imageRepository)'
+  #             command: 'buildAndPush'
+  #             Dockerfile: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)'
+  #             buildContext: '$(Build.Repository.LocalPath)'
+  #             tags: |
+  #               $(Build.BuildId)
+  #               latest
+  #               $(pomversion)
+  #         - task: PublishPipelineArtifact@1
+  #           displayName: 'Publish Atrifact manifests'
+  #           condition: and(succeeded(), eq(variables.isToDeploy, true))
+  #           inputs:
+  #             targetPath: '$(Build.Repository.LocalPath)/manifests'
+  #             artifact: 'manifests'
+  #             publishLocation: 'pipeline'
+
+  #     - deployment: Deploy
+  #       displayName: Deploy
+  #       dependsOn: Build
+  #       pool:
+  #         name: prod-agent-pool
+  #       environment: 'prod'
+  #       strategy:
+  #         runOnce:
+  #           deploy:
+  #             steps:
+  #               - download: none
+  #               - task: DownloadPipelineArtifact@2
+  #                 inputs:
+  #                   buildType: 'current'
+  #                   artifactName: 'manifests'
+  #                   targetPath: '$(Pipeline.Workspace)/manifests'
+  #               - task: KubernetesManifest@0
+  #                 displayName: Deploy to Kubernetes cluster
+  #                 inputs:
+  #                   action: 'deploy'
+  #                   kubernetesServiceConnection: ''
+  #                   namespace: ''
+  #                   manifests: |
+  #                     $(Pipeline.Workspace)/manifests/$(deployment).yml
+  #                     $(Pipeline.Workspace)/manifests/service.yml
+  #                   containers: '$(containerRegistry)/$(imageRepository):$(pomversion)'
+  #                   imagePullSecrets: '$(imagePullSecret)'
