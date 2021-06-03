@@ -3,13 +3,17 @@ package it.gov.pagopa.tkm.ms.cardmanager.constant;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 
+import java.time.*;
 import java.util.*;
 
 public class DefaultBeans {
 
     public DefaultBeans() {
     }
+
+    public final Instant INSTANT = Instant.parse("2018-08-19T16:45:42.00Z");
 
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
     public final String TAX_CODE_2 = "TRRCLE04M24L219D";
@@ -83,6 +87,13 @@ public class DefaultBeans {
             PAR_1,
             CircuitEnum.AMEX,
             QUEUE_TOKEN_LIST_1);
+    public final ReadQueue READ_QUEUE_PAN_PAR_2 = new ReadQueue(
+            TAX_CODE_1,
+            PAN_1,
+            HPAN_1,
+            PAR_1,
+            CircuitEnum.AMEX,
+            QUEUE_TOKEN_LIST_2);
     public final ReadQueue READ_QUEUE_PAN_1 = new ReadQueue(
             TAX_CODE_1,
             PAN_1,
@@ -97,5 +108,53 @@ public class DefaultBeans {
             PAR_1,
             CircuitEnum.AMEX,
             QUEUE_TOKEN_LIST_1);
+
+    public final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_NEW = new HashSet<>(Arrays.asList(
+            new WriteQueueToken(
+                    HTOKEN_1,
+                    TokenActionEnum.INSERT_UPDATE
+            ),
+            new WriteQueueToken(
+                    HTOKEN_2,
+                    TokenActionEnum.INSERT_UPDATE
+            )
+    ));
+
+    public final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_UPDATED = new HashSet<>(Arrays.asList(
+            new WriteQueueToken(
+                    HTOKEN_2,
+                    TokenActionEnum.DELETE
+            ),
+            new WriteQueueToken(
+                    HTOKEN_3,
+                    TokenActionEnum.INSERT_UPDATE
+            )
+    ));
+
+    public final Set<WriteQueueCard> WRITE_QUEUE_CARD_NEW = Collections.singleton(new WriteQueueCard(
+            HPAN_1,
+            CardActionEnum.INSERT_UPDATE,
+            PAR_1,
+            WRITE_QUEUE_TOKENS_NEW
+    ));
+
+    public final Set<WriteQueueCard> WRITE_QUEUE_CARD_UPDATED = Collections.singleton(new WriteQueueCard(
+            HPAN_1,
+            CardActionEnum.INSERT_UPDATE,
+            PAR_1,
+            WRITE_QUEUE_TOKENS_UPDATED
+    ));
+
+    public final WriteQueue WRITE_QUEUE_FOR_NEW_CARD = new WriteQueue(
+            TAX_CODE_1,
+            INSTANT,
+            WRITE_QUEUE_CARD_NEW
+    );
+
+    public final WriteQueue WRITE_QUEUE_FOR_UPDATED_CARD = new WriteQueue(
+            TAX_CODE_1,
+            INSTANT,
+            WRITE_QUEUE_CARD_UPDATED
+    );
 
 }

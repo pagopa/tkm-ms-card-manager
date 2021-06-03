@@ -6,6 +6,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.crypto.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import it.gov.pagopa.tkm.service.*;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.*;
 
 import javax.validation.*;
 
+import java.time.*;
 import java.util.*;
 
 import static org.mockito.Mockito.*;
@@ -43,13 +45,19 @@ public class TestConsumerService {
     @Mock
     private ObjectMapper mapper;
 
+    @Mock
+    private ProducerServiceImpl producerService;
+
     private DefaultBeans testBeans;
+
+    private final MockedStatic<Instant> instantMockedStatic = mockStatic(Instant.class);
 
     private final ObjectMapper testMapper = new ObjectMapper();
 
     @BeforeEach
     public void init() {
         testBeans = new DefaultBeans();
+        instantMockedStatic.when(Instant::now).thenReturn(testBeans.INSTANT);
     }
 
     private void startupAssumptions(ReadQueue readQueueToTest) throws Exception {
@@ -161,6 +169,28 @@ public class TestConsumerService {
         consumerService.consume("MESSAGE");
         verify(cardRepository).delete(testBeans.TKM_CARD_PAN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1.setTokens(updatedTokens));
+    }
+
+    @Test
+    public void givenIncompleteCard_dontWriteOnQueue() throws Exception {
+        startupAssumptions(testBeans.READ_QUEUE_PAN_1);
+        consumerService.consume("MESSAGE");
+        verify(producerService, never()).sendMessage(Mockito.any(WriteQueue.class));
+    }
+
+    @Test
+    public void givenNewCompleteCard_writeOnQueue() throws Exception {
+        startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
+        consumerService.consume("MESSAGE");
+        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
+    }
+
+    @Test
+    public void givenUpdatedCard_writeOnQueue() throws Exception {
+        startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_2);
+        when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1).thenReturn(null);
+        consumerService.consume("MESSAGE");
+        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_UPDATED_CARD);
     }
 
 }
