@@ -59,6 +59,11 @@ public class TestConsumerService {
         instantMockedStatic.when(Instant::now).thenReturn(testBeans.INSTANT);
     }
 
+    @AfterAll
+    public void close(){
+        instantMockedStatic.close();
+    }
+
     private void startupAssumptions(ReadQueue readQueueToTest) throws Exception {
         String readQueueAsString = testMapper.writeValueAsString(readQueueToTest);
         when(pgpUtils.decrypt("MESSAGE")).thenReturn(readQueueAsString);
