@@ -1,26 +1,34 @@
 package it.gov.pagopa.tkm.ms.cardmanager.controller;
 
-import com.fasterxml.jackson.databind.*;
-import it.gov.pagopa.tkm.ms.cardmanager.config.*;
-import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
-import it.gov.pagopa.tkm.ms.cardmanager.controller.impl.*;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.*;
-import org.mockito.*;
-import org.mockito.junit.jupiter.*;
-import org.springframework.http.converter.*;
-import org.springframework.http.converter.json.*;
-import org.springframework.http.converter.xml.*;
-import org.springframework.test.web.servlet.*;
-import org.springframework.test.web.servlet.setup.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.tkm.ms.cardmanager.config.ErrorHandler;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.ApiEndpoints;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
+import it.gov.pagopa.tkm.ms.cardmanager.controller.impl.ParlessCardsControllerImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ParlessCardsServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
+import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.converter.ResourceHttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-public class TestParlessCardsController {
+class TestParlessCardsController {
 
     @InjectMocks
     private ParlessCardsControllerImpl parlessCardsController;
@@ -35,7 +43,7 @@ public class TestParlessCardsController {
     private MockMvc mockMvc;
 
     @BeforeEach
-    public void init() {
+    void init() {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(parlessCardsController)
                 .setMessageConverters(
@@ -51,7 +59,7 @@ public class TestParlessCardsController {
     }
 
     @Test
-    public void givenValidParlessCardsRequest_returnValidParlessCardsResponse() throws Exception {
+    void givenValidParlessCardsRequest_returnValidParlessCardsResponse() throws Exception {
         when(parlessCardsService.getParlessCards(2)).thenReturn(testBeans.PARLESS_CARD_LIST);
         mockMvc.perform(
                 get(ApiEndpoints.BASE_PATH_PARLESS_CARDS)
@@ -61,13 +69,13 @@ public class TestParlessCardsController {
     }
 
     @Test
-    public void givenInvalidParlessCardsRequest_expectException() throws Exception {
+    void givenInvalidParlessCardsRequest_expectException() throws Exception {
         mockMvc.perform(
                 get(ApiEndpoints.BASE_PATH_PARLESS_CARDS))
                 .andExpect(status().isBadRequest());
         mockMvc.perform(
                 get(ApiEndpoints.BASE_PATH_PARLESS_CARDS)
-                    .queryParam(ApiParams.MAX_NUMBER_OF_CARDS, "a"))
+                        .queryParam(ApiParams.MAX_NUMBER_OF_CARDS, "a"))
                 .andExpect(status().isBadRequest());
     }
 

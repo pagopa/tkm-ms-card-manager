@@ -13,7 +13,7 @@ public class DefaultBeans {
     public DefaultBeans() {
     }
 
-    public final Instant INSTANT = Instant.parse("2018-08-19T16:45:42.00Z");
+    public final static Instant INSTANT = Instant.parse("2018-08-19T16:45:42.00Z");
 
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
     public final String TAX_CODE_2 = "TRRCLE04M24L219D";
