@@ -72,6 +72,11 @@ class TestConsumerService {
         instantMockedStatic.close();
     }
 
+    @AfterAll
+    public void close(){
+        instantMockedStatic.close();
+    }
+
     private void startupAssumptions(ReadQueue readQueueToTest) throws Exception {
         String readQueueAsString = testMapper.writeValueAsString(readQueueToTest);
         when(pgpUtils.decrypt("MESSAGE")).thenReturn(readQueueAsString);
