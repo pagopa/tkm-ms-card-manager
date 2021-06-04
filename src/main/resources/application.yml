@@ -72,3 +72,9 @@ keyvault:
 client-urls:
   consent-manager: ${CONSENT_MANAGER_URL}
   rtd-hashing-url: ${RTD_HASHING_URL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "info,health,prometheus"
