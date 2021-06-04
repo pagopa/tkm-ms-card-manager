@@ -1,7 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.gov.pagopa.tkm.ms.cardmanager.client.hash.ApimClient;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
@@ -29,7 +28,6 @@ import java.util.Set;
 
 import static org.mockito.Mockito.*;
 
-@SuppressWarnings("WeakerAccess")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
 class TestConsumerService {
@@ -42,9 +40,6 @@ class TestConsumerService {
 
     @Mock
     private CardRepository cardRepository;
-
-    @Mock
-    private ApimClient apimClient;
 
     @Mock
     private Validator validator;
