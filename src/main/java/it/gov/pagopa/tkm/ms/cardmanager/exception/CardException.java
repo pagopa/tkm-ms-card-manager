@@ -10,7 +10,7 @@ public class CardException extends RuntimeException {
     private ErrorCodeEnum errorCode;
 
     public CardException(ErrorCodeEnum ec) {
-        super(ec.getErrorCode() + " - " + ec.getDescription());
+        super(ec.getStatusCode() + " - " + ec.getMessage());
         errorCode = ec;
     }
 
