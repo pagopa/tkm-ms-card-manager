@@ -1,0 +1,74 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_SERVER}
+    username: ${keyvault.cardMDbUsername}
+    password: ${keyvault.cardMDbPassword}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  application:
+    name: Tkm Card Manager ${HOSTNAME:0}
+  kafka:
+    consumer:
+      bootstrap-servers: ${KAFKA_SERVERS}
+      group-id: ${KAFKA_GROUP_ID}
+      client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: true
+      properties:
+        security:
+          protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
+        sasl:
+          mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+          jaas:
+            config: ${keyvault.cardMEventhubReadSaslJaasConfig}
+    producer:
+      bootstrap-servers: ${KAFKA_SERVERS}
+      client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        security:
+          protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
+        sasl:
+          mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+          jaas:
+            config: ${keyvault.cardMEventhubWriteSaslJaasConfig}
+    listener:
+      concurrency: ${KAFKA_MAX_NUMBER_OF_THREADS:1}
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${CONTEXT_PATH:/}
+
+logging:
+  level:
+    root: ${LOGGING_LEVEL:INFO}
+  pattern:
+    level: "${LOGGING_PATTERN:%p [${spring.application.name}][%X{traceId}]}"
+
+azure:
+  keyvault:
+    enabled: true
+    client-id: ${AZURE_KEYVAULT_CLIENT_ID}
+    client-key: ${AZURE_KEYVAULT_CLIENT_KEY}
+    tenant-id: ${AZURE_KEYVAULT_TENANT_ID}
+    uri: ${AZURE_KEYVAULT_URI}
+
+keyvault:
+  eventhubLogSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-eventhubLogSaslJaasConfig:null}
+  cardMEventhubReadSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubReadSaslJaasConfig:null}
+  cardMEventhubWriteSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubWriteSaslJaasConfig:null}
+  readQueuePrvPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePrvPgpKey}
+  readQueuePubPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePubPgpKey}
+  cardMDbUsername: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbUsername}
+  cardMDbPassword: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbPassword}
+  apimSubscriptionTkmRtd: ${${AZURE_KEYVAULT_PROFILE:prod}-apimSubscriptionTkmRtd}
+
+client-urls:
+  consent-manager: ${CONSENT_MANAGER_URL}
+  rtd-hashing-url: ${RTD_HASHING_URL}
