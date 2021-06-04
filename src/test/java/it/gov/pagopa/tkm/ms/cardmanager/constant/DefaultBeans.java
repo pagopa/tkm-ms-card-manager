@@ -1,12 +1,16 @@
 package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
+import com.google.common.collect.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 
 import java.time.*;
 import java.util.*;
+
+import static it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum.*;
 
 public class DefaultBeans {
 
@@ -156,5 +160,52 @@ public class DefaultBeans {
             INSTANT,
             WRITE_QUEUE_CARD_UPDATED
     );
+
+    public ConsentResponse getConsentUpdateGlobal(ConsentEntityEnum consentEntityEnum) {
+        return new ConsentResponse()
+                .setConsent(consentEntityEnum)
+                .setTaxCode(TAX_CODE_1);
+    }
+
+    public ConsentResponse getConsentUpdatePartial() {
+        return new ConsentResponse()
+                .setConsent(Partial)
+                .setTaxCode(TAX_CODE_1)
+                .setDetails(getCardServiceConsentSet());
+    }
+
+    private Set<CardServiceConsent> getCardServiceConsentSet() {
+        Set<CardServiceConsent> cardServiceConsentSet = Sets.newHashSet();
+        cardServiceConsentSet.add(createCardServiceConsent());
+        cardServiceConsentSet.add(createCardServiceConsentOnlyBpd());
+        return cardServiceConsentSet;
+    }
+
+    private CardServiceConsent createCardServiceConsentOnlyBpd() {
+        CardServiceConsent cardServiceConsent = new CardServiceConsent();
+        cardServiceConsent.setHpan(HPAN_1);
+        cardServiceConsent.setServiceConsents(createServiceConsentOnlyBpd());
+        return cardServiceConsent;
+    }
+
+    private CardServiceConsent createCardServiceConsent() {
+        CardServiceConsent cardServiceConsent = new CardServiceConsent();
+        cardServiceConsent.setHpan(HPAN_1);
+        cardServiceConsent.setServiceConsents(createServiceConsent());
+        return cardServiceConsent;
+    }
+
+    private Set<ServiceConsent> createServiceConsentOnlyBpd() {
+        Set<ServiceConsent> serviceConsentSet = Sets.newHashSet();
+        serviceConsentSet.add(new ServiceConsent(ConsentRequestEnum.Allow, ServiceEnum.BPD));
+        return serviceConsentSet;
+    }
+
+    private Set<ServiceConsent> createServiceConsent() {
+        Set<ServiceConsent> serviceConsentSet = Sets.newHashSet();
+        serviceConsentSet.add(new ServiceConsent(ConsentRequestEnum.Allow, ServiceEnum.BPD));
+        serviceConsentSet.add(new ServiceConsent(ConsentRequestEnum.Deny, ServiceEnum.FA));
+        return serviceConsentSet;
+    }
 
 }

@@ -5,6 +5,8 @@ import org.springframework.http.*;
 import org.springframework.transaction.annotation.*;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.*;
+
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiEndpoints.BASE_PATH_CONSENT_UPDATE;
 
 @RequestMapping(BASE_PATH_CONSENT_UPDATE)
@@ -13,6 +15,6 @@ public interface ConsentUpdateController {
     @Transactional
     @PutMapping
     @ResponseStatus(value = HttpStatus.OK)
-    void updateConsent(@RequestBody ConsentResponse consentResponse);
+    void updateConsent(@RequestBody @Valid ConsentResponse consentResponse);
 
 }

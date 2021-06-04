@@ -1,11 +1,9 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.request;
 
-import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 import lombok.experimental.*;
 
 import javax.validation.constraints.*;
-import java.time.*;
 import java.util.*;
 import java.util.stream.*;
 
@@ -15,15 +13,13 @@ import java.util.stream.*;
 @Accessors(chain = true)
 public class ConsentResponse {
 
+    @NotNull
     private ConsentEntityEnum consent;
 
-    @NotEmpty
+    @NotBlank
     private String taxCode;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss", timezone = "Europe/Rome")
-    private Instant lastUpdateDate;
-
-    private Set<CardServiceConsent> details;
+    private Set<CardServiceConsent> details = new HashSet<>();
 
     public List<String> getHpans() {
         return details.stream().map(CardServiceConsent::getHpan).collect(Collectors.toList());

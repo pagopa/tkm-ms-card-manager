@@ -80,8 +80,8 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private void updateOrCreateCard(ReadQueue readQueue) {
         String taxCode = readQueue.getTaxCode();
-        String par = StringUtils.trimToNull(readQueue.getPar());
-        String pan = StringUtils.trimToNull(readQueue.getPan());
+        String par = readQueue.getPar();
+        String pan = readQueue.getPan();
         String hpan = (readQueue.getHpan() == null && pan != null) ? callRtdForHash(pan) : readQueue.getHpan();
         TkmCard card = findCard(taxCode, hpan, par);
         Set<TkmCardToken> oldTokens = new HashSet<>();
