@@ -1,30 +1,36 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
-import com.fasterxml.jackson.databind.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.hash.*;
-import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
-import it.gov.pagopa.tkm.service.*;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.*;
-import org.mockito.*;
-import org.mockito.junit.jupiter.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ConsumerServiceImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
+import it.gov.pagopa.tkm.service.PgpUtils;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.validation.*;
-
-import java.time.*;
-import java.util.*;
+import javax.validation.Validator;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.mockito.Mockito.*;
 
-@SuppressWarnings("WeakerAccess")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
-public class TestConsumerService {
+class TestConsumerService {
 
     @InjectMocks
     private ConsumerServiceImpl consumerService;
@@ -34,9 +40,6 @@ public class TestConsumerService {
 
     @Mock
     private CardRepository cardRepository;
-
-    @Mock
-    private ApimClient apimClient;
 
     @Mock
     private Validator validator;
@@ -54,13 +57,13 @@ public class TestConsumerService {
     private final ObjectMapper testMapper = new ObjectMapper();
 
     @BeforeEach
-    public void init() {
+    void init() {
         testBeans = new DefaultBeans();
-        instantMockedStatic.when(Instant::now).thenReturn(testBeans.INSTANT);
+        instantMockedStatic.when(Instant::now).thenReturn(DefaultBeans.INSTANT);
     }
 
     @AfterAll
-    public void close(){
+    void close() {
         instantMockedStatic.close();
     }
 
@@ -72,7 +75,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenNewCard_persistNewCard() throws Exception {
+    void givenNewCard_persistNewCard() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(null);
         consumerService.consume("MESSAGE");
@@ -80,7 +83,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenPanParAndExistingPanPar_doNothing() throws Exception {
+    void givenPanParAndExistingPanPar_doNothing() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
         consumerService.consume("MESSAGE");
@@ -88,7 +91,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenPanParAndExistingPan_updateCard() throws Exception {
+    void givenPanParAndExistingPan_updateCard() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(null);
@@ -97,7 +100,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenPanParAndExistingPar_updateCard() throws Exception {
+    void givenPanParAndExistingPar_updateCard() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAR_1).thenReturn(null);
         consumerService.consume("MESSAGE");
@@ -105,7 +108,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenPanAndExistingPan_doNothing() throws Exception {
+    void givenPanAndExistingPan_doNothing() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
         consumerService.consume("MESSAGE");
@@ -113,7 +116,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenPanAndExistingPanPar_doNothing() throws Exception {
+    void givenPanAndExistingPanPar_doNothing() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
         consumerService.consume("MESSAGE");
@@ -121,7 +124,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenParAndExistingPar_doNothing() throws Exception {
+    void givenParAndExistingPar_doNothing() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAR_1);
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1).thenReturn(null);
         consumerService.consume("MESSAGE");
@@ -129,7 +132,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenParAndExistingPanPar_doNothing() throws Exception {
+    void givenParAndExistingPanPar_doNothing() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAR_1);
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
         consumerService.consume("MESSAGE");
@@ -137,7 +140,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenNewTokensAndExistingCard_replaceTokensIfNew() throws Exception {
+    void givenNewTokensAndExistingCard_replaceTokensIfNew() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2));
         Set<TkmCardToken> updatedTokens = new HashSet<>(Arrays.asList(
                 testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2.setDeleted(true), testBeans.TKM_CARD_TOKEN_3
@@ -148,7 +151,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenPanParAndExistingPanAndExistingPar_mergeCards() throws Exception {
+    void givenPanParAndExistingPanAndExistingPar_mergeCards() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2));
         Set<TkmCardToken> updatedTokens = new HashSet<>(Arrays.asList(
                 testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2.setDeleted(true), testBeans.TKM_CARD_TOKEN_3
@@ -162,7 +165,7 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenPanParAndExistingParAndExistingPan_mergeCards() throws Exception {
+    void givenPanParAndExistingParAndExistingPan_mergeCards() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2));
         Set<TkmCardToken> updatedTokens = new HashSet<>(Arrays.asList(
                 testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2.setDeleted(true), testBeans.TKM_CARD_TOKEN_3
@@ -176,21 +179,21 @@ public class TestConsumerService {
     }
 
     @Test
-    public void givenIncompleteCard_dontWriteOnQueue() throws Exception {
+    void givenIncompleteCard_dontWriteOnQueue() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_1);
         consumerService.consume("MESSAGE");
         verify(producerService, never()).sendMessage(Mockito.any(WriteQueue.class));
     }
 
     @Test
-    public void givenNewCompleteCard_writeOnQueue() throws Exception {
+    void givenNewCompleteCard_writeOnQueue() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
         consumerService.consume("MESSAGE");
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
     }
 
     @Test
-    public void givenUpdatedCard_writeOnQueue() throws Exception {
+    void givenUpdatedCard_writeOnQueue() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_2);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1).thenReturn(null);
         consumerService.consume("MESSAGE");
