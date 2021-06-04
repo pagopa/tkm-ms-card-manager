@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.cardmanager.client.consent.model.response;
+package it.gov.pagopa.tkm.ms.cardmanager.model.request;
 
 import com.fasterxml.jackson.annotation.*;
 import lombok.*;
@@ -14,5 +14,9 @@ public class CardServiceConsent {
     private String hpan;
 
     private Set<ServiceConsent> serviceConsents;
+
+    public boolean hasConsent() {
+        return serviceConsents.stream().anyMatch(s -> ConsentRequestEnum.Allow.equals(s.getConsent()));
+    }
 
 }

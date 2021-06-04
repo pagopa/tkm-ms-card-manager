@@ -1,6 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.client.consent;
 
-import it.gov.pagopa.tkm.ms.cardmanager.client.consent.model.response.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import org.springframework.cloud.openfeign.*;
 import org.springframework.web.bind.annotation.*;
 

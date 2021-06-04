@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.*;
 import org.springframework.web.bind.annotation.*;
 
 @FeignClient(value = "hash", url = "${client-urls.rtd-hashing-url}")
-public interface ApimClient {
+public interface RtdHashingClient {
 
     @GetMapping
     WalletsHashingEvaluation getHash(
