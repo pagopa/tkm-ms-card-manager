@@ -17,7 +17,7 @@ public class DefaultBeans {
     public DefaultBeans() {
     }
 
-    public final static Instant INSTANT = Instant.parse("2018-08-19T16:45:42.00Z");
+    public final static Instant INSTANT = Instant.MAX;
 
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
     public final String TAX_CODE_2 = "TRRCLE04M24L219D";
@@ -149,6 +149,13 @@ public class DefaultBeans {
             WRITE_QUEUE_TOKENS_UPDATED
     ));
 
+    public final Set<WriteQueueCard> WRITE_QUEUE_CARD_REVOKED_CONSENT = Collections.singleton(new WriteQueueCard(
+            HPAN_1,
+            CardActionEnum.REVOKE,
+            PAR_1,
+            null
+    ));
+
     public final WriteQueue WRITE_QUEUE_FOR_NEW_CARD = new WriteQueue(
             TAX_CODE_1,
             INSTANT,
@@ -159,6 +166,12 @@ public class DefaultBeans {
             TAX_CODE_1,
             INSTANT,
             WRITE_QUEUE_CARD_UPDATED
+    );
+
+    public final WriteQueue WRITE_QUEUE_FOR_REVOKED_CONSENT_CARD = new WriteQueue(
+            TAX_CODE_1,
+            INSTANT,
+            WRITE_QUEUE_CARD_REVOKED_CONSENT
     );
 
     public ConsentResponse getConsentUpdateGlobal(ConsentEntityEnum consentEntityEnum) {

@@ -94,11 +94,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
         manageTokens(card, readQueue.getTokens());
         cardRepository.save(card);
-        try {
-            writeOnQueueIfComplete(card, oldTokens, merged);
-        } catch (Exception e) {
-            throw new CardException(ErrorCodeEnum.MESSAGE_WRITE_FAILED);
-        }
+        writeOnQueueIfComplete(card, oldTokens, merged);
     }
 
     private TkmCard findCard(String taxCode, String hpan, String par) {
@@ -162,23 +158,27 @@ public class ConsumerServiceImpl implements ConsumerService {
         ).collect(Collectors.toSet());
     }
 
-    private void writeOnQueueIfComplete(TkmCard card, Set<TkmCardToken> oldTokens, boolean merged) throws JsonProcessingException {
+    private void writeOnQueueIfComplete(TkmCard card, Set<TkmCardToken> oldTokens, boolean merged) {
         if (StringUtils.isAnyBlank(card.getPan(), card.getPar())) {
             return;
         }
-        boolean cardHasConsent = getConsentForCard(card);
-        WriteQueueCard writeQueueCard = new WriteQueueCard(
-                card.getHpan(),
-                cardHasConsent ? INSERT_UPDATE : REVOKE,
-                card.getPar(),
-                cardHasConsent ? getTokensDiff(oldTokens, card.getTokens(), merged) : null
-        );
-        WriteQueue writeQueue = new WriteQueue(
-            card.getTaxCode(),
-            Instant.now(),
-            Collections.singleton(writeQueueCard)
-        );
-        producerService.sendMessage(writeQueue);
+        try {
+            boolean cardHasConsent = getConsentForCard(card);
+            WriteQueueCard writeQueueCard = new WriteQueueCard(
+                    card.getHpan(),
+                    cardHasConsent ? INSERT_UPDATE : REVOKE,
+                    card.getPar(),
+                    cardHasConsent ? getTokensDiff(oldTokens, card.getTokens(), merged) : null
+            );
+            WriteQueue writeQueue = new WriteQueue(
+                card.getTaxCode(),
+                Instant.now(),
+                Collections.singleton(writeQueueCard)
+            );
+            producerService.sendMessage(writeQueue);
+        } catch (Exception e) {
+            throw new CardException(ErrorCodeEnum.MESSAGE_WRITE_FAILED);
+        }
     }
 
     private Set<WriteQueueToken> getTokensDiff(Set<TkmCardToken> oldTokens, Set<TkmCardToken> newTokens, boolean merged) {

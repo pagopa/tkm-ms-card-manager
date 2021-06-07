@@ -1,6 +1,5 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
-import com.fasterxml.jackson.core.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
@@ -37,28 +36,28 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
         if (CollectionUtils.isEmpty(cardsToUpdate)) {
             return;
         }
+        writeOnQueueIfComplete(cardsToUpdate, consent);
+    }
+
+    private void writeOnQueueIfComplete(List<TkmCard> cards, ConsentResponse consent) {
         try {
-            writeOnQueueIfComplete(cardsToUpdate, consent);
+            Set<WriteQueueCard> writeQueueCards = cards.stream().map(card ->
+                    new WriteQueueCard(
+                                card.getHpan(),
+                                consent.cardHasConsent(card.getHpan()) ? INSERT_UPDATE : REVOKE,
+                                card.getPar(),
+                                consent.cardHasConsent(card.getHpan()) ? card.getTokens().stream().map(WriteQueueToken::new).collect(Collectors.toSet()) : null
+                        )
+            ).collect(Collectors.toSet());
+            WriteQueue writeQueue = new WriteQueue(
+                    consent.getTaxCode(),
+                    Instant.now(),
+                    writeQueueCards
+            );
+            producerService.sendMessage(writeQueue);
         } catch (Exception e) {
             throw new CardException(ErrorCodeEnum.MESSAGE_WRITE_FAILED);
         }
-    }
-
-    private void writeOnQueueIfComplete(List<TkmCard> cards, ConsentResponse consent) throws JsonProcessingException {
-        Set<WriteQueueCard> writeQueueCards = cards.stream().map(card ->
-                new WriteQueueCard(
-                            card.getHpan(),
-                            consent.cardHasConsent(card.getHpan()) ? INSERT_UPDATE : REVOKE,
-                            card.getPar(),
-                            consent.cardHasConsent(card.getHpan()) ? card.getTokens().stream().map(WriteQueueToken::new).collect(Collectors.toSet()) : null
-                    )
-        ).collect(Collectors.toSet());
-        WriteQueue writeQueue = new WriteQueue(
-                consent.getTaxCode(),
-                Instant.now(),
-                writeQueueCards
-        );
-        producerService.sendMessage(writeQueue);
     }
 
 }

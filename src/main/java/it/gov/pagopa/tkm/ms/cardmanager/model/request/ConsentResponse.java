@@ -26,7 +26,13 @@ public class ConsentResponse {
     }
 
     public boolean cardHasConsent(String hpan) {
-        return details.stream().filter(d -> hpan.equals(d.getHpan())).anyMatch(CardServiceConsent::hasConsent);
+        switch(consent) {
+            case Allow: return true;
+            case Partial: return details.stream().filter(d -> hpan.equals(d.getHpan())).anyMatch(CardServiceConsent::hasConsent);
+            case Deny:
+            default:
+                return false;
+        }
     }
 
 }
