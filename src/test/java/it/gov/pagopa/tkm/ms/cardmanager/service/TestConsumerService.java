@@ -1,7 +1,7 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.gov.pagopa.tkm.ms.cardmanager.client.consent.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;

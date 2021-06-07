@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.cardmanager.client.hash.model.request;
+package it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.request;
 
 import lombok.*;
 

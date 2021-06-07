@@ -2,9 +2,9 @@ package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.consent.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.hash.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.hash.model.request.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
