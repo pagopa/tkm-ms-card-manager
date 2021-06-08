@@ -2,11 +2,13 @@ package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.hash.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.hash.model.request.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
@@ -42,10 +44,13 @@ public class ConsumerServiceImpl implements ConsumerService {
     private CardRepository cardRepository;
 
     @Autowired
-    private ApimClient apimClient;
+    private RtdHashingClient rtdHashingClient;
 
     @Autowired
     private Validator validator;
+
+    @Autowired
+    private ConsentClient consentClient;
 
     @Autowired
     private ProducerServiceImpl producerService;
@@ -73,22 +78,23 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
     }
 
-    private void updateOrCreateCard(ReadQueue readQueue) throws JsonProcessingException {
+    private void updateOrCreateCard(ReadQueue readQueue) {
         String taxCode = readQueue.getTaxCode();
-        String par = StringUtils.trimToNull(readQueue.getPar());
-        String pan = StringUtils.trimToNull(readQueue.getPan());
-        String hpan = (readQueue.getHpan() == null && pan != null) ? callApimForHash(pan) : readQueue.getHpan();
+        String par = readQueue.getPar();
+        String pan = readQueue.getPan();
+        String hpan = (readQueue.getHpan() == null && pan != null) ? callRtdForHash(pan) : readQueue.getHpan();
         TkmCard card = findCard(taxCode, hpan, par);
         Set<TkmCardToken> oldTokens = new HashSet<>();
+        boolean merged = false;
         if (card == null) {
             card = createCard(taxCode, pan, hpan, par, readQueue.getCircuit());
         } else {
             oldTokens.addAll(card.getTokens());
-            updateCard(card, pan, hpan, par);
+            merged = updateCard(card, pan, hpan, par);
         }
         manageTokens(card, readQueue.getTokens());
         cardRepository.save(card);
-        writeOnQueueIfComplete(card, oldTokens);
+        writeOnQueueIfComplete(card, oldTokens, merged);
     }
 
     private TkmCard findCard(String taxCode, String hpan, String par) {
@@ -111,19 +117,23 @@ public class ConsumerServiceImpl implements ConsumerService {
                 .setPar(par);
     }
 
-    private void updateCard(TkmCard foundCard, String pan, String hpan, String par) {
+    private boolean updateCard(TkmCard foundCard, String pan, String hpan, String par) {
         TkmCard preexistingCard = null;
+        boolean toMerge = false;
         if (par != null && foundCard.getPar() == null) {
             preexistingCard = cardRepository.findByTaxCodeAndParAndDeletedFalse(foundCard.getTaxCode(), par);
             foundCard.setPar(par);
+            toMerge = true;
         } else if (hpan != null && foundCard.getHpan() == null) {
             preexistingCard = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(foundCard.getTaxCode(), hpan);
             foundCard.setPan(pan).setHpan(hpan);
+            toMerge = true;
         }
         if (preexistingCard != null) {
             mergeTokens(preexistingCard.getTokens(), foundCard.getTokens());
             cardRepository.delete(preexistingCard);
         }
+        return toMerge;
     }
 
     private void manageTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
@@ -136,38 +146,50 @@ public class ConsumerServiceImpl implements ConsumerService {
         oldTokens.stream().filter(t -> !newTokens.contains(t)).forEach(t -> t.setDeleted(true));
     }
 
-    private String callApimForHash(String pan) {
-        return apimClient.getHash(new WalletsHashingEvaluationInput(pan), apimRtdSubscriptionKey).getHashPan();
+    private String callRtdForHash(String pan) {
+        return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(pan), apimRtdSubscriptionKey).getHashPan();
     }
 
     private Set<TkmCardToken> queueTokensToTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
         return readQueueTokens.stream().map(t -> new TkmCardToken()
                         .setCard(card)
                         .setToken(t.getToken())
-                        .setHtoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callApimForHash(t.getToken()))
+                        .setHtoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callRtdForHash(t.getToken()))
         ).collect(Collectors.toSet());
     }
 
-    private void writeOnQueueIfComplete(TkmCard card, Set<TkmCardToken> oldTokens) throws JsonProcessingException {
+    private void writeOnQueueIfComplete(TkmCard card, Set<TkmCardToken> oldTokens, boolean merged) {
         if (StringUtils.isAnyBlank(card.getPan(), card.getPar())) {
             return;
         }
-        WriteQueueCard writeQueueCard = new WriteQueueCard(
-                card.getHpan(),
-                card.isDeleted() ? REVOKE : INSERT_UPDATE,
-                card.getPar(),
-                getTokensDiff(oldTokens, card.getTokens())
-        );
-        WriteQueue writeQueue = new WriteQueue(
-            card.getTaxCode(),
-            Instant.now(),
-            Collections.singleton(writeQueueCard)
-        );
-        producerService.sendMessage(writeQueue);
+        try {
+            boolean cardHasConsent = getConsentForCard(card);
+            WriteQueueCard writeQueueCard = new WriteQueueCard(
+                    card.getHpan(),
+                    cardHasConsent ? INSERT_UPDATE : REVOKE,
+                    card.getPar(),
+                    cardHasConsent ? getTokensDiff(oldTokens, card.getTokens(), merged) : null
+            );
+            WriteQueue writeQueue = new WriteQueue(
+                card.getTaxCode(),
+                Instant.now(),
+                Collections.singleton(writeQueueCard)
+            );
+            producerService.sendMessage(writeQueue);
+        } catch (Exception e) {
+            throw new CardException(ErrorCodeEnum.MESSAGE_WRITE_FAILED);
+        }
     }
 
-    private Set<WriteQueueToken> getTokensDiff(Set<TkmCardToken> oldTokens, Set<TkmCardToken> newTokens) {
-        return newTokens.stream().filter(t -> t.isDeleted() || !oldTokens.contains(t)).map(WriteQueueToken::new).collect(Collectors.toSet());
+    private Set<WriteQueueToken> getTokensDiff(Set<TkmCardToken> oldTokens, Set<TkmCardToken> newTokens, boolean merged) {
+        return merged ?
+                oldTokens.stream().map(WriteQueueToken::new).collect(Collectors.toSet())
+                : newTokens.stream().filter(t -> t.isDeleted() || !oldTokens.contains(t)).map(WriteQueueToken::new).collect(Collectors.toSet());
+    }
+
+    private boolean getConsentForCard(TkmCard card) {
+        ConsentResponse consentResponse = consentClient.getConsent(card.getTaxCode(), card.getHpan(), null);
+        return consentResponse.cardHasConsent(card.getHpan());
     }
 
 }

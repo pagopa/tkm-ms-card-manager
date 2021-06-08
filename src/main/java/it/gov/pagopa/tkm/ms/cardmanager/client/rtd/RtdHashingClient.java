@@ -1,13 +1,13 @@
-package it.gov.pagopa.tkm.ms.cardmanager.client.hash;
+package it.gov.pagopa.tkm.ms.cardmanager.client.rtd;
 
-import it.gov.pagopa.tkm.ms.cardmanager.client.hash.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.hash.model.response.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.request.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import org.springframework.cloud.openfeign.*;
 import org.springframework.web.bind.annotation.*;
 
 @FeignClient(value = "hash", url = "${client-urls.rtd-hashing-url}")
-public interface ApimClient {
+public interface RtdHashingClient {
 
     @GetMapping
     WalletsHashingEvaluation getHash(

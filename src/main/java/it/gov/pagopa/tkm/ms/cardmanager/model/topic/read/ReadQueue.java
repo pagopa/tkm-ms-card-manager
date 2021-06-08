@@ -22,7 +22,7 @@ import static it.gov.pagopa.tkm.constant.Constants.FISCAL_CODE_REGEX;
 @CheckAtLeastOneNotEmpty(fieldNames = {"pan", "par"})
 public class ReadQueue {
 
-    @NotEmpty
+    @NotBlank
     @Pattern(regexp = FISCAL_CODE_REGEX)
     @JsonDeserialize(using = ToUpperCaseDeserializer.class)
     private String taxCode;

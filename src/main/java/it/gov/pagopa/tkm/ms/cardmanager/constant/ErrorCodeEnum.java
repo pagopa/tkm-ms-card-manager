@@ -9,7 +9,8 @@ public enum ErrorCodeEnum {
 
     REQUEST_VALIDATION_FAILED(2000, "Request validation failed, check for errors in the request"),
     MESSAGE_VALIDATION_FAILED(2001, "Message validation failed, check for errors in the message fields"),
-    MESSAGE_DECRYPTION_FAILED(2002, "Message PGP decryption failed");
+    MESSAGE_DECRYPTION_FAILED(2002, "Message PGP decryption failed"),
+    MESSAGE_WRITE_FAILED(2003, "Could not write message on queue");
 
     @Getter
     private final Integer statusCode;
