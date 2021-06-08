@@ -10,6 +10,9 @@ public class ApiParams {
 
     // Card Manager
     public static final String MAX_NUMBER_OF_CARDS = "maxNumberOfCards";
+    public static final String MAX_NUMBER_OF_RECORD = "maxNumberOfRecord";
+    public static final String PAGE_NUMBER = "pageNumber";
+    public static final String TOTAL_NUMBER_PAGES = "Total-Number-Pages";
     public static final String REQUEST_ID_HEADER = "Request-Id";
 
 }

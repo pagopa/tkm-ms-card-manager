@@ -21,7 +21,7 @@ public class ErrorHandler {
         return ResponseEntity.badRequest().body(ce.getErrorCode());
     }
 
-    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class, ConstraintViolationException.class})
     public ResponseEntity<ErrorCodeEnum> handleValidationException(Exception ve) {
         log.error(ve.getMessage());
         return ResponseEntity.badRequest().body(ErrorCodeEnum.REQUEST_VALIDATION_FAILED);
