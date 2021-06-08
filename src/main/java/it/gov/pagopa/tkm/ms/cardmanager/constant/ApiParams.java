@@ -1,6 +1,8 @@
 package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
 public class ApiParams {
+    private ApiParams() {
+    }
 
     //Consent Manager
     public static final String TAX_CODE_HEADER = "Tax-Code";
