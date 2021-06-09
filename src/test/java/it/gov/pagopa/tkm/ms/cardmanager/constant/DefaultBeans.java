@@ -1,6 +1,8 @@
 package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
+import com.google.common.collect.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
@@ -8,12 +10,14 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import java.time.*;
 import java.util.*;
 
+import static it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum.*;
+
 public class DefaultBeans {
 
     public DefaultBeans() {
     }
 
-    public final static Instant INSTANT = Instant.parse("2018-08-19T16:45:42.00Z");
+    public final static Instant INSTANT = Instant.MAX;
 
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
     public final String TAX_CODE_2 = "TRRCLE04M24L219D";
@@ -145,6 +149,13 @@ public class DefaultBeans {
             WRITE_QUEUE_TOKENS_UPDATED
     ));
 
+    public final Set<WriteQueueCard> WRITE_QUEUE_CARD_REVOKED_CONSENT = Collections.singleton(new WriteQueueCard(
+            HPAN_1,
+            CardActionEnum.REVOKE,
+            PAR_1,
+            null
+    ));
+
     public final WriteQueue WRITE_QUEUE_FOR_NEW_CARD = new WriteQueue(
             TAX_CODE_1,
             INSTANT,
@@ -156,5 +167,58 @@ public class DefaultBeans {
             INSTANT,
             WRITE_QUEUE_CARD_UPDATED
     );
+
+    public final WriteQueue WRITE_QUEUE_FOR_REVOKED_CONSENT_CARD = new WriteQueue(
+            TAX_CODE_1,
+            INSTANT,
+            WRITE_QUEUE_CARD_REVOKED_CONSENT
+    );
+
+    public ConsentResponse getConsentUpdateGlobal(ConsentEntityEnum consentEntityEnum) {
+        return new ConsentResponse()
+                .setConsent(consentEntityEnum)
+                .setTaxCode(TAX_CODE_1);
+    }
+
+    public ConsentResponse getConsentUpdatePartial() {
+        return new ConsentResponse()
+                .setConsent(Partial)
+                .setTaxCode(TAX_CODE_1)
+                .setDetails(getCardServiceConsentSet());
+    }
+
+    private Set<CardServiceConsent> getCardServiceConsentSet() {
+        Set<CardServiceConsent> cardServiceConsentSet = Sets.newHashSet();
+        cardServiceConsentSet.add(createCardServiceConsent());
+        cardServiceConsentSet.add(createCardServiceConsentOnlyBpd());
+        return cardServiceConsentSet;
+    }
+
+    private CardServiceConsent createCardServiceConsentOnlyBpd() {
+        CardServiceConsent cardServiceConsent = new CardServiceConsent();
+        cardServiceConsent.setHpan(HPAN_1);
+        cardServiceConsent.setServiceConsents(createServiceConsentOnlyBpd());
+        return cardServiceConsent;
+    }
+
+    private CardServiceConsent createCardServiceConsent() {
+        CardServiceConsent cardServiceConsent = new CardServiceConsent();
+        cardServiceConsent.setHpan(HPAN_1);
+        cardServiceConsent.setServiceConsents(createServiceConsent());
+        return cardServiceConsent;
+    }
+
+    private Set<ServiceConsent> createServiceConsentOnlyBpd() {
+        Set<ServiceConsent> serviceConsentSet = Sets.newHashSet();
+        serviceConsentSet.add(new ServiceConsent(ConsentRequestEnum.Allow, ServiceEnum.BPD));
+        return serviceConsentSet;
+    }
+
+    private Set<ServiceConsent> createServiceConsent() {
+        Set<ServiceConsent> serviceConsentSet = Sets.newHashSet();
+        serviceConsentSet.add(new ServiceConsent(ConsentRequestEnum.Allow, ServiceEnum.BPD));
+        serviceConsentSet.add(new ServiceConsent(ConsentRequestEnum.Deny, ServiceEnum.FA));
+        return serviceConsentSet;
+    }
 
 }
