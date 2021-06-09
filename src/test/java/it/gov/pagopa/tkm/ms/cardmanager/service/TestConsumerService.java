@@ -215,12 +215,12 @@ class TestConsumerService {
     }
 
     @Test
-    void givenRevokedConsentCard_writeOnQueue() throws Exception {
+    void givenNotConsentCard_writeOnQueue() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1).thenReturn(null);
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Deny));
         consumerService.consume("MESSAGE");
-        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_REVOKED_CONSENT_CARD);
+        verifyNoInteractions(producerService);
     }
 
 }
