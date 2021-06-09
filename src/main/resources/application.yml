@@ -39,6 +39,9 @@ spring:
             config: ${keyvault.cardMEventhubWriteSaslJaasConfig}
     listener:
       concurrency: ${KAFKA_MAX_NUMBER_OF_THREADS:1}
+    topics:
+      read-queue: ${KAFKA_READ_QUEUE_TOPIC}
+      write-queue: ${KAFKA_WRITE_QUEUE_TOPIC}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -65,6 +68,7 @@ keyvault:
   cardMEventhubWriteSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubWriteSaslJaasConfig:null}
   readQueuePrvPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePrvPgpKey}
   readQueuePubPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePubPgpKey}
+  readQueuePrvPgpKeyPassphrase: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePrvPgpKeyPassphrase:null}
   cardMDbUsername: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbUsername}
   cardMDbPassword: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbPassword}
   apimSubscriptionTkmRtd: ${${AZURE_KEYVAULT_PROFILE:prod}-apimSubscriptionTkmRtd}

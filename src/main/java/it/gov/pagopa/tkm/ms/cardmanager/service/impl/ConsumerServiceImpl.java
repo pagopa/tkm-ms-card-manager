@@ -26,7 +26,6 @@ import java.time.*;
 import java.util.*;
 import java.util.stream.*;
 
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.Constants.*;
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
 import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.*;
 
@@ -59,14 +58,16 @@ public class ConsumerServiceImpl implements ConsumerService {
     private String apimRtdSubscriptionKey;
 
     @Override
-    @KafkaListener(topics = TKM_READ_TOKEN_PAR_PAN_TOPIC)
+    @KafkaListener(topics = "#{'${spring.kafka.topics.read-queue}'}")
     public void consume(String message) throws JsonProcessingException {
+        log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {
             decryptedMessage = pgpUtils.decrypt(message);
         } catch (Exception e) {
             throw new CardException(MESSAGE_DECRYPTION_FAILED);
         }
+        log.trace("Decrypted message from queue: " + decryptedMessage);
         ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
         validateReadQueue(readQueue);
         updateOrCreateCard(readQueue);
@@ -87,12 +88,15 @@ public class ConsumerServiceImpl implements ConsumerService {
         Set<TkmCardToken> oldTokens = new HashSet<>();
         boolean merged = false;
         if (card == null) {
+            log.info("Card not found on database, creating new one");
             card = createCard(taxCode, pan, hpan, par, readQueue.getCircuit());
         } else {
+            log.info("Card found on database, updating");
             oldTokens.addAll(card.getTokens());
             merged = updateCard(card, pan, hpan, par);
         }
         manageTokens(card, readQueue.getTokens());
+        log.info("Merged tokens: " + card.getTokens().stream().map(TkmCardToken::getHtoken).collect(Collectors.joining(", ")));
         cardRepository.save(card);
         writeOnQueueIfComplete(card, oldTokens, merged);
     }
@@ -100,9 +104,11 @@ public class ConsumerServiceImpl implements ConsumerService {
     private TkmCard findCard(String taxCode, String hpan, String par) {
         TkmCard card = null;
         if (hpan != null) {
+            log.info("Searching card for taxCode " + taxCode + " and hpan " + hpan);
             card = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
         }
         if (card == null && par != null) {
+            log.info("Card not found by hpan, searching by par " + par);
             card = cardRepository.findByTaxCodeAndParAndDeletedFalse(taxCode, par);
         }
         return card;
@@ -119,17 +125,19 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private boolean updateCard(TkmCard foundCard, String pan, String hpan, String par) {
         TkmCard preexistingCard = null;
+        String taxCode = foundCard.getTaxCode();
         boolean toMerge = false;
         if (par != null && foundCard.getPar() == null) {
-            preexistingCard = cardRepository.findByTaxCodeAndParAndDeletedFalse(foundCard.getTaxCode(), par);
+            preexistingCard = cardRepository.findByTaxCodeAndParAndDeletedFalse(taxCode, par);
             foundCard.setPar(par);
             toMerge = true;
         } else if (hpan != null && foundCard.getHpan() == null) {
-            preexistingCard = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(foundCard.getTaxCode(), hpan);
+            preexistingCard = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
             foundCard.setPan(pan).setHpan(hpan);
             toMerge = true;
         }
         if (preexistingCard != null) {
+            log.info("Preexisting card found with " + (par != null ? "par " + par : "hpan " + hpan) + ", merging");
             mergeTokens(preexistingCard.getTokens(), foundCard.getTokens());
             cardRepository.delete(preexistingCard);
         }
@@ -146,8 +154,9 @@ public class ConsumerServiceImpl implements ConsumerService {
         oldTokens.stream().filter(t -> !newTokens.contains(t)).forEach(t -> t.setDeleted(true));
     }
 
-    private String callRtdForHash(String pan) {
-        return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(pan), apimRtdSubscriptionKey).getHashPan();
+    private String callRtdForHash(String toHash) {
+        log.trace("Calling RTD for hash of " + toHash);
+        return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(toHash), apimRtdSubscriptionKey).getHashPan();
     }
 
     private Set<TkmCardToken> queueTokensToTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
@@ -160,6 +169,7 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private void writeOnQueueIfComplete(TkmCard card, Set<TkmCardToken> oldTokens, boolean merged) {
         if (StringUtils.isAnyBlank(card.getPan(), card.getPar())) {
+            log.info("Card missing pan or par, not writing on queue");
             return;
         }
         try {
