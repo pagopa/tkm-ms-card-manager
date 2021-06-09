@@ -1,6 +1,7 @@
 package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
 public class ApiParams {
+
     private ApiParams() {
     }
 
@@ -11,10 +12,10 @@ public class ApiParams {
     public static final String OCP_APIM_SUBSCRIPTION_KEY_HEADER = "Ocp-Apim-Subscription-Key";
 
     // Card Manager
-    public static final String MAX_NUMBER_OF_CARDS = "maxNumberOfCards";
-    public static final String MAX_NUMBER_OF_RECORD = "maxNumberOfRecord";
-    public static final String PAGE_NUMBER = "pageNumber";
-    public static final String TOTAL_NUMBER_PAGES = "Total-Number-Pages";
+    public static final String MAX_NUMBER_OF_CARDS_PARAM = "maxNumberOfCards";
+    public static final String MAX_NUMBER_OF_RECORDS_PARAM = "maxNumberOfRecord";
+    public static final String PAGE_NUMBER_PARAM = "pageNumber";
+    public static final String TOTAL_NUMBER_PAGES_HEADER = "Total-Number-Pages";
     public static final String REQUEST_ID_HEADER = "Request-Id";
 
 }

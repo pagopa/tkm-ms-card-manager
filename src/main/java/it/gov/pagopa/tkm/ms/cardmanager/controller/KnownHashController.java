@@ -11,8 +11,8 @@ import javax.validation.Valid;
 import java.util.Set;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiEndpoints.BASE_PATH_KNOWN_HASH;
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams.MAX_NUMBER_OF_RECORD;
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams.PAGE_NUMBER;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams.MAX_NUMBER_OF_RECORDS_PARAM;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams.PAGE_NUMBER_PARAM;
 
 @Validated
 @RequestMapping(BASE_PATH_KNOWN_HASH)
@@ -24,11 +24,25 @@ public interface KnownHashController {
     int MAX_VALUE = 1000000;
 
     @GetMapping("pan")
-    Set<String> getKnownHashpanSet(@Valid @RequestParam(value = MAX_NUMBER_OF_RECORD, defaultValue = MAX_NUMBER_OF_RECORD_DEFAULT) @Range(min = MIN_VALUE, max = MAX_VALUE) Integer maxRecords,
-                                   @RequestParam(value = PAGE_NUMBER, defaultValue = PAGE_NUMBER_DEFAULT) Integer pageNumber, HttpServletResponse response);
+    Set<String> getKnownHashpanSet(
+            @Valid
+            @RequestParam(value = MAX_NUMBER_OF_RECORDS_PARAM, defaultValue = MAX_NUMBER_OF_RECORD_DEFAULT)
+            @Range(min = MIN_VALUE, max = MAX_VALUE)
+            Integer maxRecords,
+            @RequestParam(value = PAGE_NUMBER_PARAM, defaultValue = PAGE_NUMBER_DEFAULT)
+            Integer pageNumber,
+            HttpServletResponse response
+    );
 
     @GetMapping("token")
-    Set<String> getKnownHashTokenSet(@Valid @RequestParam(value = MAX_NUMBER_OF_RECORD, defaultValue = MAX_NUMBER_OF_RECORD_DEFAULT) @Range(min = MIN_VALUE, max = MAX_VALUE) Integer maxRecords,
-                                     @RequestParam(value = PAGE_NUMBER, defaultValue = PAGE_NUMBER_DEFAULT) Integer pageNumber, HttpServletResponse response);
+    Set<String> getKnownHashTokenSet(
+            @Valid
+            @RequestParam(value = MAX_NUMBER_OF_RECORDS_PARAM, defaultValue = MAX_NUMBER_OF_RECORD_DEFAULT)
+            @Range(min = MIN_VALUE, max = MAX_VALUE)
+            Integer maxRecords,
+            @RequestParam(value = PAGE_NUMBER_PARAM, defaultValue = PAGE_NUMBER_DEFAULT)
+            Integer pageNumber,
+            HttpServletResponse response
+    );
 
 }

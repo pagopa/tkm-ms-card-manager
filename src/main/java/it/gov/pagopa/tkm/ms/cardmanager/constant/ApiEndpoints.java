@@ -2,6 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
 
 public class ApiEndpoints {
+    
     private ApiEndpoints() {
     }
 
