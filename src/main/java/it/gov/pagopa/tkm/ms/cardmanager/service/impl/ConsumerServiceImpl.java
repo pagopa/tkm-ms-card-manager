@@ -182,16 +182,15 @@ public class ConsumerServiceImpl implements ConsumerService {
             log.info("Card missing pan or par, not writing on queue");
             return;
         }
-        Boolean cardHasConsent = getConsentForCard(card);
-        if (cardHasConsent == null) {
+        if (!getConsentForCard(card)) {
             return;
         }
         try {
             WriteQueueCard writeQueueCard = new WriteQueueCard(
                     card.getHpan(),
-                    cardHasConsent ? INSERT_UPDATE : REVOKE,
+                    INSERT_UPDATE,
                     card.getPar(),
-                    cardHasConsent ? getTokensDiff(oldTokens, card.getTokens(), merged) : null
+                    getTokensDiff(oldTokens, card.getTokens(), merged)
             );
             WriteQueue writeQueue = new WriteQueue(
                 card.getTaxCode(),
@@ -211,18 +210,19 @@ public class ConsumerServiceImpl implements ConsumerService {
                 : newTokens.stream().filter(t -> t.isDeleted() || !oldTokens.contains(t)).map(WriteQueueToken::new).collect(Collectors.toSet());
     }
 
-    private Boolean getConsentForCard(TkmCard card) {
+    private boolean getConsentForCard(TkmCard card) {
         log.info("Calling Consent Manager for card with taxCode " + card.getTaxCode() + " and hpan " + card.getHpan());
         try {
             ConsentResponse consentResponse = consentClient.getConsent(card.getTaxCode(), card.getHpan(), null);
             return consentResponse.cardHasConsent(card.getHpan());
         } catch (FeignException fe) {
-            log.error(fe.getMessage());
             if (fe.status() == HttpStatus.NOT_FOUND.value()) {
-                log.warn("Consent not found for card");
-                return null;
+                log.info("Consent not found for card");
+                return false;
+            } else {
+                log.error(fe);
+                throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
             }
-            throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
         } catch (Exception e) {
             log.error(e);
             throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
