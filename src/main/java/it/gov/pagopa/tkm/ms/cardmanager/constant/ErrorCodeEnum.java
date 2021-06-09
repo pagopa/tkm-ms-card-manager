@@ -12,7 +12,8 @@ public enum ErrorCodeEnum {
     MESSAGE_DECRYPTION_FAILED(2002, "Message PGP decryption failed"),
     MESSAGE_WRITE_FAILED(2003, "Could not write message on queue"),
     CALL_TO_CONSENT_MANAGER_FAILED(2004, "Could not execute call to Consent Manager"),
-    CALL_TO_RTD_FAILED(2005, "Could not execute call to RTD");
+    CALL_TO_RTD_FAILED(2005, "Could not execute call to RTD"),
+    CONSENT_NOT_FOUND_FOR_CARD(2006, "Could not find consent for given card");
 
     @Getter
     private final Integer statusCode;
