@@ -39,6 +39,9 @@ spring:
             config: ${keyvault.cardMEventhubWriteSaslJaasConfig}
     listener:
       concurrency: ${KAFKA_MAX_NUMBER_OF_THREADS:1}
+    topics:
+      read-queue: ${KAFKA_READ_QUEUE_TOPIC}
+      write-queue: ${KAFKA_WRITE_QUEUE_TOPIC}
 
 server:
   port: ${SERVER_PORT:8080}

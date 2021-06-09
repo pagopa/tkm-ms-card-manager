@@ -7,6 +7,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.*;
+import lombok.extern.log4j.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.*;
 import org.springframework.util.*;
@@ -19,6 +20,7 @@ import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.
 import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.REVOKE;
 
 @Service
+@Log4j2
 public class ConsentUpdateServiceImpl implements ConsentUpdateService {
 
     @Autowired
@@ -30,9 +32,11 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
     @Override
     public void updateConsent(ConsentResponse consent) {
         String taxCode = consent.getTaxCode();
+        log.info("Updating consent for taxCode " + taxCode + " with value " + consent.getConsent());
         List<TkmCard> cardsToUpdate = ConsentEntityEnum.Partial.equals(consent.getConsent()) ?
                 cardRepository.findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(taxCode, consent.getHpans())
                 : cardRepository.findByTaxCodeAndParIsNotNullAndDeletedFalse(taxCode);
+        log.info("Cards to update: " + cardsToUpdate.stream().map(TkmCard::getHpan).collect(Collectors.joining(", ")));
         if (CollectionUtils.isEmpty(cardsToUpdate)) {
             return;
         }
