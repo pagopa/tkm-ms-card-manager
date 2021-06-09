@@ -2,6 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
+import feign.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.request.*;
@@ -17,6 +18,7 @@ import it.gov.pagopa.tkm.service.*;
 import lombok.extern.log4j.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.util.*;
@@ -180,7 +182,10 @@ public class ConsumerServiceImpl implements ConsumerService {
             log.info("Card missing pan or par, not writing on queue");
             return;
         }
-        boolean cardHasConsent = getConsentForCard(card);
+        Boolean cardHasConsent = getConsentForCard(card);
+        if (cardHasConsent == null) {
+            return;
+        }
         try {
             WriteQueueCard writeQueueCard = new WriteQueueCard(
                     card.getHpan(),
@@ -196,7 +201,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             producerService.sendMessage(writeQueue);
         } catch (Exception e) {
             log.error(e);
-            throw new CardException(ErrorCodeEnum.MESSAGE_WRITE_FAILED);
+            throw new CardException(MESSAGE_WRITE_FAILED);
         }
     }
 
@@ -206,14 +211,21 @@ public class ConsumerServiceImpl implements ConsumerService {
                 : newTokens.stream().filter(t -> t.isDeleted() || !oldTokens.contains(t)).map(WriteQueueToken::new).collect(Collectors.toSet());
     }
 
-    private boolean getConsentForCard(TkmCard card) {
+    private Boolean getConsentForCard(TkmCard card) {
+        log.info("Calling Consent Manager for card with taxCode " + card.getTaxCode() + " and hpan " + card.getHpan());
         try {
-            log.info("Calling Consent Manager for card with taxCode " + card.getTaxCode() + " and hpan " + card.getHpan());
             ConsentResponse consentResponse = consentClient.getConsent(card.getTaxCode(), card.getHpan(), null);
             return consentResponse.cardHasConsent(card.getHpan());
+        } catch (FeignException fe) {
+            log.error(fe.getMessage());
+            if (fe.status() == HttpStatus.NOT_FOUND.value()) {
+                log.warn("Consent not found for card");
+                return null;
+            }
+            throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
         } catch (Exception e) {
             log.error(e);
-            throw new CardException(ErrorCodeEnum.CALL_TO_CONSENT_MANAGER_FAILED);
+            throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
         }
     }
 
