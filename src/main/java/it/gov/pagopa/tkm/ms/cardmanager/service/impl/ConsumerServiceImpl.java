@@ -65,6 +65,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         try {
             decryptedMessage = pgpUtils.decrypt(message);
         } catch (Exception e) {
+            log.error(e);
             throw new CardException(MESSAGE_DECRYPTION_FAILED);
         }
         log.trace("Decrypted message from queue: " + decryptedMessage);
@@ -74,7 +75,9 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     private void validateReadQueue(ReadQueue readQueue) {
-        if (!CollectionUtils.isEmpty(validator.validate(readQueue))) {
+        Set<ConstraintViolation<ReadQueue>> violations = validator.validate(readQueue);
+        if (!CollectionUtils.isEmpty(violations)) {
+            log.error("Validation errors: " + violations.stream().map(ConstraintViolation::getMessage).collect(Collectors.joining("; ")));
             throw new CardException(MESSAGE_VALIDATION_FAILED);
         }
     }
@@ -156,7 +159,12 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private String callRtdForHash(String toHash) {
         log.trace("Calling RTD for hash of " + toHash);
-        return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(toHash), apimRtdSubscriptionKey).getHashPan();
+        try {
+            return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(toHash), apimRtdSubscriptionKey).getHashPan();
+        } catch (Exception e) {
+            log.error(e);
+            throw new CardException(CALL_TO_RTD_FAILED);
+        }
     }
 
     private Set<TkmCardToken> queueTokensToTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
@@ -172,8 +180,8 @@ public class ConsumerServiceImpl implements ConsumerService {
             log.info("Card missing pan or par, not writing on queue");
             return;
         }
+        boolean cardHasConsent = getConsentForCard(card);
         try {
-            boolean cardHasConsent = getConsentForCard(card);
             WriteQueueCard writeQueueCard = new WriteQueueCard(
                     card.getHpan(),
                     cardHasConsent ? INSERT_UPDATE : REVOKE,
@@ -187,6 +195,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             );
             producerService.sendMessage(writeQueue);
         } catch (Exception e) {
+            log.error(e);
             throw new CardException(ErrorCodeEnum.MESSAGE_WRITE_FAILED);
         }
     }
@@ -198,8 +207,14 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     private boolean getConsentForCard(TkmCard card) {
-        ConsentResponse consentResponse = consentClient.getConsent(card.getTaxCode(), card.getHpan(), null);
-        return consentResponse.cardHasConsent(card.getHpan());
+        try {
+            log.info("Calling Consent Manager for card with taxCode " + card.getTaxCode() + " and hpan " + card.getHpan());
+            ConsentResponse consentResponse = consentClient.getConsent(card.getTaxCode(), card.getHpan(), null);
+            return consentResponse.cardHasConsent(card.getHpan());
+        } catch (Exception e) {
+            log.error(e);
+            throw new CardException(ErrorCodeEnum.CALL_TO_CONSENT_MANAGER_FAILED);
+        }
     }
 
 }
