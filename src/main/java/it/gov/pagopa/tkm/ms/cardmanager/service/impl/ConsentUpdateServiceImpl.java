@@ -60,6 +60,7 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
             );
             producerService.sendMessage(writeQueue);
         } catch (Exception e) {
+            log.error(e);
             throw new CardException(ErrorCodeEnum.MESSAGE_WRITE_FAILED);
         }
     }
