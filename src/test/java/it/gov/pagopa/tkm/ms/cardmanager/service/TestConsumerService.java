@@ -2,6 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
@@ -9,23 +10,20 @@ import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ConsumerServiceImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
 import it.gov.pagopa.tkm.service.PgpUtils;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.validation.Validation;
 import javax.validation.Validator;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.MESSAGE_DECRYPTION_FAILED;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.MESSAGE_VALIDATION_FAILED;
 import static org.mockito.Mockito.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,8 +39,8 @@ class TestConsumerService {
     @Mock
     private CardRepository cardRepository;
 
-    @Mock
-    private Validator validator;
+    @Spy
+    private Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     @Mock
     private ObjectMapper mapper;
@@ -71,7 +69,23 @@ class TestConsumerService {
         String readQueueAsString = testMapper.writeValueAsString(readQueueToTest);
         when(pgpUtils.decrypt("MESSAGE")).thenReturn(readQueueAsString);
         when(mapper.readValue(readQueueAsString, ReadQueue.class)).thenReturn(readQueueToTest);
-        when(validator.validate(readQueueToTest)).thenReturn(new HashSet<>());
+    }
+
+    @Test
+    void givenNewCard_InvalidMessageFormat() throws Exception {
+        String message = "MESSAGE";
+        when(pgpUtils.decrypt(Mockito.anyString())).thenReturn(message);
+        when(mapper.readValue(Mockito.anyString(), Mockito.eq(ReadQueue.class))).thenReturn(new ReadQueue());
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
+        Assertions.assertEquals(MESSAGE_VALIDATION_FAILED, cardException.getErrorCode());
+    }
+
+    @Test
+    void givenNewCard_InvalidMessageEncryption() throws Exception {
+        String message = "MESSAGE";
+        when(pgpUtils.decrypt(Mockito.anyString())).thenThrow(new Exception());
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
+        Assertions.assertEquals(MESSAGE_DECRYPTION_FAILED, cardException.getErrorCode());
     }
 
     @Test

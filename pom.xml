@@ -59,11 +59,12 @@
 				<configuration>
 					<excludes>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/config/**/*.class</exclude>
+						<exclude>it/gov/pagopa/tkm/ms/cardmanager/client/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/repository/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/model/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/constant/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/exception/**/*.class</exclude>
-						<exclude>it/pagopa/CardManagerApplication</exclude>
+						<exclude>it/gov/pagopa/tkm/ms/cardmanager/CardManagerApplication</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -82,10 +83,10 @@
 					<execution>
 						<id>jacoco-check</id>
 						<phase>test</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
 						<configuration>
-							<goals>
-								<goal>check</goal>
-							</goals>
 							<rules>
 								<rule>
 									<element>BUNDLE</element>
