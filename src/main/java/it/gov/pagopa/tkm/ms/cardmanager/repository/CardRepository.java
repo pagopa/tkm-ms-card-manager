@@ -1,11 +1,12 @@
 package it.gov.pagopa.tkm.ms.cardmanager.repository;
 
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.util.List;
 
 public interface CardRepository extends JpaRepository<TkmCard, Long> {
 
@@ -19,4 +20,5 @@ public interface CardRepository extends JpaRepository<TkmCard, Long> {
 
     List<TkmCard> findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
 
+    Page<TkmCard> findByHpanIsNotNull(Pageable pageRequest);
 }

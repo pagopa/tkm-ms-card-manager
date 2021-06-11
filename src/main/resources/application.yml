@@ -51,9 +51,15 @@ server:
 logging:
   level:
     root: ${LOGGING_LEVEL:INFO}
+    org:
+      hibernate:
+        SQL: INFO
+        type:
+          descriptor:
+            sql:
+              BasicBinder: INFO
   pattern:
     level: "${LOGGING_PATTERN:%p [${spring.application.name}][%X{traceId}]}"
-
 azure:
   keyvault:
     enabled: true

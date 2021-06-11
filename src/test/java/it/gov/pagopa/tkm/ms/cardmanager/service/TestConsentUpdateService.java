@@ -1,19 +1,28 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
-import com.fasterxml.jackson.core.*;
-import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ConsentUpdateServiceImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.*;
-import org.mockito.*;
-import org.mockito.junit.jupiter.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.*;
-import java.util.*;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Collections;
 
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.MESSAGE_WRITE_FAILED;
 import static org.mockito.Mockito.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -55,6 +64,15 @@ class TestConsentUpdateService {
         when(cardRepository.findByTaxCodeAndParIsNotNullAndDeletedFalse(testBeans.TAX_CODE_1)).thenReturn(Collections.singletonList(testBeans.TKM_CARD_PAN_PAR_1));
         consentUpdateService.updateConsent(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
+    }
+
+    @Test
+    void givenGlobalConsentAllowUpdate_sendError() throws JsonProcessingException {
+        when(cardRepository.findByTaxCodeAndParIsNotNullAndDeletedFalse(testBeans.TAX_CODE_1)).thenReturn(Collections.singletonList(testBeans.TKM_CARD_PAN_PAR_1));
+        Mockito.doThrow(new JsonProcessingException("Error"){}).when(producerService).sendMessage(Mockito.any());
+        ConsentResponse consentUpdateGlobal = testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow);
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> consentUpdateService.updateConsent(consentUpdateGlobal));
+        Assertions.assertEquals(MESSAGE_WRITE_FAILED, cardException.getErrorCode());
     }
 
     @Test
