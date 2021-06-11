@@ -64,7 +64,7 @@
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/model/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/constant/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/exception/**/*.class</exclude>
-						<exclude>it/gov/pagopa/tkm/ms/cardmanager/CardManagerApplication</exclude>
+						<exclude>it/gov/pagopa/tkm/ms/cardmanager/CardManagerApplication.class</exclude>
 					</excludes>
 				</configuration>
 				<executions>
