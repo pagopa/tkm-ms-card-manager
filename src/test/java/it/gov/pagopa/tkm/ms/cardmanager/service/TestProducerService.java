@@ -15,7 +15,6 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.text.DateFormat;
@@ -23,6 +22,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.TimeZone;
 
 import static org.mockito.Mockito.verify;
 
@@ -40,7 +40,7 @@ class TestProducerService {
     private ObjectMapper mapper;
 
     @BeforeEach
-     void init(){
+    void init() {
         producerService.init();
     }
 
@@ -48,6 +48,7 @@ class TestProducerService {
     void sendMessage_validMessage() throws JsonProcessingException, ParseException {
         ReflectionTestUtils.setField(producerService, "writeQueueTopic", "value");
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss:SSSS");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Rome"));
         Date date = dateFormat.parse("01/01/2000 00:00:00:00000");
         String message = String.format("{\"taxCode\":\"%s\",\"timestamp\":\"%s\",\"cards\":[]}", Constant.TAX_CODE_1, dateFormat.format(date));
 
