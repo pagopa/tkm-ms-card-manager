@@ -38,7 +38,7 @@ class TestParlessCardsService {
     @BeforeEach
     void init() {
         testBeans = new DefaultBeans();
-        instantMockedStatic.when(Instant::now).thenReturn(Instant.MAX);
+        instantMockedStatic.when(Instant::now).thenReturn(DefaultBeans.INSTANT);
     }
 
     @AfterAll

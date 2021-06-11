@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.cardmanager.client.consent.model.response;
+package it.gov.pagopa.tkm.ms.cardmanager.model.request;
 
 public enum ConsentEntityEnum {
 

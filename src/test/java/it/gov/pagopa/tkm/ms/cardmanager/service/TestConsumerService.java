@@ -1,9 +1,11 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
@@ -48,6 +50,9 @@ class TestConsumerService {
     @Mock
     private ProducerServiceImpl producerService;
 
+    @Mock
+    private ConsentClient consentClient;
+
     private DefaultBeans testBeans;
 
     private final MockedStatic<Instant> instantMockedStatic = mockStatic(Instant.class);
@@ -91,7 +96,8 @@ class TestConsumerService {
     @Test
     void givenNewCard_persistNewCard() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
-        when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(null);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
@@ -100,6 +106,7 @@ class TestConsumerService {
     void givenPanParAndExistingPanPar_doNothing() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
@@ -108,7 +115,7 @@ class TestConsumerService {
     void givenPanParAndExistingPan_updateCard() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
-        when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(null);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
@@ -117,6 +124,7 @@ class TestConsumerService {
     void givenPanParAndExistingPar_updateCard() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAR_1).thenReturn(null);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
@@ -133,6 +141,7 @@ class TestConsumerService {
     void givenPanAndExistingPanPar_doNothing() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_1);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
@@ -149,6 +158,7 @@ class TestConsumerService {
     void givenParAndExistingPanPar_doNothing() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAR_1);
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
@@ -173,6 +183,7 @@ class TestConsumerService {
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1))
                 .thenReturn(testBeans.TKM_CARD_PAN_1);
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(cardRepository).delete(testBeans.TKM_CARD_PAR_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1.setTokens(updatedTokens));
@@ -187,6 +198,7 @@ class TestConsumerService {
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1))
                 .thenReturn(null).thenReturn(testBeans.TKM_CARD_PAN_1);
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(cardRepository).delete(testBeans.TKM_CARD_PAN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1.setTokens(updatedTokens));
@@ -202,6 +214,7 @@ class TestConsumerService {
     @Test
     void givenNewCompleteCard_writeOnQueue() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
     }
@@ -210,8 +223,18 @@ class TestConsumerService {
     void givenUpdatedCard_writeOnQueue() throws Exception {
         startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_2);
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1).thenReturn(null);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         consumerService.consume("MESSAGE");
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_UPDATED_CARD);
+    }
+
+    @Test
+    void givenNotConsentCard_writeOnQueue() throws Exception {
+        startupAssumptions(testBeans.READ_QUEUE_PAN_PAR_1);
+        when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1).thenReturn(null);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Deny));
+        consumerService.consume("MESSAGE");
+        verifyNoInteractions(producerService);
     }
 
 }

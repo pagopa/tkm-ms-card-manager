@@ -1,10 +1,10 @@
 package it.gov.pagopa.tkm.ms.cardmanager.config;
 
-import com.fasterxml.jackson.databind.exc.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import lombok.extern.log4j.*;
 import org.springframework.http.*;
+import org.springframework.http.converter.*;
 import org.springframework.web.bind.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.*;
@@ -21,7 +21,7 @@ public class ErrorHandler {
         return ResponseEntity.badRequest().body(ce.getErrorCode());
     }
 
-    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class, ConstraintViolationException.class})
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class, MethodArgumentNotValidException.class, ValidationException.class, HttpMessageNotReadableException.class, , ConstraintViolationException.class})
     public ResponseEntity<ErrorCodeEnum> handleValidationException(Exception ve) {
         log.error(ve.getMessage());
         return ResponseEntity.badRequest().body(ErrorCodeEnum.REQUEST_VALIDATION_FAILED);

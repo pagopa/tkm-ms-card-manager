@@ -13,7 +13,7 @@ import javax.validation.constraints.*;
 @NoArgsConstructor
 public class ReadQueueToken {
 
-    @NotEmpty
+    @NotBlank
     private String token;
 
     @JsonDeserialize(using = ToLowerCaseDeserializer.class)
