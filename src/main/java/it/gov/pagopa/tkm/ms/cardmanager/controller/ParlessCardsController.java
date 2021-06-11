@@ -15,7 +15,7 @@ public interface ParlessCardsController {
     @Transactional
     @GetMapping
     List<ParlessCardResponse> getParlessCards(
-            @RequestParam(MAX_NUMBER_OF_CARDS) Integer maxRecords
+            @RequestParam(MAX_NUMBER_OF_CARDS_PARAM) Integer maxRecords
     );
 
 }

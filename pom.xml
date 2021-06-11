@@ -9,7 +9,7 @@
 	<parent>
 		<groupId>it.gov.pagopa.tkm.ms</groupId>
 		<artifactId>starter-parent</artifactId>
-		<version>2.1.5</version>
+		<version>2.1.6</version>
 	</parent>
 
 	<dependencies>
@@ -47,7 +47,7 @@
 			<artifactId>micrometer-registry-prometheus</artifactId>
 			<version>1.7.0</version>
 		</dependency>
-    </dependencies>
+	</dependencies>
 
 	<build>
 		<finalName>tkm-ms-${project.artifactId}-${project.version}</finalName>
@@ -59,11 +59,12 @@
 				<configuration>
 					<excludes>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/config/**/*.class</exclude>
+						<exclude>it/gov/pagopa/tkm/ms/cardmanager/client/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/repository/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/model/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/constant/**/*.class</exclude>
 						<exclude>it/gov/pagopa/tkm/ms/cardmanager/exception/**/*.class</exclude>
-						<exclude>it/pagopa/CardManagerApplication</exclude>
+						<exclude>it/gov/pagopa/tkm/ms/cardmanager/CardManagerApplication.class</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -82,10 +83,10 @@
 					<execution>
 						<id>jacoco-check</id>
 						<phase>test</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
 						<configuration>
-							<goals>
-								<goal>check</goal>
-							</goals>
 							<rules>
 								<rule>
 									<element>BUNDLE</element>

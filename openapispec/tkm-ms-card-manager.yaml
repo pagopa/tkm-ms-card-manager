@@ -9,6 +9,8 @@ servers:
   - url: http://tkm-uat/tkm-ms-card-manager
   - url: http://tkm-prod/tkm-ms-card-manager
 tags:
+  - name: authenticated
+    description: exposed via APIM
   - name: restricted
     description: only for internal use
 paths:
@@ -41,6 +43,140 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ParlessCardListResponse'
+        "400":
+          description: Bad Request
+          headers:
+            Request-Id:
+              schema:
+                type: string
+                minLength: 16
+                maxLength: 16
+                example: 937aee55bbabd29b
+              required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardError'
+        '500':
+          description: Internal Server Error
+          headers:
+            Request-Id:
+              schema:
+                type: string
+                minLength: 16
+                maxLength: 16
+                example: 937aee55bbabd29b
+              required: true
+  /known-hash/pan:
+    get:
+      tags:
+        - restricted
+      summary: Returns a set of known hpans
+      operationId: getHpansKnown
+      parameters:
+        - name: maxNumberOfRecord
+          in: query
+          description: The number of records to be returned
+          required: false
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 1000000
+            default: 100000
+        - name: pageNumber
+          in: query
+          description: The page number of pageable response
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Success
+          headers:
+            Request-Id:
+              schema:
+                type: string
+                minLength: 16
+                maxLength: 16
+                example: 937aee55bbabd29b
+            Total-Number-Pages:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "400":
+          description: Bad Request
+          headers:
+            Request-Id:
+              schema:
+                type: string
+                minLength: 16
+                maxLength: 16
+                example: 937aee55bbabd29b
+              required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardError'
+        '500':
+          description: Internal Server Error
+          headers:
+            Request-Id:
+              schema:
+                type: string
+                minLength: 16
+                maxLength: 16
+                example: 937aee55bbabd29b
+              required: true
+  /known-hash/token:
+    get:
+      tags:
+        - restricted
+      summary: Returns a set of known htokens
+      operationId: gethtokensKnown
+      parameters:
+        - name: maxNumberOfRecord
+          in: query
+          description: The number of records to be returned
+          required: false
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 1000000
+            default: 100000
+        - name: pageNumber
+          in: query
+          description: The page number of pageable response
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Success
+          headers:
+            Request-Id:
+              schema:
+                type: string
+                minLength: 16
+                maxLength: 16
+                example: 937aee55bbabd29b
+            Total-Number-Pages:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
         "400":
           description: Bad Request
           headers:

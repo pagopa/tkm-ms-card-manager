@@ -63,7 +63,7 @@ class TestParlessCardsController {
         when(parlessCardsService.getParlessCards(2)).thenReturn(testBeans.PARLESS_CARD_LIST);
         mockMvc.perform(
                 get(ApiEndpoints.BASE_PATH_PARLESS_CARDS)
-                        .queryParam(ApiParams.MAX_NUMBER_OF_CARDS, "2"))
+                        .queryParam(ApiParams.MAX_NUMBER_OF_CARDS_PARAM, "2"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(testBeans.PARLESS_CARD_LIST)));
     }
@@ -75,7 +75,7 @@ class TestParlessCardsController {
                 .andExpect(status().isBadRequest());
         mockMvc.perform(
                 get(ApiEndpoints.BASE_PATH_PARLESS_CARDS)
-                        .queryParam(ApiParams.MAX_NUMBER_OF_CARDS, "a"))
+                        .queryParam(ApiParams.MAX_NUMBER_OF_CARDS_PARAM, "a"))
                 .andExpect(status().isBadRequest());
     }
 
