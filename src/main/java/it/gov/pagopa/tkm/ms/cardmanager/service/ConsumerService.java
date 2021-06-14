@@ -7,4 +7,6 @@ public interface ConsumerService {
     @Transactional
     void consume(String message) throws Exception;
 
+    void consumeDelete(String message);
+
 }
