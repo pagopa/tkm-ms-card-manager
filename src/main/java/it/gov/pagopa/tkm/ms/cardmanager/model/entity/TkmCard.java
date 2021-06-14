@@ -1,16 +1,16 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 
-import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
-import lombok.*;
-import lombok.experimental.*;
-import org.hibernate.annotations.*;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "CARD")
@@ -44,10 +44,13 @@ public class TkmCard {
     @Column(name = "LAST_READ_DATE")
     private Instant lastReadDate;
 
+    @Column(name = "LAST_UPDATE_DATE")
+    private Instant lastUpdateDate;
+
     @Column(name = "DELETED")
     private boolean deleted;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "card", cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @Where(clause = "deleted = false")
     private Set<TkmCardToken> tokens = new HashSet<>();
 

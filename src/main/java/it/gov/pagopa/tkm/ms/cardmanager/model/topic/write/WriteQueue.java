@@ -9,6 +9,7 @@ import java.util.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class WriteQueue {
 
     private String taxCode;

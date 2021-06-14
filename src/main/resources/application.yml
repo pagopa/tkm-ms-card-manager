@@ -13,8 +13,6 @@ spring:
   kafka:
     consumer:
       bootstrap-servers: ${KAFKA_SERVERS}
-      group-id: ${KAFKA_GROUP_ID}
-      client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: true
@@ -23,8 +21,6 @@ spring:
           protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
         sasl:
           mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
-          jaas:
-            config: ${keyvault.cardMEventhubReadSaslJaasConfig}
     producer:
       bootstrap-servers: ${KAFKA_SERVERS}
       client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
@@ -37,11 +33,18 @@ spring:
           mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
           jaas:
             config: ${keyvault.cardMEventhubWriteSaslJaasConfig}
-    listener:
-      concurrency: ${KAFKA_MAX_NUMBER_OF_THREADS:1}
     topics:
-      read-queue: ${KAFKA_READ_QUEUE_TOPIC}
+      read-queue:
+        name: ${KAFKA_READ_QUEUE_TOPIC}
+        group-id: ${KAFKA_READ_QUEUE_GROUP}
+        client-id: ${KAFKA_READ_QUEUE_GROUP}${HOSTNAME:0}
+        concurrency: ${KAFKA_MAX_NUMBER_OF_THREADS:1}
       write-queue: ${KAFKA_WRITE_QUEUE_TOPIC}
+      delete-queue:
+        name: ${KAFKA_DELETE_QUEUE_TOPIC}
+        group-id: ${KAFKA_DELETE_QUEUE_GROUP}
+        client-id: ${KAFKA_DELETE_QUEUE_GROUP}${HOSTNAME:0}
+        concurrency: ${KAFKA_DELETE_MAX_NUMBER_OF_THREADS:1}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -51,9 +54,15 @@ server:
 logging:
   level:
     root: ${LOGGING_LEVEL:INFO}
+    org:
+      hibernate:
+        SQL: INFO
+        type:
+          descriptor:
+            sql:
+              BasicBinder: INFO
   pattern:
     level: "${LOGGING_PATTERN:%p [${spring.application.name}][%X{traceId}]}"
-
 azure:
   keyvault:
     enabled: true
@@ -66,6 +75,7 @@ keyvault:
   eventhubLogSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-eventhubLogSaslJaasConfig:null}
   cardMEventhubReadSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubReadSaslJaasConfig:null}
   cardMEventhubWriteSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubWriteSaslJaasConfig:null}
+  cardMEventhubDeleteSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubDeleteSaslJaasConfig:null}
   readQueuePrvPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePrvPgpKey}
   readQueuePubPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePubPgpKey}
   readQueuePrvPgpKeyPassphrase: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePrvPgpKeyPassphrase:null}
