@@ -2,6 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.gov.pagopa.tkm.constant.TkmDatetimeConstant;
 import it.gov.pagopa.tkm.jsondeserializer.ToUpperCaseDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,6 +33,6 @@ public class DeleteQueueMessage {
     private String hpan;
 
     @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss:SSSS", timezone = "Europe/Rome")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TkmDatetimeConstant.DATE_TIME_PATTERN, timezone = TkmDatetimeConstant.DATE_TIME_TIMEZONE)
     private Instant timestamp;
 }
