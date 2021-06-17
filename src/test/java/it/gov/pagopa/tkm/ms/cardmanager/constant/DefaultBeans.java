@@ -1,16 +1,18 @@
 package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
-import com.google.common.collect.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
+import com.google.common.collect.Sets;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.response.ParlessCardResponse;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 
-import java.time.*;
+import java.time.Instant;
 import java.util.*;
 
-import static it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum.*;
+import static it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum.Partial;
 
 public class DefaultBeans {
 
@@ -18,7 +20,6 @@ public class DefaultBeans {
     }
 
     public final static Instant INSTANT = Instant.MAX;
-
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
     private final String TAX_CODE_2 = "TRRCLE04M24L219D";
     private final String PAN_1 = "111111111111";

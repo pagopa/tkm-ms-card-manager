@@ -1,6 +1,5 @@
 package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -15,5 +14,9 @@ public class CardTokenRepositoryMock {
         TkmCardToken tkmCardToken2 = new TkmCardToken().setHtoken(Constant.HASH_2);
         List<TkmCardToken> tkmCards = Arrays.asList(tkmCardToken, tkmCardToken2);
         return new PageImpl<>(tkmCards);
+    }
+
+    public static TkmCardToken getCardtoken() {
+        return new TkmCardToken().setHtoken(Constant.HASH_1);
     }
 }
