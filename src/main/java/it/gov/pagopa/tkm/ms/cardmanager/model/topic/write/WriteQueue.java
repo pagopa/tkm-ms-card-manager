@@ -1,10 +1,15 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.topic.write;
 
-import com.fasterxml.jackson.annotation.*;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import it.gov.pagopa.tkm.constant.TkmDatetimeConstant;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -14,7 +19,7 @@ public class WriteQueue {
 
     private String taxCode;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss:SSSS", timezone = "Europe/Rome")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss:SSSS", timezone = TkmDatetimeConstant.DATE_TIME_TIMEZONE)
     private Instant timestamp;
 
     private Set<WriteQueueCard> cards = new HashSet<>();
