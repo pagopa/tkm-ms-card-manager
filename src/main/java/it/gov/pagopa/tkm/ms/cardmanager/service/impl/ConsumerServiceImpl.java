@@ -2,7 +2,6 @@ package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import feign.FeignException;
 import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.ConsentClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.RtdHashingClient;
@@ -31,7 +30,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.time.Instant;
@@ -75,12 +73,6 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Autowired
     private DeleteCardService deleteCardService;
 
-    @PostConstruct
-    public void initConsumerServiceImpl() {
-        JavaTimeModule module = new JavaTimeModule();
-        mapper.registerModule(module);
-    }
-
     @Override
     @KafkaListener(topics = "#{'${spring.kafka.topics.read-queue.name}'}",
             groupId = "${spring.kafka.topics.read-queue.group-id}",
@@ -115,9 +107,8 @@ public class ConsumerServiceImpl implements ConsumerService {
             log.debug("Delete message  parsed " + deleteQueueMessage);
             validateMessage(deleteQueueMessage);
             deleteCardService.deleteCard(deleteQueueMessage);
-        } catch (Exception e) {
-            e.printStackTrace();
-            //todo fixit
+        } catch (CardException | JsonProcessingException e) {
+            log.error("Invalid message");
         }
     }
 
