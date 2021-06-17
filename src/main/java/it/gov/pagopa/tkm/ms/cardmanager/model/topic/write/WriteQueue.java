@@ -19,7 +19,7 @@ public class WriteQueue {
 
     private String taxCode;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TkmDatetimeConstant.DATE_TIME_PATTERN, timezone = TkmDatetimeConstant.DATE_TIME_TIMEZONE)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss:SSSS", timezone = TkmDatetimeConstant.DATE_TIME_TIMEZONE)
     private Instant timestamp;
 
     private Set<WriteQueueCard> cards = new HashSet<>();
