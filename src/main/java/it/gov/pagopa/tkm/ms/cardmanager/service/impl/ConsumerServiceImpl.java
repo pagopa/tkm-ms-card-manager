@@ -1,35 +1,46 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.databind.*;
-import feign.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
-import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
-import it.gov.pagopa.tkm.ms.cardmanager.service.*;
-import it.gov.pagopa.tkm.service.*;
-import lombok.extern.log4j.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
+import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.ConsentClient;
+import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.RtdHashingClient;
+import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.request.WalletsHashingEvaluationInput;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.DeleteQueueMessage;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueToken;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.service.ConsumerService;
+import it.gov.pagopa.tkm.ms.cardmanager.service.DeleteCardService;
+import it.gov.pagopa.tkm.service.PgpUtils;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import org.springframework.util.*;
+import org.springframework.util.CollectionUtils;
 
-import javax.validation.*;
-import java.time.*;
-import java.util.*;
-import java.util.stream.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
-import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.*;
+import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.INSERT_UPDATE;
 
 @Service
 @Log4j2
@@ -59,8 +70,15 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Value("${keyvault.apimSubscriptionTkmRtd}")
     private String apimRtdSubscriptionKey;
 
+    @Autowired
+    private DeleteCardService deleteCardService;
+
     @Override
-    @KafkaListener(topics = "#{'${spring.kafka.topics.read-queue}'}")
+    @KafkaListener(topics = "#{'${spring.kafka.topics.read-queue.name}'}",
+            groupId = "${spring.kafka.topics.read-queue.group-id}",
+            clientIdPrefix = "${spring.kafka.topics.read-queue.client-id}",
+            properties = {"security.sasl.jaas.config:${keyvault.cardMEventhubReadSaslJaasConfig}"},
+            concurrency = "${spring.kafka.topics.read-queue.concurrency}")
     public void consume(String message) throws JsonProcessingException {
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
@@ -72,12 +90,30 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
         log.trace("Decrypted message from queue: " + decryptedMessage);
         ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
-        validateReadQueue(readQueue);
+        validateMessage(readQueue);
         updateOrCreateCard(readQueue);
     }
 
-    private void validateReadQueue(ReadQueue readQueue) {
-        Set<ConstraintViolation<ReadQueue>> violations = validator.validate(readQueue);
+    @Override
+    @KafkaListener(topics = "${spring.kafka.topics.delete-queue.name}",
+            groupId = "${spring.kafka.topics.delete-queue.group-id}",
+            clientIdPrefix = "${spring.kafka.topics.delete-queue.client-id}",
+            properties = {"security.sasl.jaas.config:${keyvault.cardMEventhubDeleteSaslJaasConfig}"},
+            concurrency = "${spring.kafka.topics.delete-queue.concurrency}")
+    public void consumeDelete(String message) {
+        log.debug("Delete message not parsed " + message);
+        try {
+            DeleteQueueMessage deleteQueueMessage = mapper.readValue(message, DeleteQueueMessage.class);
+            log.debug("Delete message  parsed " + deleteQueueMessage);
+            validateMessage(deleteQueueMessage);
+            deleteCardService.deleteCard(deleteQueueMessage);
+        } catch (CardException | JsonProcessingException e) {
+            log.error("Invalid message");
+        }
+    }
+
+    private <T> void validateMessage(T readQueue) {
+        Set<ConstraintViolation<T>> violations = validator.validate(readQueue);
         if (!CollectionUtils.isEmpty(violations)) {
             log.error("Validation errors: " + violations.stream().map(ConstraintViolation::getMessage).collect(Collectors.joining("; ")));
             throw new CardException(MESSAGE_VALIDATION_FAILED);
@@ -171,9 +207,9 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private Set<TkmCardToken> queueTokensToTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
         return readQueueTokens.stream().map(t -> new TkmCardToken()
-                        .setCard(card)
-                        .setToken(t.getToken())
-                        .setHtoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callRtdForHash(t.getToken()))
+                .setCard(card)
+                .setToken(t.getToken())
+                .setHtoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callRtdForHash(t.getToken()))
         ).collect(Collectors.toSet());
     }
 
@@ -193,9 +229,9 @@ public class ConsumerServiceImpl implements ConsumerService {
                     getTokensDiff(oldTokens, card.getTokens(), merged)
             );
             WriteQueue writeQueue = new WriteQueue(
-                card.getTaxCode(),
-                Instant.now(),
-                Collections.singleton(writeQueueCard)
+                    card.getTaxCode(),
+                    Instant.now(),
+                    Collections.singleton(writeQueueCard)
             );
             producerService.sendMessage(writeQueue);
         } catch (Exception e) {
