@@ -28,6 +28,8 @@ spec:
                 name: kafka-log-configuration
             - configMapRef:
                 name: tkmmscardmanager
+            - configMapRef:
+                name: jvm
           livenessProbe:
             httpGet:
               path: /actuator/health
