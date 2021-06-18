@@ -121,41 +121,49 @@ class TestCardService {
 
     @Test
     void givenNewTokensAndExistingCard_replaceTokensIfNew() {
-        
+        testBeans.TKM_CARD_TOKEN_2.setDeleted(true);
         Set<TkmCardToken> updatedTokens = new HashSet<>(Arrays.asList(
-                testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2.setDeleted(true), testBeans.TKM_CARD_TOKEN_3
+                testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2, testBeans.TKM_CARD_TOKEN_3
         ));
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1).thenReturn(null);
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2));
-        verify(cardRepository).save(testBeans.TKM_CARD_PAR_1.setTokens(updatedTokens));
+        testBeans.READ_QUEUE_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_1);
+        testBeans.TKM_CARD_PAR_1.setTokens(updatedTokens);
+        verify(cardRepository).save(testBeans.TKM_CARD_PAR_1);
     }
 
     @Test
     void givenPanParAndExistingPanAndExistingPar_mergeCards() {
+        testBeans.TKM_CARD_TOKEN_2.setDeleted(true);
         Set<TkmCardToken> updatedTokens = new HashSet<>(Arrays.asList(
-                testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2.setDeleted(true), testBeans.TKM_CARD_TOKEN_3
+                testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2, testBeans.TKM_CARD_TOKEN_3
         ));
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1))
                 .thenReturn(testBeans.TKM_CARD_PAN_1);
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2));
+        testBeans.READ_QUEUE_PAN_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verify(cardRepository).delete(testBeans.TKM_CARD_PAR_1);
-        verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1.setTokens(updatedTokens));
+        testBeans.TKM_CARD_PAN_PAR_1.setTokens(updatedTokens);
+        verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
 
     @Test
     void givenPanParAndExistingParAndExistingPan_mergeCards() {
+        testBeans.TKM_CARD_TOKEN_2.setDeleted(true);
         Set<TkmCardToken> updatedTokens = new HashSet<>(Arrays.asList(
-                testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2.setDeleted(true), testBeans.TKM_CARD_TOKEN_3
+                testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2, testBeans.TKM_CARD_TOKEN_3
         ));
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1))
                 .thenReturn(null).thenReturn(testBeans.TKM_CARD_PAN_1);
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2));
+        testBeans.READ_QUEUE_PAN_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verify(cardRepository).delete(testBeans.TKM_CARD_PAN_1);
-        verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1.setTokens(updatedTokens));
+        testBeans.TKM_CARD_PAN_PAR_1.setTokens(updatedTokens);
+        verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
 
     @Test

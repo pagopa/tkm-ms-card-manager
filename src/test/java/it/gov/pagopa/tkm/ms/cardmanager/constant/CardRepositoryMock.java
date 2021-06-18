@@ -10,9 +10,10 @@ import java.util.List;
 public class CardRepositoryMock {
 
     public static Page<TkmCard> getOnePageTkmCard() {
-        TkmCard tkmCard = new TkmCard().setHpan(Constant.HASH_1);
-        TkmCard tkmCard2 = new TkmCard().setHpan(Constant.HASH_2);
+        TkmCard tkmCard = TkmCard.builder().hpan(Constant.HASH_1).build();
+        TkmCard tkmCard2 = TkmCard.builder().hpan(Constant.HASH_2).build();
         List<TkmCard> tkmCards = Arrays.asList(tkmCard, tkmCard2);
         return new PageImpl<>(tkmCards);
     }
+
 }

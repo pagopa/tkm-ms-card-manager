@@ -39,42 +39,49 @@ public class DefaultBeans {
     private final ParlessCardResponse PARLESS_CARD_2 = new ParlessCardResponse(TAX_CODE_2, PAN_2, TOKEN_SET, CircuitEnum.VISA);
     public final List<ParlessCardResponse> PARLESS_CARD_LIST = Arrays.asList(PARLESS_CARD_1, PARLESS_CARD_2);
 
-    public final TkmCardToken TKM_CARD_TOKEN_1 = new TkmCardToken()
-            .setToken(TOKEN_1)
-            .setHtoken(HTOKEN_1);
-    public final TkmCardToken TKM_CARD_TOKEN_2 = new TkmCardToken()
-            .setToken(TOKEN_2)
-            .setHtoken(HTOKEN_2);
-    public final TkmCardToken TKM_CARD_TOKEN_3 = new TkmCardToken()
-            .setToken(TOKEN_3)
-            .setHtoken(HTOKEN_3);
+    public final TkmCardToken TKM_CARD_TOKEN_1 = TkmCardToken.builder()
+            .token(TOKEN_1)
+            .htoken(HTOKEN_1)
+            .build();
+    public final TkmCardToken TKM_CARD_TOKEN_2 = TkmCardToken.builder()
+            .token(TOKEN_2)
+            .htoken(HTOKEN_2)
+            .build();
+    public final TkmCardToken TKM_CARD_TOKEN_3 = TkmCardToken.builder()
+            .token(TOKEN_3)
+            .htoken(HTOKEN_3)
+            .build();
     private final Set<TkmCardToken> TKM_CARD_TOKENS_1 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2));
 
-    public final TkmCard TKM_CARD_PAN_PAR_1 = new TkmCard()
-            .setCircuit(CircuitEnum.AMEX)
-            .setHpan(HPAN_1)
-            .setPan(PAN_1)
-            .setPar(PAR_1)
-            .setTaxCode(TAX_CODE_1)
-            .setTokens(TKM_CARD_TOKENS_1);
-    public final TkmCard TKM_CARD_PAN_1 = new TkmCard()
-            .setCircuit(CircuitEnum.AMEX)
-            .setHpan(HPAN_1)
-            .setPan(PAN_1)
-            .setTaxCode(TAX_CODE_1)
-            .setTokens(TKM_CARD_TOKENS_1);
-    public final TkmCard TKM_CARD_PAR_1 = new TkmCard()
-            .setCircuit(CircuitEnum.AMEX)
-            .setPar(PAR_1)
-            .setTaxCode(TAX_CODE_1)
-            .setTokens(TKM_CARD_TOKENS_1);
-    private final TkmCard TKM_CARD_PAN_PAR_2 = new TkmCard()
-            .setCircuit(CircuitEnum.VISA)
-            .setHpan(HPAN_1)
-            .setPan(PAN_2)
-            .setPar(PAR_2)
-            .setTaxCode(TAX_CODE_2)
-            .setTokens(TKM_CARD_TOKENS_1);
+    public final TkmCard TKM_CARD_PAN_PAR_1 = TkmCard.builder()
+            .circuit(CircuitEnum.AMEX)
+            .hpan(HPAN_1)
+            .pan(PAN_1)
+            .par(PAR_1)
+            .taxCode(TAX_CODE_1)
+            .tokens(TKM_CARD_TOKENS_1)
+            .build();
+    public final TkmCard TKM_CARD_PAN_1 = TkmCard.builder()
+            .circuit(CircuitEnum.AMEX)
+            .hpan(HPAN_1)
+            .pan(PAN_1)
+            .taxCode(TAX_CODE_1)
+            .tokens(TKM_CARD_TOKENS_1)
+            .build();
+    public final TkmCard TKM_CARD_PAR_1 = TkmCard.builder()
+            .circuit(CircuitEnum.AMEX)
+            .par(PAR_1)
+            .taxCode(TAX_CODE_1)
+            .tokens(TKM_CARD_TOKENS_1)
+            .build();
+    private final TkmCard TKM_CARD_PAN_PAR_2 = TkmCard.builder()
+            .circuit(CircuitEnum.VISA)
+            .hpan(HPAN_1)
+            .pan(PAN_2)
+            .par(PAR_2)
+            .taxCode(TAX_CODE_2)
+            .tokens(TKM_CARD_TOKENS_1)
+            .build();
 
     public final List<TkmCard> TKM_CARD_LIST = Arrays.asList(TKM_CARD_PAN_PAR_1, TKM_CARD_PAN_PAR_2);
 
@@ -175,16 +182,18 @@ public class DefaultBeans {
     );
 
     public ConsentResponse getConsentUpdateGlobal(ConsentEntityEnum consentEntityEnum) {
-        return new ConsentResponse()
-                .setConsent(consentEntityEnum)
-                .setTaxCode(TAX_CODE_1);
+        return ConsentResponse.builder()
+                .consent(consentEntityEnum)
+                .taxCode(TAX_CODE_1)
+                .build();
     }
 
     public ConsentResponse getConsentUpdatePartial() {
-        return new ConsentResponse()
-                .setConsent(Partial)
-                .setTaxCode(TAX_CODE_1)
-                .setDetails(getCardServiceConsentSet());
+        return ConsentResponse.builder()
+                .consent(Partial)
+                .taxCode(TAX_CODE_1)
+                .details(getCardServiceConsentSet())
+                .build();
     }
 
     private Set<CardServiceConsent> getCardServiceConsentSet() {

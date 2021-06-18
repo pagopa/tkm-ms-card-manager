@@ -67,9 +67,11 @@ class TestConsentUpdateController {
 
     @Test
     void givenInvalidConsentUpdateRequest_expectException() throws Exception {
+        ConsentResponse consentResponse = testBeans.getConsentUpdatePartial();
+        consentResponse.setConsent(null);
         mockMvc.perform(
                 put(ApiEndpoints.BASE_PATH_CONSENT_UPDATE)
-                        .content(mapper.writeValueAsString(testBeans.getConsentUpdatePartial().setConsent(null)))
+                        .content(mapper.writeValueAsString(consentResponse))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }

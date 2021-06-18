@@ -1,7 +1,7 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.request;
 
 import lombok.*;
-import lombok.experimental.*;
+import lombok.Builder;
 
 import javax.validation.constraints.*;
 import java.util.*;
@@ -10,7 +10,7 @@ import java.util.stream.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Accessors(chain = true)
+@Builder
 public class ConsentResponse {
 
     @NotNull

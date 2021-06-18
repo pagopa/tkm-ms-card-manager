@@ -88,12 +88,13 @@ public class CardServiceImpl implements CardService {
     }
 
     private TkmCard createCard(String taxCode, String pan, String hpan, String par, CircuitEnum circuit) {
-        return new TkmCard()
-                .setTaxCode(taxCode)
-                .setCircuit(circuit)
-                .setPan(pan)
-                .setHpan(hpan)
-                .setPar(par);
+        return TkmCard.builder()
+                .taxCode(taxCode)
+                .circuit(circuit)
+                .pan(pan)
+                .hpan(hpan)
+                .par(par)
+                .build();
     }
 
     private boolean updateCard(TkmCard foundCard, String pan, String hpan, String par) {
@@ -106,7 +107,8 @@ public class CardServiceImpl implements CardService {
             toMerge = true;
         } else if (hpan != null && foundCard.getHpan() == null) {
             preexistingCard = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
-            foundCard.setPan(pan).setHpan(hpan);
+            foundCard.setPan(pan);
+            foundCard.setHpan(hpan);
             toMerge = true;
         }
         if (preexistingCard != null) {
@@ -138,10 +140,11 @@ public class CardServiceImpl implements CardService {
     }
 
     private Set<TkmCardToken> queueTokensToTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
-        return readQueueTokens.stream().map(t -> new TkmCardToken()
-                .setCard(card)
-                .setToken(t.getToken())
-                .setHtoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callRtdForHash(t.getToken()))
+        return readQueueTokens.stream().map(t -> TkmCardToken.builder()
+                .card(card)
+                .token(t.getToken())
+                .htoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callRtdForHash(t.getToken()))
+                .build()
         ).collect(Collectors.toSet());
     }
 
