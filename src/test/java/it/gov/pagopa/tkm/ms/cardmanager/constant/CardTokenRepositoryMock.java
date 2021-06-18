@@ -10,13 +10,13 @@ import java.util.List;
 public class CardTokenRepositoryMock {
 
     public static Page<TkmCardToken> getOnePageTkmCardToken() {
-        TkmCardToken tkmCardToken = new TkmCardToken().setHtoken(Constant.HASH_1);
-        TkmCardToken tkmCardToken2 = new TkmCardToken().setHtoken(Constant.HASH_2);
+        TkmCardToken tkmCardToken = TkmCardToken.builder().htoken(Constant.HASH_1).build();
+        TkmCardToken tkmCardToken2 = TkmCardToken.builder().htoken(Constant.HASH_2).build();
         List<TkmCardToken> tkmCards = Arrays.asList(tkmCardToken, tkmCardToken2);
         return new PageImpl<>(tkmCards);
     }
 
     public static TkmCardToken getCardtoken() {
-        return new TkmCardToken().setHtoken(Constant.HASH_1);
+        return TkmCardToken.builder().htoken(Constant.HASH_1).build();
     }
 }

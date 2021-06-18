@@ -1,11 +1,11 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.topic.write;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import it.gov.pagopa.tkm.constant.TkmDatetimeConstant;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.*;
+import it.gov.pagopa.tkm.constant.*;
+import lombok.*;
+
+import java.time.*;
+import java.util.*;
 
 import java.time.Instant;
 import java.util.HashSet;

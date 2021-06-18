@@ -34,7 +34,7 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
         String taxCode = consent.getTaxCode();
         log.info("Updating consent for taxCode " + taxCode + " with value " + consent.getConsent());
         List<TkmCard> cardsToUpdate = ConsentEntityEnum.Partial.equals(consent.getConsent()) ?
-                cardRepository.findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(taxCode, consent.getHpans())
+                cardRepository.findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(taxCode, consent.retrieveHpans())
                 : cardRepository.findByTaxCodeAndParIsNotNullAndDeletedFalse(taxCode);
         log.info("Cards to update: " + cardsToUpdate.stream().map(TkmCard::getHpan).collect(Collectors.joining(", ")));
         if (CollectionUtils.isEmpty(cardsToUpdate)) {

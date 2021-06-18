@@ -1,14 +1,16 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 
 import lombok.*;
-import lombok.experimental.*;
+import lombok.Builder;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "CARD_TOKEN")
 @Data
-@Accessors(chain = true)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(exclude = {"id","card"})
 public class TkmCardToken {
 
