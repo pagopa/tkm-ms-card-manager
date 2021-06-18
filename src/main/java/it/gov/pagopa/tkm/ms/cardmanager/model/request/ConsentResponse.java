@@ -21,7 +21,7 @@ public class ConsentResponse {
 
     private Set<CardServiceConsent> details = new HashSet<>();
 
-    public List<String> getHpans() {
+    public List<String> retrieveHpans() {
         return details.stream().map(CardServiceConsent::getHpan).collect(Collectors.toList());
     }
 

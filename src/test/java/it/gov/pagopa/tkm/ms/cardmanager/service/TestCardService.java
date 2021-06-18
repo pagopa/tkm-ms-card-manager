@@ -1,8 +1,10 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.fasterxml.jackson.core.*;
+import feign.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
@@ -19,6 +21,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_CONSENT_MANAGER_FAILED;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.MESSAGE_VALIDATION_FAILED;
 import static org.mockito.Mockito.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -193,6 +197,21 @@ class TestCardService {
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Deny));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verifyNoInteractions(producerService);
+    }
+
+    @Test
+    void givenExceptionOnCallToConsentClient_throwException() {
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenThrow(FeignException.class);
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1));
+        Assertions.assertEquals(CALL_TO_CONSENT_MANAGER_FAILED, cardException.getErrorCode());
+    }
+
+    @Test
+    void givenConsentNotFound_dontWriteOnQueue() throws JsonProcessingException {
+        FeignException.NotFound notFound = new FeignException.NotFound("", mock(Request.class), null);
+        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenThrow(notFound);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
+        verify(producerService, never()).sendMessage(Mockito.any(WriteQueue.class));
     }
 
 }

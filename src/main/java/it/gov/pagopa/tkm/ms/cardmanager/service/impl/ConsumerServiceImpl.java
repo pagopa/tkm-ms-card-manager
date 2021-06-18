@@ -52,7 +52,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     @KafkaListener(topics = "${spring.kafka.topics.read-queue.name}",
             groupId = "${spring.kafka.topics.read-queue.group-id}",
             clientIdPrefix = "${spring.kafka.topics.read-queue.client-id}",
-            properties = {"security.sasl.jaas.config:${keyvault.cardMEventhubReadSaslJaasConfig}"},
+            properties = {"sasl.jaas.config:${keyvault.cardMEventhubReadSaslJaasConfig}"},
             concurrency = "${spring.kafka.topics.read-queue.concurrency}")
     public void consume(String message) throws JsonProcessingException {
         log.debug("Reading message from queue: " + message);
@@ -73,7 +73,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     @KafkaListener(topics = "${spring.kafka.topics.delete-queue.name}",
             groupId = "${spring.kafka.topics.delete-queue.group-id}",
             clientIdPrefix = "${spring.kafka.topics.delete-queue.client-id}",
-            properties = {"security.sasl.jaas.config:${keyvault.cardMEventhubDeleteSaslJaasConfig}"},
+            properties = {"sasl.jaas.config:${keyvault.cardMEventhubDeleteSaslJaasConfig}"},
             concurrency = "${spring.kafka.topics.delete-queue.concurrency}")
     public void consumeDelete(String message) {
         log.debug("Delete message not parsed " + message);
@@ -82,6 +82,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             log.debug("Delete message  parsed " + deleteQueueMessage);
             validateMessage(deleteQueueMessage);
             deleteCardService.deleteCard(deleteQueueMessage);
+            log.info("Card Deleted: " + deleteQueueMessage.getHpan());
         } catch (Exception e) {
             log.error(e);
         }

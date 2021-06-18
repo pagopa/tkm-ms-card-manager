@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 public class CardRepositoryMock {
@@ -16,4 +18,13 @@ public class CardRepositoryMock {
         return new PageImpl<>(tkmCards);
     }
 
+    public static TkmCard getTkmCardFull() {
+        return TkmCard.builder()
+                .taxCode(Constant.TAX_CODE_1)
+                .hpan(Constant.HASH_1)
+                .par("par")
+                .circuit(CircuitEnum.VISA)
+                .tokens(new HashSet<>(Collections.singletonList(CardTokenRepositoryMock.getCardtoken())))
+                .build();
+    }
 }

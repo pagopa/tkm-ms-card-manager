@@ -16,4 +16,7 @@ public class CardTokenRepositoryMock {
         return new PageImpl<>(tkmCards);
     }
 
+    public static TkmCardToken getCardtoken() {
+        return TkmCardToken.builder().htoken(Constant.HASH_1).build();
+    }
 }

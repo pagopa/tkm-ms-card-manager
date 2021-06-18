@@ -1,6 +1,5 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
@@ -18,7 +17,6 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 
@@ -85,7 +83,7 @@ class TestConsentUpdateService {
     @Test
     void givenPartialConsentUpdate_writeOnQueue() throws JsonProcessingException {
         ConsentResponse consentUpdate = testBeans.getConsentUpdatePartial();
-        when(cardRepository.findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(testBeans.TAX_CODE_1, consentUpdate.getHpans())).thenReturn(Collections.singletonList(testBeans.TKM_CARD_PAN_PAR_1));
+        when(cardRepository.findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(testBeans.TAX_CODE_1, consentUpdate.retrieveHpans())).thenReturn(Collections.singletonList(testBeans.TKM_CARD_PAN_PAR_1));
         consentUpdateService.updateConsent(consentUpdate);
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
     }

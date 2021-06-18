@@ -38,7 +38,7 @@ spring:
         name: ${KAFKA_READ_QUEUE_TOPIC}
         group-id: ${KAFKA_READ_QUEUE_GROUP}
         client-id: ${KAFKA_READ_QUEUE_GROUP}${HOSTNAME:0}
-        concurrency: ${KAFKA_MAX_NUMBER_OF_THREADS:1}
+        concurrency: ${KAFKA_READ_MAX_NUMBER_OF_THREADS:1}
       write-queue: ${KAFKA_WRITE_QUEUE_TOPIC}
       delete-queue:
         name: ${KAFKA_DELETE_QUEUE_TOPIC}

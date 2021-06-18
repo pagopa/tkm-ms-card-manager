@@ -94,6 +94,7 @@ public class CardServiceImpl implements CardService {
                 .pan(pan)
                 .hpan(hpan)
                 .par(par)
+                .tokens(new HashSet<>())
                 .build();
     }
 
