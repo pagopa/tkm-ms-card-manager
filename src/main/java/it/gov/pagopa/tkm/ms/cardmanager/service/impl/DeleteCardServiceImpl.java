@@ -9,6 +9,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Set;
 
 @Log4j2
@@ -23,8 +24,11 @@ public class DeleteCardServiceImpl implements DeleteCardService {
         String taxCode = deleteQueueMessage.getTaxCode();
         String hpan = deleteQueueMessage.getHpan();
         TkmCard byTaxCodeAndHpanAndDeletedFalse = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
+        Instant timestamp = deleteQueueMessage.getTimestamp();
         if (byTaxCodeAndHpanAndDeletedFalse == null) {
-            log.info(String.format("No Card found with hpan %s and taxCode %s", hpan, taxCode));
+            log.info(String.format("No Card found with hpan %s and taxCode %s. Creating new record", hpan, taxCode));
+            TkmCard newCardAlreadyDeleted = TkmCard.builder().taxCode(taxCode).hpan(hpan).lastUpdateDate(timestamp).build();
+            cardRepository.save(newCardAlreadyDeleted);
             return;
         }
 
@@ -32,7 +36,7 @@ public class DeleteCardServiceImpl implements DeleteCardService {
         tokens.forEach(t -> t.setDeleted(true));
 
         byTaxCodeAndHpanAndDeletedFalse.setDeleted(true);
-        byTaxCodeAndHpanAndDeletedFalse.setLastUpdateDate(deleteQueueMessage.getTimestamp());
+        byTaxCodeAndHpanAndDeletedFalse.setLastUpdateDate(timestamp);
         cardRepository.save(byTaxCodeAndHpanAndDeletedFalse);
         log.info(String.format("Deleted card with hpan %s and taxCode %s", hpan, taxCode));
 
