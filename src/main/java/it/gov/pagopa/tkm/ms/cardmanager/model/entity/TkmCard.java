@@ -1,9 +1,7 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 
 import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.Where;
 
@@ -18,6 +16,9 @@ import java.util.Set;
 @Accessors(chain = true)
 @EqualsAndHashCode(exclude = "tokens")
 @ToString(exclude = "tokens")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class TkmCard {
 
     @Id

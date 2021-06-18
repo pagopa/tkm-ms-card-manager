@@ -109,7 +109,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             deleteCardService.deleteCard(deleteQueueMessage);
             log.info("Card Deleted: " + deleteQueueMessage.getHpan());
         } catch (CardException | JsonProcessingException e) {
-            log.error("Invalid message");
+            log.error("Invalid message " + message, e);
         }
     }
 

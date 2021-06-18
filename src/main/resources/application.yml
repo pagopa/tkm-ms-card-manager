@@ -62,7 +62,7 @@ logging:
             sql:
               BasicBinder: INFO
   pattern:
-    level: "${LOGGING_PATTERN:%p [${spring.application.name}][%X{traceId}]}"
+    level: "${LOGGING_PATTERN:%p [${spring.application.name}][%X{traceId}|%X{spanId}]}"
 azure:
   keyvault:
     enabled: true
