@@ -15,6 +15,7 @@ import java.util.Set;
 @Log4j2
 @Service
 public class DeleteCardServiceImpl implements DeleteCardService {
+
     @Autowired
     private CardRepository cardRepository;
 
@@ -40,4 +41,5 @@ public class DeleteCardServiceImpl implements DeleteCardService {
         log.info(String.format("Deleted card with hpan %s and taxCode %s", hpan, taxCode));
 
     }
+
 }

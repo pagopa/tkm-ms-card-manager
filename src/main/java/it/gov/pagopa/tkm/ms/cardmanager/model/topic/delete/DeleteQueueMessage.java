@@ -2,7 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import it.gov.pagopa.tkm.constant.TkmDatetimeConstant;
+import it.gov.pagopa.tkm.constant.*;
 import it.gov.pagopa.tkm.jsondeserializer.ToUpperCaseDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

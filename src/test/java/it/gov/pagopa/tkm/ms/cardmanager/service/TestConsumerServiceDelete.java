@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.DeleteQueueMessage;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ConsumerServiceImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -30,24 +30,21 @@ class TestConsumerServiceDelete {
     private ConsumerServiceImpl consumerService;
 
     @Spy
-    private ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper;
 
     @Mock
-    private DeleteCardService deleteCardService;
+    private DeleteCardServiceImpl deleteCardService;
 
     @Spy
-    private Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     private DefaultBeans testBeans;
-
-    private final ObjectMapper testMapper = new ObjectMapper();
 
     @BeforeEach()
     void init() {
         testBeans = new DefaultBeans();
         JavaTimeModule module = new JavaTimeModule();
         mapper.registerModule(module);
-        testMapper.registerModule(new JavaTimeModule());
     }
 
     @Test
@@ -57,10 +54,9 @@ class TestConsumerServiceDelete {
                 .hpan(testBeans.HPAN_1)
                 .timestamp(Instant.now())
                 .build();
-        String message = testMapper.writeValueAsString(build);
-        doNothing().when(deleteCardService).deleteCard(Mockito.any(DeleteQueueMessage.class));
+        String message = mapper.writeValueAsString(build);
         consumerService.consumeDelete(message);
-        verify(deleteCardService).deleteCard(testMapper.readValue(message, DeleteQueueMessage.class));
+        verify(deleteCardService).deleteCard(mapper.readValue(message, DeleteQueueMessage.class));
     }
 
     @Test
@@ -69,7 +65,7 @@ class TestConsumerServiceDelete {
                 .taxCode(testBeans.TAX_CODE_1)
                 .hpan(testBeans.HPAN_1)
                 .build();
-        String message = testMapper.writeValueAsString(build);
+        String message = mapper.writeValueAsString(build);
         consumerService.consumeDelete(message);
         verify(deleteCardService, never()).deleteCard(Mockito.any(DeleteQueueMessage.class));
     }

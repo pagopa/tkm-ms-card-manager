@@ -1,14 +1,15 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.request;
 
 import lombok.*;
-import lombok.experimental.*;
+import lombok.Builder;
 
 import javax.validation.constraints.*;
 import java.util.*;
 
 @Data
+@Builder
 @NoArgsConstructor
-@Accessors(chain = true)
+@AllArgsConstructor
 public class Consent {
 
     @NotNull
