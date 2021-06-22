@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.tkm.ms.cardmanager.config.ErrorHandler;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.controller.impl.KnownHashesControllerImpl;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,13 +22,11 @@ import org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConvert
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.executable.ExecutableValidator;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -42,6 +41,9 @@ class TestKnownHashesController {
 
     @Mock
     private CardRepository cardRepository;
+
+    @Mock
+    private CardTokenRepository cardTokenRepository;
 
     private MockMvc mockMvc;
 
@@ -63,29 +65,33 @@ class TestKnownHashesController {
     }
 
     @Test
-    void getKnownHashpanSet_onePage() throws Exception {
-        when(cardRepository.findByHpanIsNotNull(Mockito.any())).thenReturn(CardRepositoryMock.getOnePageTkmCard());
-
+    void getKnownHashes() throws Exception {
+        when(cardRepository.findByHpanIsNotNull(Mockito.any())).thenReturn(CardRepositoryMock.getTkmCardsList());
+        when(cardTokenRepository.findByHtokenIsNotNull(Mockito.any())).thenReturn(CardTokenRepositoryMock.getTkmCardTokensList());
         mockMvc.perform(
                 get(ApiEndpoints.BASE_PATH_KNOWN_HASHES)
-                        .queryParam(ApiParams.MAX_NUMBER_OF_RECORDS_PARAM, "10"))
+                        .queryParam(ApiParams.MAX_NUMBER_OF_RECORDS_PARAM, "4"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(Arrays.asList(Constant.HASH_1, Constant.HASH_2))));
+                .andExpect(content().json(mapper.writeValueAsString(
+                        new KnownHashesResponse(
+                                new HashSet<>(Arrays.asList(Constant.HASH_1, Constant.HASH_2)),
+                                new HashSet<>(Arrays.asList(Constant.HASH_1, Constant.HASH_2))
+                        ))));
     }
 
     @Test
-    void getKnownHashpanSet_InvalidNumRecordsMin() throws Exception {
+    void getKnownHashes_InvalidNumRecordsMin() throws Exception {
         ExecutableValidator validator = Validation.buildDefaultValidatorFactory().getValidator().forExecutables();
-        Method getKnownHashpanSetMethod = KnownHashesController.class.getMethod("getKnownHashes", Integer.class, Integer.class, HttpServletResponse.class);
+        Method getKnownHashpanSetMethod = KnownHashesController.class.getMethod("getKnownHashes", Integer.class, Integer.class, Integer.class);
         Object[] parameterValues = {KnownHashesController.MIN_VALUE - 1, 0, null};
         Set<ConstraintViolation<KnownHashesControllerImpl>> constraintViolations = validator.validateParameters(new KnownHashesControllerImpl(), getKnownHashpanSetMethod, parameterValues);
         assertEquals(1, constraintViolations.size());
     }
 
     @Test
-    void getKnownHashpanSet_InvalidNumRecordsMax() throws Exception {
+    void getKnownHashes_InvalidNumRecordsMax() throws Exception {
         ExecutableValidator validator = Validation.buildDefaultValidatorFactory().getValidator().forExecutables();
-        Method getKnownHashpanSetMethod = KnownHashesController.class.getMethod("getKnownHashes", Integer.class, Integer.class, HttpServletResponse.class);
+        Method getKnownHashpanSetMethod = KnownHashesController.class.getMethod("getKnownHashes", Integer.class, Integer.class, Integer.class);
         Object[] parameterValues = {KnownHashesController.MAX_VALUE + 1, 0, null};
         Set<ConstraintViolation<KnownHashesControllerImpl>> constraintViolations = validator.validateParameters(new KnownHashesControllerImpl(), getKnownHashpanSetMethod, parameterValues);
         assertEquals(1, constraintViolations.size());

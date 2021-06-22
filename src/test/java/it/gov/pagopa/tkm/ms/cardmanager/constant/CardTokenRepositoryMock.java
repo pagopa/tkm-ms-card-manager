@@ -7,7 +7,7 @@ import java.util.List;
 
 public class CardTokenRepositoryMock {
 
-    public static List<TkmCardToken> getOnePageTkmCardToken() {
+    public static List<TkmCardToken> getTkmCardTokensList() {
         TkmCardToken tkmCardToken = TkmCardToken.builder().htoken(Constant.HASH_1).build();
         TkmCardToken tkmCardToken2 = TkmCardToken.builder().htoken(Constant.HASH_2).build();
         return Arrays.asList(tkmCardToken, tkmCardToken2);
