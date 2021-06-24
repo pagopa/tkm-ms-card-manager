@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.tkm.ms.cardmanager.config.ErrorHandler;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.controller.impl.KnownHashesControllerImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,8 +79,28 @@ class TestKnownHashesController {
                         new KnownHashesResponse(
                                 new HashSet<>(Arrays.asList(Constant.HASH_1, Constant.HASH_2)),
                                 new HashSet<>(Arrays.asList(Constant.HASH_1, Constant.HASH_2)),
-                                4L,
-                                4L
+                                2L,
+                                2L
+                        ))));
+    }
+
+    @Test
+    void getKnownHashesWithFirstIdNon1() throws Exception {
+        when(cardRepository.findTopByOrderByIdAsc()).thenReturn(TkmCard.builder().id(1000L).build());
+        when(cardTokenRepository.findTopByOrderByIdAsc()).thenReturn(TkmCardToken.builder().id(1000L).build());
+        mockMvc.perform(
+                get(ApiEndpoints.BASE_PATH_KNOWN_HASHES)
+                        .queryParam(ApiParams.MAX_NUMBER_OF_RECORDS_PARAM, "4")
+                        .queryParam(ApiParams.HPAN_OFFSET_PARAM, "2")
+                        .queryParam(ApiParams.HTOKEN_OFFSET_PARAM, "2")
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(
+                        new KnownHashesResponse(
+                                new HashSet<>(),
+                                new HashSet<>(),
+                                999L,
+                                999L
                         ))));
     }
 
@@ -87,7 +108,7 @@ class TestKnownHashesController {
     void getKnownHashes_InvalidNumRecordsMin() throws Exception {
         ExecutableValidator validator = Validation.buildDefaultValidatorFactory().getValidator().forExecutables();
         Method getKnownHashesMethod = KnownHashesController.class.getMethod("getKnownHashes", Long.class, Long.class, Long.class);
-        Object[] parameterValues = {KnownHashesController.MIN_VALUE - 1, 0, null};
+        Object[] parameterValues = {KnownHashesController.MIN_VALUE - 1L, 0L, null};
         Set<ConstraintViolation<KnownHashesControllerImpl>> constraintViolations = validator.validateParameters(new KnownHashesControllerImpl(), getKnownHashesMethod, parameterValues);
         assertEquals(1, constraintViolations.size());
     }
@@ -96,7 +117,7 @@ class TestKnownHashesController {
     void getKnownHashes_InvalidNumRecordsMax() throws Exception {
         ExecutableValidator validator = Validation.buildDefaultValidatorFactory().getValidator().forExecutables();
         Method getKnownHashesMethod = KnownHashesController.class.getMethod("getKnownHashes", Long.class, Long.class, Long.class);
-        Object[] parameterValues = {KnownHashesController.MAX_VALUE + 1, 0, null};
+        Object[] parameterValues = {KnownHashesController.MAX_VALUE + 1L, 0L, null};
         Set<ConstraintViolation<KnownHashesControllerImpl>> constraintViolations = validator.validateParameters(new KnownHashesControllerImpl(), getKnownHashesMethod, parameterValues);
         assertEquals(1, constraintViolations.size());
     }

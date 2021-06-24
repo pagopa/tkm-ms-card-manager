@@ -18,8 +18,8 @@ public interface KnownHashesController {
 
     String MAX_NUMBER_OF_RECORDS_DEFAULT = "100000";
     String OFFSET_DEFAULT = "0";
-    int MIN_VALUE = 10;
-    int MAX_VALUE = 1000000;
+    long MIN_VALUE = 10L;
+    long MAX_VALUE = 1000000L;
 
     @GetMapping
     KnownHashesResponse getKnownHashes(
