@@ -7,7 +7,7 @@ public class ApiEndpoints {
     }
 
     public static final String BASE_PATH_PARLESS_CARDS = "/parless-cards";
-    public static final String BASE_PATH_KNOWN_HASH = "/known-hash";
+    public static final String BASE_PATH_KNOWN_HASHES = "/known-hashes";
     public static final String BASE_PATH_CONSENT_UPDATE = "/consent-update";
 
 }

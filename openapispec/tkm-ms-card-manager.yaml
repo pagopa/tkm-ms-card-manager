@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: tkm-ms-card-manager
   description: RESTful API provided for parless cards retrieval
-  version: 1.1.0
+  version: 1.1.2
 servers:
   - url: http://localhost:2000/tkm-ms-card-manager
   - url: http://tkm-sit/tkm-ms-card-manager
@@ -67,12 +67,12 @@ paths:
                 maxLength: 16
                 example: 937aee55bbabd29b
               required: true
-  /known-hash/pan:
+  /known-hashes:
     get:
       tags:
         - restricted
-      summary: Returns a set of known hpans
-      operationId: getHpansKnown
+      summary: Returns a set of known hpans and htokens
+      operationId: getKnownHashes
       parameters:
         - name: maxNumberOfRecord
           in: query
@@ -83,9 +83,17 @@ paths:
             minimum: 10
             maximum: 1000000
             default: 100000
-        - name: pageNumber
+        - name: hpanOffset
           in: query
-          description: The page number of pageable response
+          description: The offset from which to retrieve hpans
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: htokenOffset
+          in: query
+          description: The offset from which to retrieve htokens
           required: false
           schema:
             type: integer
@@ -101,82 +109,10 @@ paths:
                 minLength: 16
                 maxLength: 16
                 example: 937aee55bbabd29b
-            Total-Number-Pages:
-              schema:
-                type: integer
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
-        "400":
-          description: Bad Request
-          headers:
-            Request-Id:
-              schema:
-                type: string
-                minLength: 16
-                maxLength: 16
-                example: 937aee55bbabd29b
-              required: true
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CardError'
-        '500':
-          description: Internal Server Error
-          headers:
-            Request-Id:
-              schema:
-                type: string
-                minLength: 16
-                maxLength: 16
-                example: 937aee55bbabd29b
-              required: true
-  /known-hash/token:
-    get:
-      tags:
-        - restricted
-      summary: Returns a set of known htokens
-      operationId: gethtokensKnown
-      parameters:
-        - name: maxNumberOfRecord
-          in: query
-          description: The number of records to be returned
-          required: false
-          schema:
-            type: integer
-            minimum: 10
-            maximum: 1000000
-            default: 100000
-        - name: pageNumber
-          in: query
-          description: The page number of pageable response
-          required: false
-          schema:
-            type: integer
-            minimum: 0
-            default: 0
-      responses:
-        "200":
-          description: Success
-          headers:
-            Request-Id:
-              schema:
-                type: string
-                minLength: 16
-                maxLength: 16
-                example: 937aee55bbabd29b
-            Total-Number-Pages:
-              schema:
-                type: integer
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
+                $ref: '#/components/schemas/KnownHashesResponse'
         "400":
           description: Bad Request
           headers:
@@ -321,6 +257,24 @@ components:
           $ref: '#/components/schemas/ConsentRequestEnum'
         service:
           $ref: '#/components/schemas/ServiceEnum'
+    KnownHashesResponse:
+      required:
+        - hpans
+        - htokens
+      type: object
+      properties:
+        hpans:
+          type: array
+          items:
+            type: string
+        htokens:
+          type: array
+          items:
+            type: string
+        nextHpanOffset:
+          type: integer
+        nextHtokenOffset:
+          type: integer
     ConsentRequestEnum:
       description: Type of consent
       type: string
