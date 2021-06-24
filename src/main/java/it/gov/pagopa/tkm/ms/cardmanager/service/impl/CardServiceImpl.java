@@ -191,10 +191,9 @@ public class CardServiceImpl implements CardService {
             if (fe.status() == HttpStatus.NOT_FOUND.value()) {
                 log.info("Consent not found for card");
                 return false;
-            } else {
-                log.error(fe);
-                throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
             }
+            log.error(fe);
+            throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
         } catch (Exception e) {
             log.error(e);
             throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
