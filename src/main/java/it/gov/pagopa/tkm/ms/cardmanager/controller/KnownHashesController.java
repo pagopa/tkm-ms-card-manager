@@ -18,19 +18,19 @@ public interface KnownHashesController {
 
     String MAX_NUMBER_OF_RECORDS_DEFAULT = "100000";
     String OFFSET_DEFAULT = "0";
-    int MIN_VALUE = 10;
-    int MAX_VALUE = 1000000;
+    long MIN_VALUE = 10L;
+    long MAX_VALUE = 1000000L;
 
     @GetMapping
     KnownHashesResponse getKnownHashes(
             @Valid
             @RequestParam(value = MAX_NUMBER_OF_RECORDS_PARAM, defaultValue = MAX_NUMBER_OF_RECORDS_DEFAULT)
             @Range(min = MIN_VALUE, max = MAX_VALUE)
-            Integer maxRecords,
+            Long maxRecords,
             @RequestParam(value = HPAN_OFFSET_PARAM, defaultValue = OFFSET_DEFAULT)
-            Integer hpanOffset,
+            Long hpanOffset,
             @RequestParam(value = HTOKEN_OFFSET_PARAM, defaultValue = OFFSET_DEFAULT)
-            Integer htokenOffset
+            Long htokenOffset
     );
 
 }
