@@ -13,4 +13,8 @@ public class KnownHashesResponse {
 
     private Set<String> htokens = new HashSet<>();
 
+    private Long nextHpanOffset;
+
+    private Long nextHtokenOffset;
+
 }
