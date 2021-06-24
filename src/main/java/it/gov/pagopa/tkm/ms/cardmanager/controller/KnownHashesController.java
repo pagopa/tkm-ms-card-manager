@@ -26,11 +26,11 @@ public interface KnownHashesController {
             @Valid
             @RequestParam(value = MAX_NUMBER_OF_RECORDS_PARAM, defaultValue = MAX_NUMBER_OF_RECORDS_DEFAULT)
             @Range(min = MIN_VALUE, max = MAX_VALUE)
-            Integer maxRecords,
+            Long maxRecords,
             @RequestParam(value = HPAN_OFFSET_PARAM, defaultValue = OFFSET_DEFAULT)
-            Integer hpanOffset,
+            Long hpanOffset,
             @RequestParam(value = HTOKEN_OFFSET_PARAM, defaultValue = OFFSET_DEFAULT)
-            Integer htokenOffset
+            Long htokenOffset
     );
 
 }
