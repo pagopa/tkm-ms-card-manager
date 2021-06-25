@@ -37,7 +37,7 @@ public class KnownHashesControllerImpl implements KnownHashesController {
             List<TkmCard> cards = cardRepository.findByIdGreaterThanAndIdLessThanEqual(hpanOffset, hpanOffset + maxRecords);
             log.info("Found " + CollectionUtils.size(cards) + " hpans");
             response.setHpans(cards.stream().map(TkmCard::getHpan).collect(Collectors.toSet()));
-            response.setNextHpanOffset(cards.stream().mapToLong(TkmCard::getId).max().orElse(0));
+            response.setNextHpanOffset(cards.stream().mapToLong(TkmCard::getId).max().orElse(hpanOffset));
         }
         long diff = maxRecords - response.getHpans().size();
         if (diff > 0) {
@@ -50,7 +50,7 @@ public class KnownHashesControllerImpl implements KnownHashesController {
                 List<TkmCardToken> tokens = cardTokenRepository.findByIdGreaterThanAndIdLessThanEqual(htokenOffset, htokenOffset + diff);
                 log.info("Found " + CollectionUtils.size(tokens) + " tokens");
                 response.setHtokens(tokens.stream().map(TkmCardToken::getHtoken).collect(Collectors.toSet()));
-                response.setNextHtokenOffset(tokens.stream().mapToLong(TkmCardToken::getId).max().orElse(0));
+                response.setNextHtokenOffset(tokens.stream().mapToLong(TkmCardToken::getId).max().orElse(htokenOffset));
             }
         }
         log.trace(response);
