@@ -48,6 +48,9 @@ public class CardServiceImpl implements CardService {
     @Autowired
     private ProducerServiceImpl producerService;
 
+    @Autowired
+    private CryptoServiceImpl cryptoService;
+
     @Value("${keyvault.apimSubscriptionTkmRtd}")
     private String apimRtdSubscriptionKey;
 
@@ -70,8 +73,14 @@ public class CardServiceImpl implements CardService {
         }
         manageTokens(card, readQueue.getTokens());
         log.info("Merged tokens: " + card.getTokens().stream().map(TkmCardToken::getHtoken).collect(Collectors.joining(", ")));
-        cardRepository.save(card);
+        saveAndEncryptCard(card);
         writeOnQueueIfComplete(card, oldTokens, merged);
+    }
+
+    private void saveAndEncryptCard(TkmCard card) {
+        card.setPan(cryptoService.encrypt(card.getPan()));
+        card.getTokens().forEach(t -> t.setToken(cryptoService.encrypt(t.getToken())));
+        cardRepository.save(card);
     }
 
     private TkmCard findCard(String taxCode, String hpan, String par) {

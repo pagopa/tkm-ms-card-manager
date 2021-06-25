@@ -82,6 +82,7 @@ keyvault:
   cardMDbUsername: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbUsername}
   cardMDbPassword: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbPassword}
   apimSubscriptionTkmRtd: ${${AZURE_KEYVAULT_PROFILE:prod}-apimSubscriptionTkmRtd}
+  cryptographicKeyId: ${AZURE_KEYVAULT_PROFILE:prod}-cardm-rsa-key
 
 client-urls:
   consent-manager: ${CONSENT_MANAGER_URL}
