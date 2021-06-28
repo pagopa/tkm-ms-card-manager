@@ -38,7 +38,7 @@ class TestConsumerService {
         String message = "MESSAGE";
         when(pgpUtils.decrypt(Mockito.anyString())).thenReturn(message);
         when(mapper.readValue(Mockito.anyString(), Mockito.eq(ReadQueue.class))).thenReturn(new ReadQueue());
-        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message, "true"));
         Assertions.assertEquals(MESSAGE_VALIDATION_FAILED, cardException.getErrorCode());
     }
 
@@ -46,7 +46,7 @@ class TestConsumerService {
     void givenNewCard_InvalidMessageEncryption() throws Exception {
         String message = "MESSAGE";
         when(pgpUtils.decrypt(Mockito.anyString())).thenThrow(new Exception());
-        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message, "true"));
         Assertions.assertEquals(MESSAGE_DECRYPTION_FAILED, cardException.getErrorCode());
     }
 

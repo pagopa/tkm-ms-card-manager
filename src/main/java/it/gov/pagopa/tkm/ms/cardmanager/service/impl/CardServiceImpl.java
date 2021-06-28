@@ -1,9 +1,9 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import feign.FeignException;
-import it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager.ConsentClient;
-import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.RtdHashingClient;
-import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.request.WalletsHashingEvaluationInput;
+import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
+import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
+import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
@@ -17,6 +17,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CardService;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,7 +56,7 @@ public class CardServiceImpl implements CardService {
     private String apimRtdSubscriptionKey;
 
     @Override
-    public void updateOrCreateCard(ReadQueue readQueue) {
+    public void updateOrCreateCard(ReadQueue readQueue, boolean fromIssuer) {
         String taxCode = readQueue.getTaxCode();
         String par = readQueue.getPar();
         String pan = readQueue.getPan();
@@ -71,15 +72,10 @@ public class CardServiceImpl implements CardService {
             oldTokens.addAll(card.getTokens());
             merged = updateCard(card, pan, hpan, par);
         }
-        manageAndEncryptTokens(card, readQueue.getTokens());
+        manageAndEncryptTokens(card, readQueue.getTokens(), fromIssuer);
         log.info("Merged tokens: " + card.getTokens().stream().map(TkmCardToken::getHtoken).collect(Collectors.joining(", ")));
-        saveAndEncryptCard(card);
-        writeOnQueueIfComplete(card, oldTokens, merged);
-    }
-
-    private void saveAndEncryptCard(TkmCard card) {
-        card.setPan(cryptoService.encrypt(card.getPan()));
         cardRepository.save(card);
+        writeOnQueueIfComplete(card, oldTokens, merged);
     }
 
     private TkmCard findCard(String taxCode, String hpan, String par) {
@@ -99,7 +95,7 @@ public class CardServiceImpl implements CardService {
         return TkmCard.builder()
                 .taxCode(taxCode)
                 .circuit(circuit)
-                .pan(pan)
+                .pan(cryptoService.encrypt(pan))
                 .hpan(hpan)
                 .par(par)
                 .tokens(new HashSet<>())
@@ -128,10 +124,14 @@ public class CardServiceImpl implements CardService {
         return toMerge;
     }
 
-    private void manageAndEncryptTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
-        Set<TkmCardToken> newTokens = queueTokensToTkmTokens(card, readQueueTokens);
-        newTokens.forEach(t -> t.setToken(cryptoService.encrypt(t.getToken())));
-        mergeTokens(card.getTokens(), newTokens);
+    private void manageAndEncryptTokens(TkmCard card, List<ReadQueueToken> readQueueTokens, boolean fromIssuer) {
+        if (readQueueTokens == null) {
+            return;
+        }
+        Set<TkmCardToken> newTokens = queueTokensToEncryptedTkmTokens(card, readQueueTokens);
+        if (CollectionUtils.isEmpty(newTokens) || fromIssuer) {
+            mergeTokens(card.getTokens(), newTokens);
+        }
         card.getTokens().addAll(newTokens);
     }
 
@@ -149,18 +149,18 @@ public class CardServiceImpl implements CardService {
         }
     }
 
-    private Set<TkmCardToken> queueTokensToTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
+    private Set<TkmCardToken> queueTokensToEncryptedTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
         return readQueueTokens.stream().map(t -> TkmCardToken.builder()
                 .card(card)
-                .token(t.getToken())
+                .token(cryptoService.encrypt(t.getToken()))
                 .htoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callRtdForHash(t.getToken()))
                 .build()
         ).collect(Collectors.toSet());
     }
 
     private void writeOnQueueIfComplete(TkmCard card, Set<TkmCardToken> oldTokens, boolean merged) {
-        if (StringUtils.isAnyBlank(card.getPan(), card.getPar())) {
-            log.info("Card missing pan or par, not writing on queue");
+        if (StringUtils.isAnyBlank(card.getPan(), card.getPar(), card.getTaxCode())) {
+            log.info("Card missing pan, par or taxCode, not writing on queue");
             return;
         }
         if (!getConsentForCard(card)) {

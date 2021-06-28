@@ -2,7 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.datatype.jsr310.*;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
@@ -11,10 +11,11 @@ import it.gov.pagopa.tkm.service.*;
 import lombok.extern.log4j.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.kafka.annotation.*;
+import org.springframework.messaging.handler.annotation.*;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.*;
 import org.springframework.util.*;
 
-import javax.annotation.*;
 import javax.validation.*;
 
 import java.util.*;
@@ -46,9 +47,12 @@ public class ConsumerServiceImpl implements ConsumerService {
     @KafkaListener(topics = "${spring.kafka.topics.read-queue.name}",
             groupId = "${spring.kafka.topics.read-queue.group-id}",
             clientIdPrefix = "${spring.kafka.topics.read-queue.client-id}",
-            properties = {"sasl.jaas.config:${keyvault.cardMEventhubReadSaslJaasConfig}"},
+            properties = {"sasl.jaas.config:${keyvault.tkmReadTokenParPanConsumerSaslJaasConfig}"},
             concurrency = "${spring.kafka.topics.read-queue.concurrency}")
-    public void consume(String message) throws JsonProcessingException {
+    public void consume(
+            @Payload String message,
+            @Header(value = ApiParams.FROM_ISSUER_HEADER, required = false) String fromIssuer
+    ) throws JsonProcessingException {
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {
@@ -60,7 +64,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         log.trace("Decrypted message from queue: " + decryptedMessage);
         ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
         validateMessage(readQueue);
-        cardService.updateOrCreateCard(readQueue);
+        cardService.updateOrCreateCard(readQueue, Boolean.parseBoolean(fromIssuer));
     }
 
     @Override

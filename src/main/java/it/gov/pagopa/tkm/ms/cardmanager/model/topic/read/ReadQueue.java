@@ -42,7 +42,7 @@ public class ReadQueue {
     @NotNull
     private CircuitEnum circuit;
 
-    private List<@Valid ReadQueueToken> tokens = new ArrayList<>();
+    private List<@Valid ReadQueueToken> tokens;
 
 }
 

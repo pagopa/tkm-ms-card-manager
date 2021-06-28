@@ -23,7 +23,7 @@ spring:
           mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
     producer:
       bootstrap-servers: ${KAFKA_SERVERS}
-      client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
+      client-id: ${KAFKA_GROUP_ID:null}${HOSTNAME:0}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
@@ -73,7 +73,7 @@ azure:
 
 keyvault:
   eventhubLogSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-eventhubLogSaslJaasConfig:null}
-  cardMEventhubReadSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubReadSaslJaasConfig:null}
+  tkmReadTokenParPanConsumerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanConsumerSaslJaasConfig:null}
   cardMEventhubWriteSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubWriteSaslJaasConfig:null}
   cardMEventhubDeleteSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubDeleteSaslJaasConfig:null}
   readQueuePrvPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePrvPgpKey}

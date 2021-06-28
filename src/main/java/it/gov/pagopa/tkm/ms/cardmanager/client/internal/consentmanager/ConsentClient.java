@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.cardmanager.client.consentmanager;
+package it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager;
 
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import org.springframework.cloud.openfeign.*;

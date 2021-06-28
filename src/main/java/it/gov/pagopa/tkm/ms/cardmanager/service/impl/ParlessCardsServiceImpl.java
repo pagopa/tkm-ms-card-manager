@@ -38,7 +38,7 @@ public class ParlessCardsServiceImpl implements ParlessCardsService {
         return parlessCards.stream().map(c ->
                 new ParlessCardResponse(
                         c.getTaxCode(),
-                        cryptoService.decrypt(c.getPan()),
+                        cryptoService.decryptNullable(c.getPan()),
                         c.getTokens().stream().map(t -> cryptoService.decrypt(t.getToken())).collect(Collectors.toSet()),
                         c.getCircuit())
         ).collect(Collectors.toList());
