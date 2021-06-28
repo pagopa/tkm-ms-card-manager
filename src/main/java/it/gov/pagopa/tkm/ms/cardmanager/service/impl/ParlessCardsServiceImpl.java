@@ -28,19 +28,20 @@ public class ParlessCardsServiceImpl implements ParlessCardsService {
 
     @Override
     public List<ParlessCardResponse> getParlessCards(Integer maxRecords) {
-        log.info("Getting parless cards with a limit of " + maxRecords + " cards");
-        List<TkmCard> parlessCards = cardRepository.findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(
-                Instant.now().minus(1, ChronoUnit.DAYS),
-                PageRequest.of(0, maxRecords));
-        parlessCards.forEach(c -> c.setLastReadDate(Instant.now()));
-        cardRepository.saveAll(parlessCards);
-        log.info("Found " + CollectionUtils.size(parlessCards) + " parless cards");
-        return parlessCards.stream().map(c ->
-                new ParlessCardResponse(
-                        c.getTaxCode(),
-                        cryptoService.decryptNullable(c.getPan()),
-                        c.getTokens().stream().map(t -> cryptoService.decrypt(t.getToken())).collect(Collectors.toSet()),
-                        c.getCircuit())
-        ).collect(Collectors.toList());
+//        log.info("Getting parless cards with a limit of " + maxRecords + " cards");
+//        List<TkmCard> parlessCards = cardRepository.findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(
+//                Instant.now().minus(1, ChronoUnit.DAYS),
+//                PageRequest.of(0, maxRecords));
+//        parlessCards.forEach(c -> c.setLastReadDate(Instant.now()));
+//        cardRepository.saveAll(parlessCards);
+//        log.info("Found " + CollectionUtils.size(parlessCards) + " parless cards");
+//        return parlessCards.stream().map(c ->
+//                new ParlessCardResponse(
+//                        c.getTaxCode(),
+//                        cryptoService.decryptNullable(c.getPan()),
+//                        c.getTokens().stream().map(t -> cryptoService.decrypt(t.getToken())).collect(Collectors.toSet()),
+//                        c.getCircuit())
+//        ).collect(Collectors.toList());
+        return null;//todo
     }
 }

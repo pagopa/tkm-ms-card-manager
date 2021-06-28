@@ -159,18 +159,18 @@ public class CardServiceImplOld implements CardService {
         }
     }
 
-    private TkmCard findCard(String taxCode, String hpan, String par) {
-        TkmCard card = null;
-        if (hpan != null) {
-            log.info("Searching card for taxCode " + taxCode + " and hpan " + hpan);
-            card = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
-        }
-        if (card == null && par != null) {
-            log.info("Card not found by hpan, searching by par " + par);
-            card = cardRepository.findByTaxCodeAndParAndDeletedFalse(taxCode, par);
-        }
-        return card;
-    }
+//    private TkmCard findCard(String taxCode, String hpan, String par) {
+//        TkmCard card = null;
+//        if (hpan != null) {
+//            log.info("Searching card for taxCode " + taxCode + " and hpan " + hpan);
+//            card = cardRepository.findByTaxCodeAndHpanAndDeletedFalse(taxCode, hpan);
+//        }
+//        if (card == null && par != null) {
+//            log.info("Card not found by hpan, searching by par " + par);
+//            card = cardRepository.findByTaxCodeAndParAndDeletedFalse(taxCode, par);
+//        }
+//        return card;
+//    }
 
 //    private TkmCard createCard(String taxCode, String pan, String hpan, String par, CircuitEnum circuit) {
 //        return TkmCard.builder()
@@ -232,7 +232,7 @@ public class CardServiceImplOld implements CardService {
 
     private Set<TkmCardToken> queueTokensToEncryptedTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
         return readQueueTokens.stream().map(t -> TkmCardToken.builder()
-                .card(card)
+//                .card(card)
                 .token(cryptoService.encrypt(t.getToken()))
                 .htoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callRtdForHash(t.getToken()))
                 .build()

@@ -17,7 +17,7 @@ public class CardRepositoryMock {
 
     public static TkmCard getTkmCardFull() {
         return TkmCard.builder()
-                .taxCode(Constant.TAX_CODE_1)
+//                .taxCode(Constant.TAX_CODE_1) todo
                 .hpan(Constant.HASH_1)
                 .par("par")
                 .circuit(CircuitEnum.VISA)

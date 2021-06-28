@@ -82,20 +82,20 @@ public class DefaultBeans {
             .hpan(HPAN_1)
             .pan(PAN_1)
             .par(PAR_1)
-            .taxCode(TAX_CODE_1)
+//            .taxCode(TAX_CODE_1) todo
             .tokens(TKM_CARD_TOKENS_1)
             .build();
     public final TkmCard TKM_CARD_PAN_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .hpan(HPAN_1)
             .pan(PAN_1)
-            .taxCode(TAX_CODE_1)
+//            .taxCode(TAX_CODE_1)todo
             .tokens(TKM_CARD_TOKENS_1)
             .build();
     public final TkmCard TKM_CARD_PAR_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .par(PAR_1)
-            .taxCode(TAX_CODE_1)
+//            .taxCode(TAX_CODE_1) todo
             .tokens(TKM_CARD_TOKENS_1)
             .build();
     private final TkmCard TKM_CARD_PAN_PAR_2 = TkmCard.builder()
@@ -103,7 +103,7 @@ public class DefaultBeans {
             .hpan(HPAN_1)
             .pan(PAN_2)
             .par(PAR_2)
-            .taxCode(TAX_CODE_2)
+//            .taxCode(TAX_CODE_2)todo
             .tokens(TKM_CARD_TOKENS_1)
             .build();
 

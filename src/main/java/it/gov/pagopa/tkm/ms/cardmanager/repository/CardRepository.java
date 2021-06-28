@@ -10,24 +10,23 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CardRepository extends JpaRepository<TkmCard, Long> {
+    Optional<TkmCard> findByPar(String par);
 
-    TkmCard findByHpanAndParNull(String hpan);
+//    TkmCard findByTaxCodeAndHpanAndDeletedFalse(String taxCode, String hpan);
 
-    TkmCard findByParAndHpanNull(String par);
+//    TkmCard findByTaxCodeAndParAndDeletedFalse(String taxCode, String par);
 
-    TkmCard findByTaxCodeAndHpanAndDeletedFalse(String taxCode, String hpan);
+//    List<TkmCard> findByTaxCodeAndParIsNotNullAndDeletedFalse(String taxCode);
 
-    TkmCard findByTaxCodeAndParAndDeletedFalse(String taxCode, String par);
+//    List<TkmCard> findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(String taxCode, List<String> hpan);
 
-    List<TkmCard> findByTaxCodeAndParIsNotNullAndDeletedFalse(String taxCode);
-
-    List<TkmCard> findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(String taxCode, List<String> hpan);
-
-    List<TkmCard> findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
+//    List<TkmCard> findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
 
     List<TkmCard> findByIdGreaterThanAndIdLessThanEqual(Long min, Long max);
 
     @Cacheable(value = "first-card", unless = "#result == null")
     TkmCard findTopByOrderByIdAsc();
+    TkmCard findByHpanAndParNull(String hpan);
 
+    TkmCard findByParAndHpanNull(String par);
 }

@@ -3,7 +3,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 import lombok.*;
 
 import javax.persistence.*;
-import java.time.*;
+import java.time.Instant;
 
 @Entity
 @Table(name = "CARD_TOKEN")
@@ -16,7 +16,7 @@ public class TkmCardToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID", unique = true, nullable = false)
+    @Column(name = "ID", unique = true)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,6 +32,7 @@ public class TkmCardToken {
     @Column(name = "LAST_READ_DATE")
     private Instant lastReadDate;
 
+    @Builder.Default
     @Column(name = "DELETED")
     private boolean deleted = false;
 

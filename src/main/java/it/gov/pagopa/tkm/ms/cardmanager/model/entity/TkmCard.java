@@ -6,7 +6,10 @@ import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "CARD")
@@ -14,7 +17,7 @@ import java.util.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"tokens","pan"})
+@EqualsAndHashCode(exclude = {"tokens", "pan"})
 @ToString(exclude = "tokens")
 public class TkmCard {
 
@@ -39,11 +42,19 @@ public class TkmCard {
     @Column(name = "LAST_READ_DATE")
     private Instant lastReadDate;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @Builder.Default
+    @OneToMany(mappedBy = "card", cascade = {CascadeType.ALL})
     @Where(clause = "deleted = false")
     private Set<TkmCardToken> tokens = new HashSet<>();
 
+    @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "card")
-    private List<TkmCitizen> citizens = new ArrayList<>();
+    private List<TkmCitizenCard> tkmCitizenCards = new ArrayList<>();
 
+//
+//    @Builder.Default
+//    @OneToMany(fetch = FetchType.LAZY /*, mappedBy = "card"*/, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+//    @JoinColumn(name = "card_id")
+//    @Where(clause = "deleted = false")
+//    private Set<TkmCardToken> tokens = new HashSet<>();
 }
