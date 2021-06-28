@@ -26,7 +26,7 @@ public class TkmCardToken {
     @Column(name = "TOKEN", nullable = false, length = 500)
     private String token;
 
-    @Column(name = "HTOKEN", nullable = false, length = 64)
+    @Column(name = "HTOKEN", unique = true, nullable = false, length = 64)
     private String htoken;
 
     @Column(name = "LAST_READ_DATE")

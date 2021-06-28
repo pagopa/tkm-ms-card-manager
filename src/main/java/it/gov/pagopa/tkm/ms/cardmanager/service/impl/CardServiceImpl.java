@@ -147,7 +147,7 @@ public class CardServiceImpl implements CardService {
         } else if (StringUtils.isBlank(par) && CollectionUtils.isNotEmpty(tokens)) {
             //caso solo aggiunta token
         } else {
-            //messaggio inconsistente
+            throw new CardException(INCONSISTENT_MESSAGE);
         }
 
     }
