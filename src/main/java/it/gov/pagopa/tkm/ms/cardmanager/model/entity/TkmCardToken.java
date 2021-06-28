@@ -3,6 +3,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.*;
 
 @Entity
 @Table(name = "CARD_TOKEN")
@@ -22,11 +23,14 @@ public class TkmCardToken {
     @JoinColumn(name = "CARD_ID", nullable = false)
     private TkmCard card;
 
-    @Column(name = "TOKEN", nullable = false, length = 32)
+    @Column(name = "TOKEN", nullable = false, length = 500)
     private String token;
 
     @Column(name = "HTOKEN", nullable = false, length = 64)
     private String htoken;
+
+    @Column(name = "LAST_READ_DATE")
+    private Instant lastReadDate;
 
     @Column(name = "DELETED")
     private boolean deleted;

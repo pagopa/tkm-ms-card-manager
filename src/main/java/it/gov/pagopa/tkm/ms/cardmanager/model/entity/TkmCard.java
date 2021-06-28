@@ -6,8 +6,7 @@ import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "CARD")
@@ -24,33 +23,27 @@ public class TkmCard {
     @Column(name = "ID", unique = true, nullable = false)
     private Long id;
 
-    @Column(name = "TAX_CODE", nullable = false, length = 16)
-    private String taxCode;
-
-    @Column(name = "PAN", nullable = false, length = 32)
+    @Column(name = "PAN", length = 500)
     private String pan;
 
-    @Column(name = "HPAN", nullable = false, length = 64)
+    @Column(name = "HPAN", length = 64)
     private String hpan;
 
-    @Column(name = "PAR", nullable = false, length = 32)
+    @Column(name = "PAR", length = 32)
     private String par;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "CIRCUIT", nullable = false, length = 32)
+    @Column(name = "CIRCUIT", length = 32)
     private CircuitEnum circuit;
 
     @Column(name = "LAST_READ_DATE")
     private Instant lastReadDate;
 
-    @Column(name = "LAST_UPDATE_DATE")
-    private Instant lastUpdateDate;
-
-    @Column(name = "DELETED")
-    private boolean deleted;
-
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @Where(clause = "deleted = false")
     private Set<TkmCardToken> tokens = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "card")
+    private List<TkmCitizen> citizens = new ArrayList<>();
 
 }
