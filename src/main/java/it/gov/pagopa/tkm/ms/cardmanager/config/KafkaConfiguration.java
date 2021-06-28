@@ -2,7 +2,9 @@ package it.gov.pagopa.tkm.ms.cardmanager.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -10,42 +12,56 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
-import org.springframework.kafka.listener.LoggingErrorHandler;
 import org.springframework.kafka.listener.SeekToCurrentErrorHandler;
-import org.springframework.kafka.retrytopic.RetryTopicConfiguration;
-import org.springframework.kafka.retrytopic.RetryTopicConfigurationBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Configuration
 @EnableKafka
 public class KafkaConfiguration {
+
+    @Value("${spring.kafka.topics.dlt-queue}")
+    private String dltQueueTopic;
+
+    public static final String attemptsCounterHeader="attemptsCounter" ;
+    public static final String originalTopicHeader="originalTopic";
+
 
     /**
      * Boot will autowire this into the container factory.
      */
    @Bean
     public SeekToCurrentErrorHandler errorHandlerKafka(DeadLetterPublishingRecoverer deadLetterPublishingRecoverer) {
-        return new SeekToCurrentErrorHandler(deadLetterPublishingRecoverer);
+       return new SeekToCurrentErrorHandler(deadLetterPublishingRecoverer);
     }
 
     /**
      * Configure the {@link DeadLetterPublishingRecoverer} to publish poison pill bytes to a dead letter topic:
      * "stock-quotes-avro.DLT".
      */
-//    @Bean
-//    public DeadLetterPublishingRecoverer publisher(KafkaTemplate<String, String> bytesTemplate) {
-//        return new DeadLetterPublishingRecoverer(bytesTemplate);
-//    }
 
     @Bean
     public DeadLetterPublishingRecoverer recoverer(KafkaTemplate<String, String> bytesTemplate) {
         return new DeadLetterPublishingRecoverer(bytesTemplate,
                 (record, ex) -> {
-                    record.headers().add("dee", "dd".getBytes());
-                    return new TopicPartition("morti", -1);
+
+                    Header retriesHeader = record.headers().lastHeader(attemptsCounterHeader);
+                    String retriesIntValue="1";
+                   if (retriesHeader!=null) {
+
+                        byte[] value = retriesHeader.value();
+                       String stringValue = new String(value, StandardCharsets.UTF_8);
+                       int intValue = Integer.parseInt(stringValue);
+                       intValue++;
+                       retriesIntValue= Integer.toString(intValue);
+                    }
+
+                    record.headers().add(attemptsCounterHeader, retriesIntValue.getBytes());
+                    record.headers().add(originalTopicHeader, record.topic().getBytes());
+
+                    return new TopicPartition(dltQueueTopic, -1);
                 });
 
     }
@@ -69,22 +85,5 @@ public class KafkaConfiguration {
                 StringSerializer.class);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
-
-  /*  @Bean
-    public LoggingErrorHandler errorHandler() {
-        return new LoggingErrorHandler();
-    } */
-
-
-    /*@Bean
-    public RetryTopicConfiguration dltRetryTopic(KafkaTemplate<String, String> template) {
-        return RetryTopicConfigurationBuilder
-                .newInstance()
-                .fixedBackOff(2000)
-                .maxAttempts(3)
-              //  .includeTopics("my-topic", "my-other-topic")
-              //  .retryOn(MyException.class)
-                .create(template);
-    } */
 
 }

@@ -45,7 +45,7 @@ spring:
         group-id: ${KAFKA_DELETE_QUEUE_GROUP}
         client-id: ${KAFKA_DELETE_QUEUE_GROUP}${HOSTNAME:0}
         concurrency: ${KAFKA_DELETE_MAX_NUMBER_OF_THREADS:1}
-
+      dlt-queue: ${KAFKA_DLT_QUEUE_TOPIC}
 server:
   port: ${SERVER_PORT:8080}
   servlet:
@@ -92,3 +92,8 @@ management:
     web:
       exposure:
         include: "info,health,prometheus"
+
+
+batch:
+  kafka-dlt-read:
+    cron: ${KAFKA_DLT_READ_CRON:-}
