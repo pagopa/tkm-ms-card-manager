@@ -1,16 +1,11 @@
 package it.gov.pagopa.tkm.ms.cardmanager.repository;
 
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
-import org.springframework.cache.annotation.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 public interface CardTokenRepository extends JpaRepository<TkmCardToken, Long> {
-
-    List<TkmCardToken> findByIdGreaterThanAndIdLessThanEqual(Long min, Long max);
-
-    @Cacheable(value = "first-token", unless = "#result == null")
-    TkmCardToken findTopByOrderByIdAsc();
-
+    Optional<List<TkmCardToken>> findByHtoken(String htoken);
 }

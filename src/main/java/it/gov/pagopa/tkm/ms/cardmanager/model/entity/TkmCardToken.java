@@ -11,7 +11,7 @@ import java.time.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"id","card","token"})
+@EqualsAndHashCode(exclude = {"id", "card", "token"})
 public class TkmCardToken {
 
     @Id
@@ -33,6 +33,6 @@ public class TkmCardToken {
     private Instant lastReadDate;
 
     @Column(name = "DELETED")
-    private boolean deleted;
+    private boolean deleted = false;
 
 }

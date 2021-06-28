@@ -1,9 +1,9 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import feign.FeignException;
-import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
+import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
@@ -15,19 +15,19 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CardService;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.collections.*;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
@@ -55,14 +55,25 @@ public class CardServiceImpl implements CardService {
     @Value("${keyvault.apimSubscriptionTkmRtd}")
     private String apimRtdSubscriptionKey;
 
+    @Autowired
+    private CardTokenRepository cardTokenRepository;
+
     @Override
     public void updateOrCreateCard(ReadQueue readQueue, boolean fromIssuer) {
         String taxCode = readQueue.getTaxCode();
+        if (StringUtils.isBlank(taxCode)) {
+            manageParUpdateAndAcquirerToken(readQueue);
+        } else if (readQueue.getTokens() == null) {
+            managePmCard(readQueue);
+        } else {
+            //gestire come adesso
+        }
+
         String par = readQueue.getPar();
         String pan = readQueue.getPan();
         String hpan = (readQueue.getHpan() == null && pan != null) ? callRtdForHash(pan) : readQueue.getHpan();
-        TkmCard card = findCard(taxCode, hpan, par);
         Set<TkmCardToken> oldTokens = new HashSet<>();
+        TkmCard card = findCard(taxCode, hpan, par);
         boolean merged = false;
         if (card == null) {
             log.info("Card not found on database, creating new one");
@@ -72,10 +83,86 @@ public class CardServiceImpl implements CardService {
             oldTokens.addAll(card.getTokens());
             merged = updateCard(card, pan, hpan, par);
         }
+
         manageAndEncryptTokens(card, readQueue.getTokens(), fromIssuer);
-        log.info("Merged tokens: " + card.getTokens().stream().map(TkmCardToken::getHtoken).collect(Collectors.joining(", ")));
+        log.info("Merged tokens: " + card.getTokens().
+
+                stream().
+
+                map(TkmCardToken::getHtoken).
+
+                collect(Collectors.joining(", ")));
         cardRepository.save(card);
+
         writeOnQueueIfComplete(card, oldTokens, merged);
+
+    }
+
+    private void managePmCard(ReadQueue readQueue) {
+        //todo controllo sula struttura
+        String taxCode = readQueue.getTaxCode();
+        String hpan = readQueue.getHpan();
+        String par = readQueue.getPar();
+        String pan = readQueue.getPan();
+        TkmCard card = findCard(taxCode, hpan, par);
+        if (card == null) {
+            card = TkmCard.builder()
+                    .taxCode(taxCode)
+                    .deleted(false)
+                    .build();
+        }
+        boolean wasAlreadyCompleted = card.isCompleteToSendBpd();
+        card.setLastUpdateDate(Instant.now());
+        card.setHpan(StringUtils.firstNonBlank(card.getHpan(), callRtdForHash(hpan)));
+        card.setPan(StringUtils.firstNonBlank(card.getPan(), cryptoService.encrypt(pan)));
+        card.setPar(StringUtils.firstNonBlank(card.getPar(), par));
+        card.setCircuit(ObjectUtils.firstNonNull(card.getCircuit(), readQueue.getCircuit()));
+        cardRepository.save(card);
+        if (!wasAlreadyCompleted && card.isCompleteToSendBpd()) {
+            //todo ritornare tutti i token per essere mandati
+        }
+    }
+
+    private void manageParUpdateAndAcquirerToken(ReadQueue readQueue) {
+        String par = readQueue.getPar();
+        String hpan = readQueue.getHpan();
+        //Aggiungere controllo che non contenga più di 1 token
+        List<ReadQueueToken> tokens = readQueue.getTokens();
+        if (StringUtils.isNotBlank(par) && CollectionUtils.isNotEmpty(tokens)) {
+            ReadQueueToken readQueueToken = tokens.get(0);
+            TkmCard tkmCards = cardRepository.findByPar(par).orElse(TkmCard.builder().par(par).build());
+            String token = readQueueToken.getToken();
+            String htoken = getHtoken(token, readQueueToken.getHToken());
+            List<TkmCardToken> byHtokenAndCardIsNull = cardTokenRepository.findByHtoken(htoken).orElse(new ArrayList<>());
+            Set<TkmCardToken> tkmCardTokensUnique = new HashSet<>(byHtokenAndCardIsNull);
+            tkmCardTokensUnique.add(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).build());
+            tkmCards.setTokens(tkmCardTokensUnique);
+            cardRepository.save(tkmCards);
+
+            //caso par e htoken/token
+            //Cercare la carta con il par e cercare tutte le tighe con l'htoken dato -> Creare una sola riga (merge) e aggiungere il token. Se hai tutto per bpd mandi tutti gli htoken.
+        } else if (StringUtils.isNoneBlank(par, hpan)) {
+            //Cerco la carta con hpan e quella con par e poi mergio sia la carte che i token.
+            //caso par hpan
+        } else if (StringUtils.isBlank(par) && CollectionUtils.isNotEmpty(tokens)) {
+            //caso solo aggiunta token
+        } else {
+            //messaggio inconsistente
+        }
+
+    }
+
+    private void setParTokenCircuit(TkmCard c, ReadQueue readQueue) {
+        c.setCircuit(ObjectUtils.firstNonNull(c.getCircuit(), readQueue.getCircuit()));
+        c.setPar(StringUtils.firstNonBlank(c.getPar(), readQueue.getPar()));
+        List<ReadQueueToken> tokens = readQueue.getTokens();
+        if (tokens != null) {
+            for (ReadQueueToken readQueueToken : tokens) {
+                String token = readQueueToken.getToken();
+                String hToken = StringUtils.firstNonBlank(readQueueToken.getHToken(), callRtdForHash(readQueueToken.getHToken()));
+                tokens.add(new ReadQueueToken(token, hToken));
+            }
+        }
     }
 
     private TkmCard findCard(String taxCode, String hpan, String par) {
@@ -207,6 +294,13 @@ public class CardServiceImpl implements CardService {
             log.error(e);
             throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
         }
+    }
+
+
+    private String getHtoken(String htoken, String token) {
+        if (StringUtils.isNotBlank(htoken))
+            return htoken;
+        return callRtdForHash(token);
     }
 
 }
