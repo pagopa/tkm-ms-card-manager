@@ -10,9 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CardRepository extends JpaRepository<TkmCard, Long> {
-    Optional<List<TkmCard>> findByParAndDeletedFalse(String par);
 
-    Optional<TkmCard> findByPar(String par);
+    TkmCard findByHpanAndParNull(String hpan);
+
+    TkmCard findByParAndHpanNull(String par);
 
     TkmCard findByTaxCodeAndHpanAndDeletedFalse(String taxCode, String hpan);
 
