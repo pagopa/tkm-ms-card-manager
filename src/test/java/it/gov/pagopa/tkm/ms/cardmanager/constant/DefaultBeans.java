@@ -11,6 +11,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.*;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum.Partial;
 
@@ -19,17 +20,39 @@ public class DefaultBeans {
     public DefaultBeans() {
     }
 
-    public final static Instant INSTANT = Instant.MAX;
+    public static String enc(String toEnc) {
+        return "ENC_" + toEnc;
+    }
+
+    public static TkmCard encCard(TkmCard card) {
+        card.setPan(enc(card.getPan()));
+        for (TkmCardToken token : card.getTokens()) {
+            token.setToken(enc(token.getToken()));
+        }
+        return card;
+    }
+
+    public static String dec(String toDec) {
+        return "DEC_" + toDec;
+    }
+
+    public static ParlessCardResponse decCard(ParlessCardResponse card) {
+        card.setPan(dec(card.getPan()));
+        card.setTokens(card.getTokens().stream().map(t -> t = dec(t)).collect(Collectors.toSet()));
+        return card;
+    }
+
+    public static final Instant INSTANT = Instant.MAX;
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
     private final String TAX_CODE_2 = "TRRCLE04M24L219D";
-    private final String PAN_1 = "111111111111";
-    private final String PAN_2 = "222222222222";
+    public final String PAN_1 = "111111111111";
+    public final String PAN_2 = "222222222222";
     public final String PAR_1 = "abc11111111111";
     private final String PAR_2 = "cba222222222222";
     public final String HPAN_1 = "92fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6f";
-    private final String TOKEN_1 = "abcde123";
-    private final String TOKEN_2 = "xyz6543";
-    private final String TOKEN_3 = "aerr126";
+    public final String TOKEN_1 = "abcde123";
+    public final String TOKEN_2 = "xyz6543";
+    public final String TOKEN_3 = "aerr126";
     private final String HTOKEN_1 = "12fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6a";
     private final String HTOKEN_2 = "22fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6b";
     private final String HTOKEN_3 = "32fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6c";
@@ -38,7 +61,7 @@ public class DefaultBeans {
 
     private final ParlessCardResponse PARLESS_CARD_1 = new ParlessCardResponse(TAX_CODE_1, PAN_1, TOKEN_SET, CircuitEnum.AMEX);
     private final ParlessCardResponse PARLESS_CARD_2 = new ParlessCardResponse(TAX_CODE_2, PAN_2, TOKEN_SET, CircuitEnum.VISA);
-    public final List<ParlessCardResponse> PARLESS_CARD_LIST = Arrays.asList(PARLESS_CARD_1, PARLESS_CARD_2);
+    public final List<ParlessCardResponse> PARLESS_CARD_LIST = Arrays.asList(decCard(PARLESS_CARD_1), decCard(PARLESS_CARD_2));
 
     public final TkmCardToken TKM_CARD_TOKEN_1 = TkmCardToken.builder()
             .token(TOKEN_1)

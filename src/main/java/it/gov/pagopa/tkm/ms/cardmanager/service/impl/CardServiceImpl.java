@@ -71,7 +71,7 @@ public class CardServiceImpl implements CardService {
             oldTokens.addAll(card.getTokens());
             merged = updateCard(card, pan, hpan, par);
         }
-        manageTokens(card, readQueue.getTokens());
+        manageAndEncryptTokens(card, readQueue.getTokens());
         log.info("Merged tokens: " + card.getTokens().stream().map(TkmCardToken::getHtoken).collect(Collectors.joining(", ")));
         saveAndEncryptCard(card);
         writeOnQueueIfComplete(card, oldTokens, merged);
@@ -79,7 +79,6 @@ public class CardServiceImpl implements CardService {
 
     private void saveAndEncryptCard(TkmCard card) {
         card.setPan(cryptoService.encrypt(card.getPan()));
-        card.getTokens().forEach(t -> t.setToken(cryptoService.encrypt(t.getToken())));
         cardRepository.save(card);
     }
 
@@ -129,8 +128,9 @@ public class CardServiceImpl implements CardService {
         return toMerge;
     }
 
-    private void manageTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
+    private void manageAndEncryptTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
         Set<TkmCardToken> newTokens = queueTokensToTkmTokens(card, readQueueTokens);
+        newTokens.forEach(t -> t.setToken(cryptoService.encrypt(t.getToken())));
         mergeTokens(card.getTokens(), newTokens);
         card.getTokens().addAll(newTokens);
     }

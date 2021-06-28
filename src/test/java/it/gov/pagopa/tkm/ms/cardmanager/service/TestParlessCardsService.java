@@ -3,7 +3,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.service;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.model.response.ParlessCardResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ParlessCardsServiceImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +31,9 @@ class TestParlessCardsService {
 
     @Mock
     private CardRepository cardRepository;
+
+    @Mock
+    private CryptoServiceImpl cryptoService;
 
     private DefaultBeans testBeans;
 
@@ -48,9 +52,12 @@ class TestParlessCardsService {
 
     @Test
     void givenMaxNumberOfCards_returnParlessCardsResponse() {
-        int maxRecords = 2;
+        when(cryptoService.decrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.dec(testBeans.PAN_1));
+        when(cryptoService.decrypt(testBeans.PAN_2)).thenReturn(DefaultBeans.dec(testBeans.PAN_2));
+        when(cryptoService.decrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.dec(testBeans.TOKEN_1));
+        when(cryptoService.decrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.dec(testBeans.TOKEN_2));
         when(cardRepository.findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
-        List<ParlessCardResponse> parlessCards = parlessCardsService.getParlessCards(maxRecords);
+        List<ParlessCardResponse> parlessCards = parlessCardsService.getParlessCards(2);
         verify(cardRepository).saveAll(testBeans.TKM_CARD_LIST);
         assertEquals(parlessCards, testBeans.PARLESS_CARD_LIST);
     }

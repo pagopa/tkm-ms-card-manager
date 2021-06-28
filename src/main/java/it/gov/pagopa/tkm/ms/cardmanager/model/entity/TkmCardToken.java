@@ -11,7 +11,7 @@ import javax.persistence.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"id","card"})
+@EqualsAndHashCode(exclude = {"id","card","token"})
 public class TkmCardToken {
 
     @Id
