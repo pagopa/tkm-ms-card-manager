@@ -1,7 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 
 import lombok.*;
-import lombok.Builder;
 
 import javax.persistence.*;
 

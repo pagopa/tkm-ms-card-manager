@@ -1,17 +1,21 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.topic.read;
 
-import com.fasterxml.jackson.databind.annotation.*;
-import it.gov.pagopa.tkm.annotation.*;
-import it.gov.pagopa.tkm.jsondeserializer.*;
-import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.gov.pagopa.tkm.jsondeserializer.ToLowerCaseDeserializer;
+import it.gov.pagopa.tkm.jsondeserializer.ToUpperCaseDeserializer;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Builder;
 
-import javax.validation.*;
-import javax.validation.constraints.*;
-import java.util.*;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.List;
 
 import static it.gov.pagopa.tkm.constant.Constants.FISCAL_CODE_REGEX;
 
@@ -19,10 +23,8 @@ import static it.gov.pagopa.tkm.constant.Constants.FISCAL_CODE_REGEX;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@CheckAtLeastOneNotEmpty(fieldNames = {"pan", "par"})
 public class ReadQueue {
 
-    @NotBlank
     @Pattern(regexp = FISCAL_CODE_REGEX)
     @JsonDeserialize(using = ToUpperCaseDeserializer.class)
     private String taxCode;

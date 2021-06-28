@@ -42,12 +42,6 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Autowired
     private Validator validator;
 
-    @PostConstruct
-    public void init() {
-        JavaTimeModule module = new JavaTimeModule();
-        mapper.registerModule(module);
-    }
-
     @Override
     @KafkaListener(topics = "${spring.kafka.topics.read-queue.name}",
             groupId = "${spring.kafka.topics.read-queue.group-id}",
