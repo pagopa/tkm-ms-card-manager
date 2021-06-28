@@ -67,7 +67,7 @@ class TestCardService {
 
     @Test
     void givenPan_returnHash() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
+        when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(rtdHashingClient.getHash(new WalletsHashingEvaluationInput(testBeans.PAN_1), "key")).thenReturn(new WalletsHashingEvaluation(testBeans.HPAN_1, "salt"));
@@ -78,7 +78,7 @@ class TestCardService {
 
     @Test
     void givenNewCard_persistNewCard() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
+        when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
@@ -89,7 +89,6 @@ class TestCardService {
 
     @Test
     void givenPanParAndExistingPanPar_doNothing() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
@@ -100,7 +99,6 @@ class TestCardService {
 
     @Test
     void givenPanParAndExistingPan_updateCard() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
@@ -111,7 +109,6 @@ class TestCardService {
 
     @Test
     void givenPanParAndExistingPar_updateCard() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAR_1).thenReturn(null);
@@ -122,7 +119,6 @@ class TestCardService {
 
     @Test
     void givenPanAndExistingPan_doNothing() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
@@ -132,7 +128,6 @@ class TestCardService {
 
     @Test
     void givenPanAndExistingPanPar_doNothing() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
@@ -150,7 +145,6 @@ class TestCardService {
 
     @Test
     void givenParAndExistingPanPar_doNothing() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByTaxCodeAndParAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
@@ -174,7 +168,6 @@ class TestCardService {
 
     @Test
     void givenPanParAndExistingPanAndExistingPar_mergeCards() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_3)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_3));
         testBeans.TKM_CARD_TOKEN_2.setDeleted(true);
@@ -194,7 +187,6 @@ class TestCardService {
 
     @Test
     void givenPanParAndExistingParAndExistingPan_mergeCards() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_3)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_3));
         testBeans.TKM_CARD_TOKEN_2.setDeleted(true);
@@ -214,7 +206,7 @@ class TestCardService {
 
     @Test
     void givenIncompleteCard_dontWriteOnQueue() throws JsonProcessingException {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
+        when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_1, true);
@@ -223,7 +215,7 @@ class TestCardService {
 
     @Test
     void givenNewCompleteCard_writeOnQueue() throws JsonProcessingException {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
+        when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
@@ -233,7 +225,6 @@ class TestCardService {
 
     @Test
     void givenUpdatedCard_writeOnQueue() throws JsonProcessingException {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_3)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_3));
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1).thenReturn(null);
@@ -244,7 +235,6 @@ class TestCardService {
 
     @Test
     void givenNotConsentCard_writeOnQueue() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByTaxCodeAndHpanAndDeletedFalse(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1).thenReturn(null);
@@ -255,7 +245,7 @@ class TestCardService {
 
     @Test
     void givenExceptionOnCallToConsentClient_throwException() {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
+        when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenThrow(FeignException.class);
@@ -265,7 +255,7 @@ class TestCardService {
 
     @Test
     void givenConsentNotFound_dontWriteOnQueue() throws JsonProcessingException {
-        when(cryptoService.encrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
+        when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         FeignException.NotFound notFound = new FeignException.NotFound("", mock(Request.class), null);

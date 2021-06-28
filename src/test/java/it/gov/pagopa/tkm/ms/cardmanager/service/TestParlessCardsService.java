@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,8 +51,8 @@ class TestParlessCardsService {
 
     @Test
     void givenMaxNumberOfCards_returnParlessCardsResponse() {
-        when(cryptoService.decrypt(testBeans.PAN_1)).thenReturn(DefaultBeans.dec(testBeans.PAN_1));
-        when(cryptoService.decrypt(testBeans.PAN_2)).thenReturn(DefaultBeans.dec(testBeans.PAN_2));
+        when(cryptoService.decryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.dec(testBeans.PAN_1));
+        when(cryptoService.decryptNullable(testBeans.PAN_2)).thenReturn(DefaultBeans.dec(testBeans.PAN_2));
         when(cryptoService.decrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.dec(testBeans.TOKEN_1));
         when(cryptoService.decrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.dec(testBeans.TOKEN_2));
         when(cardRepository.findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(any(), any())).thenReturn(testBeans.TKM_CARD_LIST);

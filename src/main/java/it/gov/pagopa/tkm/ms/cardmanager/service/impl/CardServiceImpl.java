@@ -95,7 +95,7 @@ public class CardServiceImpl implements CardService {
         return TkmCard.builder()
                 .taxCode(taxCode)
                 .circuit(circuit)
-                .pan(cryptoService.encrypt(pan))
+                .pan(cryptoService.encryptNullable(pan))
                 .hpan(hpan)
                 .par(par)
                 .tokens(new HashSet<>())
