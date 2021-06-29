@@ -78,12 +78,12 @@ public class CardServiceImpl implements CardService {
         String hpan = readQueue.getHpan();
         CircuitEnum circuit = readQueue.getCircuit();
         List<ReadQueueToken> tokens = readQueue.getTokens();
-        if (StringUtils.isNotBlank(par) && CollectionUtils.isNotEmpty(tokens)) {
+        if (StringUtils.isNotBlank(par) && StringUtils.isBlank(hpan) && CollectionUtils.isNotEmpty(tokens)) {
             checkCollectionSingleton(tokens);
             manageParAndToken(par, circuit, tokens);
-        } else if (StringUtils.isNoneBlank(par, hpan)) {
+        } else if (StringUtils.isNoneBlank(par, hpan) && CollectionUtils.isEmpty(tokens)) {
             manageParAndHpan(par, hpan, circuit);
-        } else if (CollectionUtils.isNotEmpty(tokens)) {
+        } else if (StringUtils.isAllBlank(par, hpan) && CollectionUtils.isNotEmpty(tokens)) {
             manageOnlyToken(tokens, circuit);
         } else {
             throw new CardException(INCONSISTENT_MESSAGE);
