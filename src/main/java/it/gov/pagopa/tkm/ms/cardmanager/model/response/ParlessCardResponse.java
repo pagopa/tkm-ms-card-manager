@@ -10,12 +10,12 @@ import java.util.*;
 @NoArgsConstructor
 public class ParlessCardResponse {
 
-    private String taxCode;
-
     private String pan;
 
-    private Set<String> tokens;
+    private String hpan;
 
     private CircuitEnum circuit;
+
+    private Set<ParlessCardToken> tokens;
 
 }

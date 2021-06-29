@@ -2,8 +2,10 @@ package it.gov.pagopa.tkm.ms.cardmanager.repository;
 
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.*;
 import java.util.List;
 
 public interface CardRepository extends JpaRepository<TkmCard, Long> {
@@ -27,6 +29,6 @@ public interface CardRepository extends JpaRepository<TkmCard, Long> {
 
 //    List<TkmCard> findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(String taxCode, List<String> hpan);
 
-//    List<TkmCard> findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
+    List<TkmCard> findByParIsNullAndHpanIsNotNullAndLastReadDateBeforeOrParIsNullAndHpanIsNotNullAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
 
 }
