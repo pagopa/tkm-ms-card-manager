@@ -28,7 +28,7 @@ public class ParlessCardsServiceImpl implements ParlessCardsService {
     @Override
     public List<ParlessCardResponse> getParlessCards(Integer maxRecords) {
         log.info("Getting parless cards with a limit of " + maxRecords + " cards");
-        List<TkmCard> parlessCards = cardRepository.findByParIsNullAndHpanIsNotNullAndLastReadDateBeforeOrParIsNullAndHpanIsNotNullAndLastReadDateIsNull(
+        List<TkmCard> parlessCards = cardRepository.findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(
                 Instant.now().minus(1, ChronoUnit.DAYS),
                 PageRequest.of(0, maxRecords));
         for (TkmCard c : parlessCards) {
