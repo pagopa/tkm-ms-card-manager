@@ -149,6 +149,7 @@ public class CardServiceImpl implements CardService {
         TkmCardToken byHtokenAndCardIsNull = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
                 .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).build());
 
+        //Looking for the row with the par or with the token. If they exist I'll merge them
         TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).build();
         TkmCard tokenCard = byHtokenAndCardIsNull.getCard();
         log.trace("TokenCard: " + tokenCard);
@@ -159,6 +160,7 @@ public class CardServiceImpl implements CardService {
         TkmCard parCard = cardRepository.findByPar(par);
         log.trace("ParCard: " + parCard);
 
+        //I prefer the row with the par and delete the one without
         if (parCard != null) {
             deleteIfNotNull(tokenCard);
             cardToSave = parCard;
