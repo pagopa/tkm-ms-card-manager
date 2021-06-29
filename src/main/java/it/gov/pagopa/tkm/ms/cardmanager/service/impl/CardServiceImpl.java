@@ -109,19 +109,9 @@ public class CardServiceImpl implements CardService {
     }
 
     private void updateCitizenCardAfterMerge(TkmCard survivingCard, TkmCard deletedCard) {
-        List<TkmCitizenCard> oldCitizenCards = citizenCardRepository.findByCardId(deletedCard.getId());
-        List<TkmCitizenCard> newCitizenCards = new ArrayList<>();
-        for (TkmCitizenCard c : oldCitizenCards) {
-            newCitizenCards.add(new TkmCitizenCard(
-                    c.getCitizen(),
-                    survivingCard,
-                    c.getCreationDate(),
-                    c.getLastUpdateDate(),
-                    c.isDeleted()
-            ));
-        }
-        citizenCardRepository.saveAll(newCitizenCards);
-        citizenCardRepository.deleteAll(oldCitizenCards);
+        List<TkmCitizenCard> citizenCards = citizenCardRepository.findByCardId(deletedCard.getId());
+        citizenCards.forEach(c -> c.setCard(survivingCard));
+        citizenCardRepository.saveAll(citizenCards);
     }
 
     private void manageOnlyToken(List<ReadQueueToken> tokens) {

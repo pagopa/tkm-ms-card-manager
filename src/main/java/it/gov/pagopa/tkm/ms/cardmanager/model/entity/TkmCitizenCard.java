@@ -7,7 +7,6 @@ import java.time.*;
 
 @Entity
 @Table(name = "CITIZEN_CARD")
-@IdClass(CitizenCardId.class)
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,11 +14,14 @@ import java.time.*;
 public class TkmCitizenCard {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID", unique = true, nullable = false)
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CITIZEN_ID", nullable = false)
     private TkmCitizen citizen;
 
-    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CARD_ID", nullable = false)
     private TkmCard card;
