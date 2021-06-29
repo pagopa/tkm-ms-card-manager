@@ -11,7 +11,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +36,12 @@ class TestCardService {
 
     @Mock
     private CardRepository cardRepository;
+
+    @Mock
+    private CardTokenRepository cardTokenRepository;
+
+    @Mock
+    private CitizenCardRepository citizenCardRepository;
 
     @Mock
     private ProducerServiceImpl producerService;
@@ -65,7 +71,7 @@ class TestCardService {
         instantMockedStatic.close();
     }
 
-    @Test
+    /*@Test
     void givenPan_returnHash() {
         when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
@@ -275,6 +281,21 @@ class TestCardService {
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenThrow(notFound);
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1, true);
         verify(producerService, never()).sendMessage(Mockito.any(WriteQueue.class));
+    }*/
+
+    @Test
+    void manageParAndToken() {
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1, false);
+    }
+
+    @Test
+    void manageParAndHpan() {
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1, false);
+    }
+
+    @Test
+    void manageToken() {
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_TOKEN_1, false);
     }
 
 }

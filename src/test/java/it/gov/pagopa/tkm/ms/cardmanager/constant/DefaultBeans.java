@@ -121,6 +121,7 @@ public class DefaultBeans {
     private final List<ReadQueueToken> QUEUE_TOKEN_LIST_1 = Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_2);
     public final List<ReadQueueToken> QUEUE_TOKEN_LIST_2 = Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_3);
 
+    //ISSUER
     public final ReadQueue READ_QUEUE_PAN_PAR_1 = new ReadQueue(
             TAX_CODE_1,
             PAN_1,
@@ -149,6 +150,29 @@ public class DefaultBeans {
             PAR_1,
             CircuitEnum.AMEX,
             QUEUE_TOKEN_LIST_1);
+
+    //NON-ISSUER
+    public final ReadQueue READ_QUEUE_PAR_TOKEN_1 = new ReadQueue(
+            null,
+            null,
+            null,
+            PAR_1,
+            CircuitEnum.AMEX,
+            Collections.singletonList(QUEUE_TOKEN_1));
+    public final ReadQueue READ_QUEUE_PAR_HPAN_1 = new ReadQueue(
+            null,
+            null,
+            HPAN_1,
+            PAR_1,
+            CircuitEnum.AMEX,
+            null);
+    public final ReadQueue READ_QUEUE_TOKEN_1 = new ReadQueue(
+            null,
+            null,
+            null,
+            null,
+            CircuitEnum.AMEX,
+            Collections.singletonList(QUEUE_TOKEN_1));
 
     private final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_NEW = new HashSet<>(Arrays.asList(
             new WriteQueueToken(

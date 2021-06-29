@@ -1,5 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
+import feign.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
@@ -8,8 +9,10 @@ import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizenCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
@@ -19,15 +22,15 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.time.*;
+import java.util.*;
+import java.util.stream.*;
 
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_RTD_FAILED;
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.INCONSISTENT_MESSAGE;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
+import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.INSERT_UPDATE;
 
 @Service
 @Log4j2
@@ -75,12 +78,12 @@ public class CardServiceImpl implements CardService {
         String hpan = readQueue.getHpan();
         CircuitEnum circuit = readQueue.getCircuit();
         List<ReadQueueToken> tokens = readQueue.getTokens();
-        if (StringUtils.isNotBlank(par) && CollectionUtils.isNotEmpty(tokens)) {
+        if (StringUtils.isNotBlank(par) && StringUtils.isBlank(hpan) && CollectionUtils.isNotEmpty(tokens)) {
             checkCollectionSingleton(tokens);
             manageParAndToken(par, circuit, tokens);
-        } else if (StringUtils.isNoneBlank(par, hpan)) {
+        } else if (StringUtils.isNoneBlank(par, hpan) && CollectionUtils.isEmpty(tokens)) {
             manageParAndHpan(par, hpan, circuit);
-        } else if (CollectionUtils.isNotEmpty(tokens)) {
+        } else if (StringUtils.isAllBlank(par, hpan) && CollectionUtils.isNotEmpty(tokens)) {
             manageOnlyToken(tokens, circuit);
         } else {
             throw new CardException(INCONSISTENT_MESSAGE);
@@ -205,6 +208,60 @@ public class CardServiceImpl implements CardService {
         if (StringUtils.isNotBlank(htoken))
             return htoken;
         return callRtdForHash(token);
+    }
+
+    //TODO USE
+    private void writeOnQueueIfComplete(TkmCitizenCard citizenCard, Set<TkmCardToken> oldTokens, boolean merged) {
+        TkmCard card = citizenCard.getCard();
+        if (StringUtils.isAnyBlank(card.getPan(), card.getPar())) {
+            log.info("Card missing pan or par, not writing on queue");
+            return;
+        }
+        String taxCode = citizenCard.getCitizen().getTaxCode();
+        if (!getConsentForCard(card, taxCode)) {
+            return;
+        }
+        try {
+            WriteQueueCard writeQueueCard = new WriteQueueCard(
+                    card.getHpan(),
+                    INSERT_UPDATE,
+                    card.getPar(),
+                    getTokensDiff(oldTokens, card.getTokens(), merged)
+            );
+            WriteQueue writeQueue = new WriteQueue(
+                    citizenCard.getCitizen().getTaxCode(),
+                    Instant.now(),
+                    Collections.singleton(writeQueueCard)
+            );
+            producerService.sendMessage(writeQueue);
+        } catch (Exception e) {
+            log.error(e);
+            throw new CardException(MESSAGE_WRITE_FAILED);
+        }
+    }
+
+    private Set<WriteQueueToken> getTokensDiff(Set<TkmCardToken> oldTokens, Set<TkmCardToken> newTokens, boolean merged) {
+        return merged ?
+                oldTokens.stream().map(WriteQueueToken::new).collect(Collectors.toSet())
+                : newTokens.stream().filter(t -> t.isDeleted() || !oldTokens.contains(t)).map(WriteQueueToken::new).collect(Collectors.toSet());
+    }
+
+    private boolean getConsentForCard(TkmCard card, String taxCode) {
+        log.info("Calling Consent Manager for card with taxCode " + taxCode + " and hpan " + card.getHpan());
+        try {
+            ConsentResponse consentResponse = consentClient.getConsent(taxCode, card.getHpan(), null);
+            return consentResponse.cardHasConsent(card.getHpan());
+        } catch (FeignException fe) {
+            if (fe.status() == HttpStatus.NOT_FOUND.value()) {
+                log.info("Consent not found for card");
+                return false;
+            }
+            log.error(fe);
+            throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
+        } catch (Exception e) {
+            log.error(e);
+            throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
+        }
     }
 
 }
