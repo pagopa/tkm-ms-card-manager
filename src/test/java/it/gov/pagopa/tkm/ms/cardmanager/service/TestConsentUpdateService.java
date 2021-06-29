@@ -5,8 +5,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ConsentUpdateServiceImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
 import org.junit.jupiter.api.*;
@@ -18,7 +17,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.util.Collections;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.MESSAGE_WRITE_FAILED;
 import static org.mockito.Mockito.*;
@@ -31,7 +29,7 @@ class TestConsentUpdateService {
     private ConsentUpdateServiceImpl consentUpdateService;
 
     @Mock
-    private CardRepository cardRepository;
+    private CitizenRepository citizenRepository;
 
     @Mock
     private ProducerServiceImpl producerService;
@@ -52,41 +50,34 @@ class TestConsentUpdateService {
     }
 
     @Test
-    void givenConsentUpdateForCardNotPresentInCardManager_doNothing() throws JsonProcessingException {
+    void givenGlobalConsentAllowUpdate_writeOnQueue() throws JsonProcessingException {
+        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN);
         consentUpdateService.updateConsent(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
-        verify(producerService, never()).sendMessage(Mockito.any(WriteQueue.class));
+        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
     }
 
-    //todo
-//    @Test
-//    void givenGlobalConsentAllowUpdate_writeOnQueue() throws JsonProcessingException {
-//        when(cardRepository.findByTaxCodeAndParIsNotNullAndDeletedFalse(testBeans.TAX_CODE_1)).thenReturn(Collections.singletonList(testBeans.TKM_CARD_PAN_PAR_1));
-//        consentUpdateService.updateConsent(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
-//        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
-//    }
-//
-//    @Test
-//    void givenGlobalConsentAllowUpdate_sendError() throws JsonProcessingException {
-//        when(cardRepository.findByTaxCodeAndParIsNotNullAndDeletedFalse(testBeans.TAX_CODE_1)).thenReturn(Collections.singletonList(testBeans.TKM_CARD_PAN_PAR_1));
-//        Mockito.doThrow(new JsonProcessingException("Error"){}).when(producerService).sendMessage(Mockito.any());
-//        ConsentResponse consentUpdateGlobal = testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow);
-//        CardException cardException = Assertions.assertThrows(CardException.class, () -> consentUpdateService.updateConsent(consentUpdateGlobal));
-//        Assertions.assertEquals(MESSAGE_WRITE_FAILED, cardException.getErrorCode());
-//    }
-//
-//    @Test
-//    void givenGlobalConsentDenyUpdate_writeOnQueue() throws JsonProcessingException {
-//        when(cardRepository.findByTaxCodeAndParIsNotNullAndDeletedFalse(testBeans.TAX_CODE_1)).thenReturn(Collections.singletonList(testBeans.TKM_CARD_PAN_PAR_1));
-//        consentUpdateService.updateConsent(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Deny));
-//        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_REVOKED_CONSENT_CARD);
-//    }
+    @Test
+    void givenGlobalConsentAllowUpdate_sendError() throws JsonProcessingException {
+        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN);
+        Mockito.doThrow(new JsonProcessingException("Error"){}).when(producerService).sendMessage(Mockito.any());
+        ConsentResponse consentUpdateGlobal = testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow);
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> consentUpdateService.updateConsent(consentUpdateGlobal));
+        Assertions.assertEquals(MESSAGE_WRITE_FAILED, cardException.getErrorCode());
+    }
+
+    @Test
+    void givenGlobalConsentDenyUpdate_writeOnQueue() throws JsonProcessingException {
+        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN);
+        consentUpdateService.updateConsent(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Deny));
+        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_REVOKED_CONSENT_CARD);
+    }
 
     @Test
     void givenPartialConsentUpdate_writeOnQueue() throws JsonProcessingException {
-//        ConsentResponse consentUpdate = testBeans.getConsentUpdatePartial();
-//        when(cardRepository.findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(testBeans.TAX_CODE_1, consentUpdate.retrieveHpans())).thenReturn(Collections.singletonList(testBeans.TKM_CARD_PAN_PAR_1));
-//        consentUpdateService.updateConsent(consentUpdate);
-//        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD); todo
+        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN);
+        ConsentResponse consentUpdate = testBeans.getConsentUpdatePartial();
+        consentUpdateService.updateConsent(consentUpdate);
+        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
     }
 
 }

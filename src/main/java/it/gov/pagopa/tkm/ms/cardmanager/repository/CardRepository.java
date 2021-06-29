@@ -21,13 +21,11 @@ public interface CardRepository extends JpaRepository<TkmCard, Long> {
     @Cacheable(value = "first-card", unless = "#result == null")
     TkmCard findTopByOrderByIdAsc();
 
-//    TkmCard findByTaxCodeAndHpanAndDeletedFalse(String taxCode, String hpan);
+    TkmCard findByTaxCodeAndHpanAndDeletedFalse(String taxCode, String hpan);
 
-//    TkmCard findByTaxCodeAndParAndDeletedFalse(String taxCode, String par);
+    TkmCard findByTaxCodeAndParAndDeletedFalse(String taxCode, String par);
 
-//    List<TkmCard> findByTaxCodeAndParIsNotNullAndDeletedFalse(String taxCode);
-
-//    List<TkmCard> findByTaxCodeAndHpanInAndParIsNotNullAndDeletedFalse(String taxCode, List<String> hpan);
+    List<TkmCard> findByTaxCodeAndParIsNotNullAndDeletedFalse(String taxCode);
 
     List<TkmCard> findByParIsNullAndHpanIsNotNullAndLastReadDateBeforeOrParIsNullAndHpanIsNotNullAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
 

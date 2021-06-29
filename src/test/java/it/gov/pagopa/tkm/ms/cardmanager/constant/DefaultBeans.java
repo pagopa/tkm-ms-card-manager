@@ -1,8 +1,7 @@
 package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
 import com.google.common.collect.Sets;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
@@ -85,20 +84,17 @@ public class DefaultBeans {
             .hpan(HPAN_1)
             .pan(PAN_1)
             .par(PAR_1)
-//            .taxCode(TAX_CODE_1) todo
             .tokens(TKM_CARD_TOKENS_1)
             .build();
     public final TkmCard TKM_CARD_PAN_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .hpan(HPAN_1)
             .pan(PAN_1)
-//            .taxCode(TAX_CODE_1)todo
             .tokens(TKM_CARD_TOKENS_1)
             .build();
     public final TkmCard TKM_CARD_PAR_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .par(PAR_1)
-//            .taxCode(TAX_CODE_1) todo
             .tokens(TKM_CARD_TOKENS_1)
             .build();
     private final TkmCard TKM_CARD_PAN_PAR_2 = TkmCard.builder()
@@ -106,9 +102,16 @@ public class DefaultBeans {
             .hpan(HPAN_1)
             .pan(PAN_2)
             .par(PAR_2)
-//            .taxCode(TAX_CODE_2)todo
             .tokens(TKM_CARD_TOKENS_1)
             .build();
+
+    private final List<TkmCitizenCard> CITIZEN_CARDS = Collections.singletonList(
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_PAR_1)
+                    .build()
+    );
+
+    public final TkmCitizen CITIZEN = TkmCitizen.builder().taxCode(TAX_CODE_1).citizenCards(CITIZEN_CARDS).build();
 
     public final List<TkmCard> TKM_CARD_LIST = Arrays.asList(TKM_CARD_PAN_PAR_1, TKM_CARD_PAN_PAR_2);
 

@@ -16,7 +16,8 @@ public enum ErrorCodeEnum {
     CALL_TO_RTD_FAILED(2005, "Could not execute call to RTD"),
     KEYVAULT_ENCRYPTION_FAILED(2006, "Keyvault encryption failed"),
     KEYVAULT_DECRYPTION_FAILED(2007, "Keyvault decryption failed"),
-    INCONSISTENT_MESSAGE(2008, "Inconsistent message");
+    INCONSISTENT_MESSAGE(2008, "Inconsistent message"),
+    CITIZEN_NOT_FOUND(2009, "A citizen with the given tax code was not found");
 
     @Getter
     private final Integer statusCode;
