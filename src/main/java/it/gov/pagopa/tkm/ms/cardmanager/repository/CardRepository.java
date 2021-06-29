@@ -27,6 +27,6 @@ public interface CardRepository extends JpaRepository<TkmCard, Long> {
 
     List<TkmCard> findByTaxCodeAndParIsNotNullAndDeletedFalse(String taxCode);
 
-    List<TkmCard> findByParIsNullAndHpanIsNotNullAndLastReadDateBeforeOrParIsNullAndHpanIsNotNullAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
+    List<TkmCard> findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
 
 }
