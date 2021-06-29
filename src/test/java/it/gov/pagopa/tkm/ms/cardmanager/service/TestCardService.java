@@ -11,7 +11,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +36,9 @@ class TestCardService {
 
     @Mock
     private CardRepository cardRepository;
+
+    @Mock
+    private CitizenCardRepository citizenCardRepository;
 
     @Mock
     private ProducerServiceImpl producerService;
