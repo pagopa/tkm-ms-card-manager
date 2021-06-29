@@ -1,8 +1,7 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
-import it.gov.pagopa.tkm.ms.cardmanager.model.response.ParlessCardResponse;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.ParlessCardsService;
 import lombok.extern.log4j.*;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,20 +27,27 @@ public class ParlessCardsServiceImpl implements ParlessCardsService {
 
     @Override
     public List<ParlessCardResponse> getParlessCards(Integer maxRecords) {
-//        log.info("Getting parless cards with a limit of " + maxRecords + " cards");
-//        List<TkmCard> parlessCards = cardRepository.findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(
-//                Instant.now().minus(1, ChronoUnit.DAYS),
-//                PageRequest.of(0, maxRecords));
-//        parlessCards.forEach(c -> c.setLastReadDate(Instant.now()));
-//        cardRepository.saveAll(parlessCards);
-//        log.info("Found " + CollectionUtils.size(parlessCards) + " parless cards");
-//        return parlessCards.stream().map(c ->
-//                new ParlessCardResponse(
-//                        c.getTaxCode(),
-//                        cryptoService.decryptNullable(c.getPan()),
-//                        c.getTokens().stream().map(t -> cryptoService.decrypt(t.getToken())).collect(Collectors.toSet()),
-//                        c.getCircuit())
-//        ).collect(Collectors.toList());
-        return null;//todo
+        log.info("Getting parless cards with a limit of " + maxRecords + " cards");
+        List<TkmCard> parlessCards = cardRepository.findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(
+                Instant.now().minus(1, ChronoUnit.DAYS),
+                PageRequest.of(0, maxRecords));
+        for (TkmCard c : parlessCards) {
+            c.setLastReadDate(Instant.now());
+            c.getTokens().forEach(t -> t.setLastReadDate(Instant.now()));
+        }
+        cardRepository.saveAll(parlessCards);
+        log.info("Found " + CollectionUtils.size(parlessCards) + " parless cards");
+        return parlessCards.stream().map(c ->
+                new ParlessCardResponse(
+                        cryptoService.decryptNullable(c.getPan()),
+                        c.getHpan(),
+                        c.getCircuit(),
+                        c.getTokens().stream().map(this::toParlessCardToken).collect(Collectors.toSet()))
+        ).collect(Collectors.toList());
     }
+
+    private ParlessCardToken toParlessCardToken(TkmCardToken token) {
+        return new ParlessCardToken(cryptoService.decrypt(token.getToken()), token.getHtoken());
+    }
+
 }
