@@ -4,7 +4,7 @@ import com.google.common.collect.Sets;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.response.ParlessCardResponse;
+import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
@@ -38,7 +38,7 @@ public class DefaultBeans {
 
     public static ParlessCardResponse decCard(ParlessCardResponse card) {
         card.setPan(dec(card.getPan()));
-        card.setTokens(card.getTokens().stream().map(t -> t = dec(t)).collect(Collectors.toSet()));
+        card.setTokens(card.getTokens().stream().map(t -> t = new ParlessCardToken(dec(t.getToken()), t.getHtoken())).collect(Collectors.toSet()));
         return card;
     }
 
@@ -57,10 +57,13 @@ public class DefaultBeans {
     private final String HTOKEN_2 = "22fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6b";
     private final String HTOKEN_3 = "32fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6c";
 
-    private final Set<String> TOKEN_SET = new HashSet<>(Arrays.asList(TOKEN_1, TOKEN_2));
+    private final Set<ParlessCardToken> PARLESS_CARD_TOKENS = new HashSet<>(Arrays.asList(
+            new ParlessCardToken(TOKEN_1, HTOKEN_1),
+            new ParlessCardToken(TOKEN_2, HTOKEN_2)
+    ));
 
-    private final ParlessCardResponse PARLESS_CARD_1 = new ParlessCardResponse(TAX_CODE_1, PAN_1, TOKEN_SET, CircuitEnum.AMEX);
-    private final ParlessCardResponse PARLESS_CARD_2 = new ParlessCardResponse(TAX_CODE_2, PAN_2, TOKEN_SET, CircuitEnum.VISA);
+    private final ParlessCardResponse PARLESS_CARD_1 = new ParlessCardResponse(PAN_1, HPAN_1, CircuitEnum.AMEX, PARLESS_CARD_TOKENS);
+    private final ParlessCardResponse PARLESS_CARD_2 = new ParlessCardResponse(PAN_2, HPAN_1, CircuitEnum.VISA, PARLESS_CARD_TOKENS);
     public final List<ParlessCardResponse> PARLESS_CARD_LIST = Arrays.asList(decCard(PARLESS_CARD_1), decCard(PARLESS_CARD_2));
 
     public final TkmCardToken TKM_CARD_TOKEN_1 = TkmCardToken.builder()
