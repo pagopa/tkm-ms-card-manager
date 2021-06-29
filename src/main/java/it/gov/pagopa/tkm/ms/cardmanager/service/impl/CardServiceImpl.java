@@ -94,15 +94,21 @@ public class CardServiceImpl implements CardService {
     }
 
     private void manageParAndHpan(String par, String hpan, CircuitEnum circuit) {
+        log.debug("manageParAndHpan with par " + par + " and hpan " + hpan);
         TkmCard cardByHpanAndPar = cardRepository.findByHpanAndPar(hpan, par);
         if (cardByHpanAndPar != null) {
+            log.debug("A complete card with this par and hpan already exists, aborting");
             return;
         }
         TkmCard cardByHpan = cardRepository.findByHpan(hpan);
         TkmCard cardByPar = cardRepository.findByPar(par);
         if (cardByHpan != null) {
+            log.debug("Found card by hpan " + hpan + ", updating");
+            log.trace(cardByHpan);
             cardByHpan.setPar(par);
             if (cardByPar != null) {
+                log.debug("Also found card by par " + par + ", merging it into card found by hpan");
+                log.trace(cardByPar);
                 for (TkmCardToken t : cardByPar.getTokens()) {
                     t.setCard(cardByHpan);
                 }
@@ -111,9 +117,11 @@ public class CardServiceImpl implements CardService {
             }
             cardRepository.save(cardByHpan);
         } else if (cardByPar != null) {
+            log.debug("Found card by par " + par + ", updating");
             cardByPar.setHpan(hpan);
             cardRepository.save(cardByPar);
         } else {
+            log.debug("No existing cards found, creating one");
             TkmCard card = TkmCard.builder().hpan(hpan).par(par).circuit(circuit).build();
             cardRepository.save(card);
         }
@@ -121,8 +129,10 @@ public class CardServiceImpl implements CardService {
 
     private void updateCitizenCardAfterMerge(TkmCard survivingCard, TkmCard deletedCard) {
         List<TkmCitizenCard> citizenCards = citizenCardRepository.findByCardId(deletedCard.getId());
+        log.trace(citizenCards);
         citizenCards.forEach(c -> c.setCard(survivingCard));
         citizenCardRepository.saveAll(citizenCards);
+        log.debug("All cards have been merged");
     }
 
     private void manageOnlyToken(List<ReadQueueToken> tokens, CircuitEnum circuit) {
