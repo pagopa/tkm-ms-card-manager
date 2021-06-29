@@ -18,7 +18,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(exclude = {"tokens", "pan"})
-@ToString(exclude = "tokens")
+@ToString(exclude = {"tokens", "citizenCards"})
 public class TkmCard {
 
     @Id
@@ -43,18 +43,12 @@ public class TkmCard {
     private Instant lastReadDate;
 
     @Builder.Default
-    @OneToMany(mappedBy = "card", cascade = {CascadeType.ALL})
+    @OneToMany(mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @Where(clause = "deleted = false")
     private Set<TkmCardToken> tokens = new HashSet<>();
 
     @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "card")
-    private List<TkmCitizenCard> tkmCitizenCards = new ArrayList<>();
+    private List<TkmCitizenCard> citizenCards = new ArrayList<>();
 
-//
-//    @Builder.Default
-//    @OneToMany(fetch = FetchType.LAZY /*, mappedBy = "card"*/, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-//    @JoinColumn(name = "card_id")
-//    @Where(clause = "deleted = false")
-//    private Set<TkmCardToken> tokens = new HashSet<>();
 }
