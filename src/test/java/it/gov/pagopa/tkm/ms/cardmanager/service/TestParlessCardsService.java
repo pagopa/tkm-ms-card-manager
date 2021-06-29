@@ -55,8 +55,7 @@ class TestParlessCardsService {
         when(cryptoService.decryptNullable(testBeans.PAN_2)).thenReturn(DefaultBeans.dec(testBeans.PAN_2));
         when(cryptoService.decrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.dec(testBeans.TOKEN_1));
         when(cryptoService.decrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.dec(testBeans.TOKEN_2));
-        //todo
-//        when(cardRepository.findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
+        when(cardRepository.findByParIsNullAndHpanIsNotNullAndLastReadDateBeforeOrParIsNullAndHpanIsNotNullAndLastReadDateIsNull(any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
         List<ParlessCardResponse> parlessCards = parlessCardsService.getParlessCards(2);
         verify(cardRepository).saveAll(testBeans.TKM_CARD_LIST);
         assertEquals(parlessCards, testBeans.PARLESS_CARD_LIST);
