@@ -5,10 +5,14 @@ import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.Wallet
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizenCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CardService;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections.CollectionUtils;
@@ -17,7 +21,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_RTD_FAILED;
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.INCONSISTENT_MESSAGE;
@@ -69,15 +76,19 @@ public class CardServiceImpl implements CardService {
         CircuitEnum circuit = readQueue.getCircuit();
         List<ReadQueueToken> tokens = readQueue.getTokens();
         if (StringUtils.isNotBlank(par) && CollectionUtils.isNotEmpty(tokens)) {
-            if (CollectionUtils.size(tokens) > 1) {
-                throw new CardException(INCONSISTENT_MESSAGE);
-            }
+            checkCollectionSingleton(tokens);
             manageParAndToken(par, circuit, tokens);
         } else if (StringUtils.isNoneBlank(par, hpan)) {
             manageParAndHpan(par, hpan, circuit);
         } else if (CollectionUtils.isNotEmpty(tokens)) {
-            manageOnlyToken(tokens);
+            manageOnlyToken(tokens, circuit);
         } else {
+            throw new CardException(INCONSISTENT_MESSAGE);
+        }
+    }
+
+    private void checkCollectionSingleton(List<ReadQueueToken> tokens) {
+        if (CollectionUtils.size(tokens) > 1) {
             throw new CardException(INCONSISTENT_MESSAGE);
         }
     }
@@ -114,36 +125,58 @@ public class CardServiceImpl implements CardService {
         citizenCardRepository.saveAll(citizenCards);
     }
 
-    private void manageOnlyToken(List<ReadQueueToken> tokens) {
+    private void manageOnlyToken(List<ReadQueueToken> tokens, CircuitEnum circuit) {
         ReadQueueToken readQueueToken = tokens.get(0);
         String token = readQueueToken.getToken();
         String htoken = getHtoken(readQueueToken.getHToken(), token);
         Optional<TkmCardToken> byHtokenAndDeletedFalse = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
         if (!byHtokenAndDeletedFalse.isPresent()) {
-            TkmCardToken build = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).build();
-            cardTokenRepository.save(build);
+            log.debug("Adding htoken:" + htoken);
+            TkmCard tkmCard = TkmCard.builder().circuit(circuit).build();
+            TkmCardToken build = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).card(tkmCard).build();
+            tkmCard.setTokens(new HashSet<>(Collections.singleton(build)));
+            cardRepository.save(tkmCard);
+        } else {
+            log.debug("Skip: Card Already Updated");
         }
     }
 
     private void manageParAndToken(String par, CircuitEnum circuit, List<ReadQueueToken> tokens) {
         ReadQueueToken readQueueToken = tokens.get(0);
-        TkmCard card = cardRepository.findByPar(par);
-        if (card == null) {
-            card = TkmCard.builder().par(par).circuit(circuit).build();
-        }
         String token = readQueueToken.getToken();
+        log.debug("manageParAndToken with par " + par);
         String htoken = getHtoken(readQueueToken.getHToken(), token);
         TkmCardToken byHtokenAndCardIsNull = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
                 .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).build());
-        card.getTokens().add(byHtokenAndCardIsNull);
-        for (TkmCardToken t : card.getTokens()) {
-            t.setCard(card);
+
+        TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).build();
+        TkmCard tokenCard = byHtokenAndCardIsNull.getCard();
+        log.trace("TokenCard: " + tokenCard);
+        if (tokenCard != null && StringUtils.isNotBlank(tokenCard.getPar())) {
+            log.debug("Skip: Card Already Updated");
+            return;
         }
-        cardRepository.save(card);
+        TkmCard parCard = cardRepository.findByPar(par);
+        log.trace("ParCard: " + parCard);
+
+        if (parCard != null) {
+            deleteIfNotNull(tokenCard);
+            cardToSave = parCard;
+        } else if (tokenCard != null) {
+            cardToSave = tokenCard;
+            cardToSave.setPar(par);
+        }
+
+        byHtokenAndCardIsNull.setCard(cardToSave);
+        cardToSave.getTokens().add(byHtokenAndCardIsNull);
+
+        cardRepository.save(cardToSave);
     }
 
-    private void mergeTokens(Set<TkmCardToken> oldTokens, Set<TkmCardToken> newTokens) {
-        oldTokens.stream().filter(t -> !newTokens.contains(t)).forEach(t -> t.setDeleted(true));
+    private void deleteIfNotNull(TkmCard tkmCard) {
+        if (tkmCard != null) {
+            cardRepository.delete(tkmCard);
+        }
     }
 
     private String callRtdForHash(String toHash) {
