@@ -230,7 +230,7 @@ public class CardServiceImpl implements CardService {
     }
 
     //TODO USE
-    private void writeOnQueueIfComplete(TkmCitizenCard citizenCard, Set<TkmCardToken> oldTokens, boolean merged) {
+    /*private void writeOnQueueIfComplete(TkmCitizenCard citizenCard, Set<TkmCardToken> oldTokens, boolean merged) {
         TkmCard card = citizenCard.getCard();
         if (StringUtils.isAnyBlank(card.getPan(), card.getPar())) {
             log.info("Card missing pan or par, not writing on queue");
@@ -281,6 +281,6 @@ public class CardServiceImpl implements CardService {
             log.error(e);
             throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
         }
-    }
+    }*/
 
 }
