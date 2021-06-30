@@ -237,7 +237,7 @@ public class CardServiceImpl implements CardService {
         boolean merged = false;
         if (citizenCard == null) {
             log.info("Card not found on database, creating new one");
-            citizenCard = createCitizenCard(taxCode, pan, hpan, par, readQueue.getCircuit());
+            citizenCard = createCitizenCard(taxCode, hpan, par, pan, readQueue.getCircuit());
             card = citizenCard.getCard();
         } else {
             log.info("Card found on database, updating");
@@ -246,10 +246,7 @@ public class CardServiceImpl implements CardService {
             merged = updateCard(card, pan, hpan, par);
         }
         manageAndEncryptTokens(card, readQueue.getTokens());
-        log.info("Merged tokens: " + card.getTokens().
-                stream().
-                map(TkmCardToken::getHtoken).
-                collect(Collectors.joining(", ")));
+        log.info("Merged tokens: " + card.getTokens().stream().map(TkmCardToken::getHtoken).collect(Collectors.joining(", ")));
         citizenCardRepository.save(citizenCard);
         writeOnQueueIfComplete(citizenCard, oldTokens, merged);
     }
