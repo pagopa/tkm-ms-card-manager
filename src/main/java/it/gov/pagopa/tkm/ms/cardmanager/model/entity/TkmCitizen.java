@@ -1,9 +1,11 @@
 package it.gov.pagopa.tkm.ms.cardmanager.model.entity;
 
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.*;
 
 import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +16,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"citizenCards"})
+@EqualsAndHashCode(exclude = "citizenCards")
+@ToString(exclude = "citizenCards")
 public class TkmCitizen {
 
     @Id

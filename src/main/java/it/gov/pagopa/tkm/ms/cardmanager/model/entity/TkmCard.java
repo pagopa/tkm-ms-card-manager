@@ -17,7 +17,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"tokens", "pan"})
+@EqualsAndHashCode(exclude = {"tokens", "pan", "citizenCards"})
 @ToString(exclude = {"tokens", "citizenCards"})
 public class TkmCard {
 
