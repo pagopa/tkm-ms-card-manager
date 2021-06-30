@@ -145,10 +145,10 @@ public class CardServiceImpl implements CardService {
         Optional<TkmCardToken> byHtokenAndDeletedFalse = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
         if (!byHtokenAndDeletedFalse.isPresent()) {
             log.debug("Adding htoken:" + htoken);
-            TkmCard tkmCard = TkmCard.builder().circuit(circuit).build();
-            TkmCardToken build = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).card(tkmCard).build();
-            tkmCard.setTokens(new HashSet<>(Collections.singleton(build)));
-            cardRepository.save(tkmCard);
+            TkmCard fakeCard = TkmCard.builder().circuit(circuit).build();
+            TkmCardToken build = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).card(fakeCard).build();
+            fakeCard.setTokens(new HashSet<>(Collections.singleton(build)));
+            cardRepository.save(fakeCard);
         } else {
             log.debug("Skip: Card Already Updated");
         }
@@ -159,12 +159,11 @@ public class CardServiceImpl implements CardService {
         String token = readQueueToken.getToken();
         log.debug("manageParAndToken with par " + par);
         String htoken = getHtoken(readQueueToken.getHToken(), token);
-        TkmCardToken byHtokenAndCardIsNull = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
+        TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
                 .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).build());
-
         //Looking for the row with the par or with the token. If they exist I'll merge them
         TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).build();
-        TkmCard tokenCard = byHtokenAndCardIsNull.getCard();
+        TkmCard tokenCard = byHtoken.getCard();
         log.trace("TokenCard: " + tokenCard);
         if (tokenCard != null && StringUtils.isNotBlank(tokenCard.getPar())) {
             log.debug("Skip: Card Already Updated");
@@ -172,7 +171,6 @@ public class CardServiceImpl implements CardService {
         }
         TkmCard parCard = cardRepository.findByPar(par);
         log.trace("ParCard: " + parCard);
-
         //I prefer the row with the par and delete the one without
         if (parCard != null) {
             deleteIfNotNull(tokenCard);
@@ -181,10 +179,8 @@ public class CardServiceImpl implements CardService {
             cardToSave = tokenCard;
             cardToSave.setPar(par);
         }
-
-        byHtokenAndCardIsNull.setCard(cardToSave);
-        cardToSave.getTokens().add(byHtokenAndCardIsNull);
-
+        byHtoken.setCard(cardToSave);
+        cardToSave.getTokens().add(byHtoken);
         cardRepository.save(cardToSave);
     }
 
