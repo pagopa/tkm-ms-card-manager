@@ -5,9 +5,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizen;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizenCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.DeleteQueueMessage;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenRepository;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.TkmCitizenCardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.DeleteCardService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +18,7 @@ import java.time.Instant;
 public class DeleteCardServiceImpl implements DeleteCardService {
 
     @Autowired
-    private TkmCitizenCardRepository tkmCitizenCardRepository;
+    private CitizenCardRepository citizenCardRepository;
 
     @Autowired
     private CardRepository cardRepository;
@@ -32,7 +30,7 @@ public class DeleteCardServiceImpl implements DeleteCardService {
     public void deleteCard(DeleteQueueMessage deleteQueueMessage) {
         String taxCode = deleteQueueMessage.getTaxCode();
         String hpan = deleteQueueMessage.getHpan();
-        TkmCitizenCard tkmCitizenCard = tkmCitizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(taxCode, hpan);
+        TkmCitizenCard tkmCitizenCard = citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(taxCode, hpan);
         Instant timestamp = deleteQueueMessage.getTimestamp();
         if (tkmCitizenCard == null) {
             log.info(String.format("No Card found with hpan %s and taxCode %s. Creating new record", hpan, taxCode));
@@ -40,12 +38,12 @@ public class DeleteCardServiceImpl implements DeleteCardService {
             TkmCitizen tkmCitizen = getTkmCitizen(taxCode, timestamp);
             TkmCitizenCard citizenCard = TkmCitizenCard.builder().card(tkmCard).citizen(tkmCitizen).deleted(true)
                     .lastUpdateDate(timestamp).creationDate(timestamp).build();
-            tkmCitizenCardRepository.save(citizenCard);
+            citizenCardRepository.save(citizenCard);
             return;
         }
         tkmCitizenCard.setDeleted(true);
         tkmCitizenCard.setLastUpdateDate(timestamp);
-        tkmCitizenCardRepository.save(tkmCitizenCard);
+        citizenCardRepository.save(tkmCitizenCard);
         log.info(String.format("Deleted card with hpan %s and taxCode %s", hpan, taxCode));
     }
 
