@@ -51,14 +51,14 @@ class TestConsentUpdateService {
 
     @Test
     void givenGlobalConsentAllowUpdate_writeOnQueue() throws JsonProcessingException {
-        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN);
+        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN_1);
         consentUpdateService.updateConsent(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
     }
 
     @Test
     void givenGlobalConsentAllowUpdate_sendError() throws JsonProcessingException {
-        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN);
+        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN_1);
         Mockito.doThrow(new JsonProcessingException("Error"){}).when(producerService).sendMessage(Mockito.any());
         ConsentResponse consentUpdateGlobal = testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow);
         CardException cardException = Assertions.assertThrows(CardException.class, () -> consentUpdateService.updateConsent(consentUpdateGlobal));
@@ -67,14 +67,14 @@ class TestConsentUpdateService {
 
     @Test
     void givenGlobalConsentDenyUpdate_writeOnQueue() throws JsonProcessingException {
-        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN);
+        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN_1);
         consentUpdateService.updateConsent(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Deny));
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_REVOKED_CONSENT_CARD);
     }
 
     @Test
     void givenPartialConsentUpdate_writeOnQueue() throws JsonProcessingException {
-        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN);
+        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN_1);
         ConsentResponse consentUpdate = testBeans.getConsentUpdatePartial();
         consentUpdateService.updateConsent(consentUpdate);
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);

@@ -52,7 +52,7 @@ public class DefaultBeans {
     public final String TOKEN_1 = "abcde123";
     public final String TOKEN_2 = "xyz6543";
     public final String TOKEN_3 = "aerr126";
-    private final String HTOKEN_1 = "12fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6a";
+    public final String HTOKEN_1 = "12fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6a";
     private final String HTOKEN_2 = "22fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6b";
     private final String HTOKEN_3 = "32fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6c";
 
@@ -77,7 +77,12 @@ public class DefaultBeans {
             .token(TOKEN_3)
             .htoken(HTOKEN_3)
             .build();
+
     private final Set<TkmCardToken> TKM_CARD_TOKENS_1 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2));
+
+    public final Set<TkmCardToken> TKM_CARD_TOKENS_2 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_3));
+
+    public final Set<TkmCardToken> TKM_CARD_TOKENS_ALL = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2, TKM_CARD_TOKEN_3));
 
     public final TkmCard TKM_CARD_PAN_PAR_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
@@ -105,13 +110,37 @@ public class DefaultBeans {
             .tokens(TKM_CARD_TOKENS_1)
             .build();
 
-    private final List<TkmCitizenCard> CITIZEN_CARDS = Collections.singletonList(
+    private final List<TkmCitizenCard> CITIZEN_CARD = Collections.singletonList(
             TkmCitizenCard.builder()
                     .card(TKM_CARD_PAN_PAR_1)
                     .build()
     );
 
-    public final TkmCitizen CITIZEN = TkmCitizen.builder().taxCode(TAX_CODE_1).citizenCards(CITIZEN_CARDS).build();
+    public final TkmCitizen CITIZEN_1 = TkmCitizen.builder().taxCode(TAX_CODE_1).citizenCards(CITIZEN_CARD).build();
+    public final TkmCitizen CITIZEN_2 = TkmCitizen.builder().taxCode(TAX_CODE_2).build();
+    public final TkmCitizen CITIZEN_3 = TkmCitizen.builder().taxCode(TAX_CODE_1).build();
+
+    public final List<TkmCitizenCard> CITIZEN_CARDS = Arrays.asList(
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAR_1)
+                    .citizen(CITIZEN_2)
+                    .build(),
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_1)
+                    .citizen(CITIZEN_3)
+                    .build()
+    );
+
+    public final List<TkmCitizenCard> CITIZEN_CARDS_UPDATED = Arrays.asList(
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_1)
+                    .citizen(CITIZEN_2)
+                    .build(),
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_1)
+                    .citizen(CITIZEN_3)
+                    .build()
+    );
 
     public final List<TkmCard> TKM_CARD_LIST = Arrays.asList(TKM_CARD_PAN_PAR_1, TKM_CARD_PAN_PAR_2);
 
