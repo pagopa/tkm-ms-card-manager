@@ -188,7 +188,7 @@ public class CardServiceImpl implements CardService {
     }
 
     private void mergeTokenCardToParCard(TkmCard cardToSave, TkmCard tokenCard) {
-        //Adding pan and hpan if present
+        //Adding pan and hpan if present to kept card
         if (tokenCard != null) {
             cardToSave.setPan(StringUtils.firstNonBlank(cardToSave.getPan(), tokenCard.getPan()));
             cardToSave.setHpan(StringUtils.firstNonBlank(cardToSave.getHpan(), tokenCard.getHpan()));

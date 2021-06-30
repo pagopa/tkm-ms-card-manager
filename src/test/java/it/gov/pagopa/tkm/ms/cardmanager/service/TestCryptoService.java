@@ -1,25 +1,31 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
-import com.azure.security.keyvault.keys.cryptography.*;
-import com.azure.security.keyvault.keys.cryptography.models.*;
-import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.*;
-import org.mockito.*;
-import org.mockito.junit.jupiter.*;
-import org.springframework.test.util.*;
-import org.springframework.util.*;
+import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
+import com.azure.security.keyvault.keys.cryptography.models.DecryptResult;
+import com.azure.security.keyvault.keys.cryptography.models.EncryptResult;
+import com.azure.security.keyvault.keys.cryptography.models.EncryptionAlgorithm;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CryptoServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.Base64Utils;
 
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.KEYVAULT_ENCRYPTION_FAILED;
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.KEYVAULT_DECRYPTION_FAILED;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.KEYVAULT_ENCRYPTION_FAILED;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
-public class TestCryptoService {
+class TestCryptoService {
 
     @InjectMocks
     private CryptoServiceImpl cryptoService;
@@ -44,6 +50,19 @@ public class TestCryptoService {
     }
 
     @Test
+    void encryptNullable_returnEncryptedNotNull() {
+        EncryptResult enc = new EncryptResult("ENCRYPTED".getBytes(), EncryptionAlgorithm.RSA_OAEP_256, "KEY_ID");
+        when(client.encrypt(EncryptionAlgorithm.RSA_OAEP_256, "PLAINTEXT".getBytes())).thenReturn(enc);
+        assertEquals("RU5DUllQVEVE", cryptoService.encryptNullable("PLAINTEXT"));
+    }
+
+    @Test
+    void encryptNullable_returnEncryptedNull() {
+        assertNull(cryptoService.encryptNullable(""));
+        Mockito.verify(client, never()).encrypt(Mockito.any(EncryptionAlgorithm.class), Mockito.any());
+    }
+
+    @Test
     void givenEmptyStringToEncrypt_throwException() {
         CardException cardException = assertThrows(CardException.class, () -> cryptoService.encrypt(""));
         assertEquals(KEYVAULT_ENCRYPTION_FAILED, cardException.getErrorCode());
@@ -62,6 +81,19 @@ public class TestCryptoService {
         DecryptResult dec = new DecryptResult("PLAINTEXT".getBytes(), EncryptionAlgorithm.RSA_OAEP_256, "KEY_ID");
         when(client.decrypt(EncryptionAlgorithm.RSA_OAEP_256, Base64Utils.decodeFromString("RU5DUllQVEVE"))).thenReturn(dec);
         assertEquals("PLAINTEXT", cryptoService.decrypt("RU5DUllQVEVE"));
+    }
+
+    @Test
+    void decryptNullable_returnPlaintextNotNull() {
+        DecryptResult dec = new DecryptResult("PLAINTEXT".getBytes(), EncryptionAlgorithm.RSA_OAEP_256, "KEY_ID");
+        when(client.decrypt(EncryptionAlgorithm.RSA_OAEP_256, Base64Utils.decodeFromString("RU5DUllQVEVE"))).thenReturn(dec);
+        assertEquals("PLAINTEXT", cryptoService.decryptNullable("RU5DUllQVEVE"));
+    }
+
+    @Test
+    void decryptNullable_returnPlaintextNull() {
+        Mockito.verify(client, never()).decrypt(Mockito.any(EncryptionAlgorithm.class), Mockito.any());
+        assertNull(cryptoService.decryptNullable(""));
     }
 
     @Test
