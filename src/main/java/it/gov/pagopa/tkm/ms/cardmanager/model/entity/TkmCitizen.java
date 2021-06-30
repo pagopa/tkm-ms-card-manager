@@ -32,6 +32,7 @@ public class TkmCitizen {
     @Column(name = "DELETED")
     private boolean deleted = false;
 
+    @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "citizen")
     @Where(clause = "deleted = false")
     private List<TkmCitizenCard> citizenCards = new ArrayList<>();

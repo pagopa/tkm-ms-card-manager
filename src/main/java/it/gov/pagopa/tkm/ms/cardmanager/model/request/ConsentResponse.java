@@ -19,6 +19,7 @@ public class ConsentResponse {
     @NotBlank
     private String taxCode;
 
+    @Builder.Default
     private Set<CardServiceConsent> details = new HashSet<>();
 
     public List<String> retrieveHpans() {

@@ -37,7 +37,8 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
         log.info("Updating consent for taxCode " + taxCode + " with value " + consent.getConsent());
         TkmCitizen citizen = citizenRepository.findByTaxCode(taxCode);
         if (citizen == null) {
-            throw new CardException(ErrorCodeEnum.CITIZEN_NOT_FOUND);
+            log.info("A citizen with taxCode " + taxCode + " does not exist, aborting");
+            return;
         }
         List<TkmCard> citizenCards = citizen.getCitizenCards().stream().map(TkmCitizenCard::getCard).collect(Collectors.toList());
         List<TkmCard> cardsToUpdate = ConsentEntityEnum.Partial.equals(consent.getConsent()) ?
