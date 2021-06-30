@@ -9,6 +9,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.*;
 import org.mockito.*;
 import org.mockito.junit.jupiter.*;
+import org.springframework.test.util.*;
 
 import javax.validation.*;
 
@@ -22,31 +23,38 @@ class TestConsumerService {
     private ConsumerServiceImpl consumerService;
 
     @Mock
-    private PgpUtils pgpUtils;
-
-    @Mock
     private ObjectMapper mapper;
 
     @Spy
     private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    @Mock
-    private CardServiceImpl cardService;
+    private final MockedStatic<PgpStaticUtils> pgpStaticUtilsMockedStatic = mockStatic(PgpStaticUtils.class);
+
+    @BeforeEach
+    void init() {
+        pgpStaticUtilsMockedStatic.when(()-> PgpStaticUtils.decryptMessage(anyString(), any(byte[].class), any(char[].class))).thenReturn("MESSAGE");
+        ReflectionTestUtils.setField(consumerService, "pgpPrivateKey", "TEST_PRIVATE_KEY".getBytes());
+        ReflectionTestUtils.setField(consumerService, "pgpPassphrase", "TEST_PASSPHRASE".toCharArray());
+    }
+
+    @AfterEach
+    void close() {
+        pgpStaticUtilsMockedStatic.close();
+    }
 
     @Test
-    void givenNewCard_InvalidMessageFormat() throws Exception {
+    void givenNewCard_invalidMessageFormat() throws Exception {
         String message = "MESSAGE";
-        when(pgpUtils.decrypt(Mockito.anyString())).thenReturn(message);
-        when(mapper.readValue(Mockito.anyString(), Mockito.eq(ReadQueue.class))).thenReturn(new ReadQueue());
-        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message, "true"));
+        when(mapper.readValue(anyString(), eq(ReadQueue.class))).thenReturn(new ReadQueue());
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
         Assertions.assertEquals(MESSAGE_VALIDATION_FAILED, cardException.getErrorCode());
     }
 
     @Test
     void givenNewCard_InvalidMessageEncryption() throws Exception {
         String message = "MESSAGE";
-        when(pgpUtils.decrypt(Mockito.anyString())).thenThrow(new Exception());
-        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message, "true"));
+        when(PgpStaticUtils.decryptMessage(anyString(), any(byte[].class), any(char[].class))).thenThrow(new RuntimeException());
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
         Assertions.assertEquals(MESSAGE_DECRYPTION_FAILED, cardException.getErrorCode());
     }
 

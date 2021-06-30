@@ -289,7 +289,7 @@ class TestCardService {
     void givenParAndToken_givenExistingCardWithParAndToken_doNothing() {
         testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAR_1);
         when(cardTokenRepository.findByHtokenAndDeletedFalse(testBeans.HTOKEN_1)).thenReturn(Optional.ofNullable(testBeans.TKM_CARD_TOKEN_1));
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1);
         verifyNoInteractions(cardRepository);
     }
 
@@ -298,7 +298,7 @@ class TestCardService {
         testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAN_1);
         when(cardTokenRepository.findByHtokenAndDeletedFalse(testBeans.HTOKEN_1)).thenReturn(Optional.ofNullable(testBeans.TKM_CARD_TOKEN_1));
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1);
         verify(cardRepository).delete(testBeans.TKM_CARD_PAN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAR_1);
     }
@@ -307,21 +307,21 @@ class TestCardService {
     void givenParAndToken_givenExistingCardWithTokenAndNoCardWithPar_updatePar() {
         testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAN_1);
         when(cardTokenRepository.findByHtokenAndDeletedFalse(testBeans.HTOKEN_1)).thenReturn(Optional.ofNullable(testBeans.TKM_CARD_TOKEN_1));
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
 
     @Test
     void givenParAndHpan_givenExistingCardWithParAndHpan_doNothing() {
         when(cardRepository.findByHpanAndPar(testBeans.HPAN_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
         verifyNoMoreInteractions(cardRepository, cardTokenRepository, citizenCardRepository);
     }
 
     @Test
     void givenParAndHpan_givenExistingCardWithHpan_updateCard() {
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
 
@@ -333,7 +333,7 @@ class TestCardService {
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
         when(citizenCardRepository.findByCardId(1L)).thenReturn(testBeans.CITIZEN_CARDS);
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
         verify(cardRepository).delete(testBeans.TKM_CARD_PAR_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
         verify(citizenCardRepository).saveAll(testBeans.CITIZEN_CARDS_UPDATED);
@@ -342,21 +342,21 @@ class TestCardService {
     @Test
     void givenParAndHpan_givenExistingCardWithPar_updateCard() {
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
 
     @Test
     void givenParAndHpan_givenNoExistingCards_createCard() {
         testBeans.TKM_CARD_PAN_PAR_1.setPan(null);
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
 
     @Test
     void givenToken_givenExistingToken_doNothing() {
         when(cardTokenRepository.findByHtokenAndDeletedFalse(testBeans.HTOKEN_1)).thenReturn(Optional.ofNullable(testBeans.TKM_CARD_TOKEN_1));
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_TOKEN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_TOKEN_1);
         verifyNoInteractions(cardRepository);
     }
 
@@ -369,7 +369,7 @@ class TestCardService {
                         .token(encToken)
                         .htoken(testBeans.HTOKEN_1)
                         .build())).build();
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_TOKEN_1, false);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_TOKEN_1);
         verify(cardRepository).save(fakeCard);
     }
 

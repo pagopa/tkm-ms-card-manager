@@ -2,7 +2,6 @@ package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
-import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
@@ -11,8 +10,6 @@ import it.gov.pagopa.tkm.service.*;
 import lombok.extern.log4j.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.kafka.annotation.*;
-import org.springframework.messaging.handler.annotation.*;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.*;
 import org.springframework.util.*;
 
@@ -38,10 +35,13 @@ public class ConsumerServiceImpl implements ConsumerService {
     private ObjectMapper mapper;
 
     @Autowired
-    private PgpUtils pgpUtils;
-
-    @Autowired
     private Validator validator;
+
+    @Value("${keyvault.readQueuePrvPgpKey}")
+    private byte[] pgpPrivateKey;
+
+    @Value("${keyvault.readQueuePrvPgpKeyPassphrase:null}")
+    private char[] pgpPassphrase;
 
     @Override
     @KafkaListener(topics = "${spring.kafka.topics.read-queue.name}",
@@ -49,14 +49,11 @@ public class ConsumerServiceImpl implements ConsumerService {
             clientIdPrefix = "${spring.kafka.topics.read-queue.client-id}",
             properties = {"sasl.jaas.config:${keyvault.tkmReadTokenParPanConsumerSaslJaasConfig}"},
             concurrency = "${spring.kafka.topics.read-queue.concurrency}")
-    public void consume(
-            @Payload String message,
-            @Header(value = ApiParams.FROM_ISSUER_HEADER, required = false) String fromIssuer
-    ) throws JsonProcessingException {
+    public void consume(String message) throws JsonProcessingException {
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {
-            decryptedMessage = pgpUtils.decrypt(message);
+            decryptedMessage = PgpStaticUtils.decryptMessage(message, pgpPrivateKey, pgpPassphrase);
         } catch (Exception e) {
             log.error(e);
             throw new CardException(MESSAGE_DECRYPTION_FAILED);
@@ -64,7 +61,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         log.trace("Decrypted message from queue: " + decryptedMessage);
         ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
         validateMessage(readQueue);
-        cardService.updateOrCreateCard(readQueue, Boolean.parseBoolean(fromIssuer));
+        cardService.updateOrCreateCard(readQueue);
     }
 
     @Override

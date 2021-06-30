@@ -1,6 +1,5 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
-import feign.FeignException;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
@@ -9,12 +8,8 @@ import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizenCard;
-import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueCard;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
@@ -24,15 +19,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
-import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.INSERT_UPDATE;
 
 @Service
 @Log4j2
@@ -63,19 +54,20 @@ public class CardServiceImpl implements CardService {
     private CardTokenRepository cardTokenRepository;
 
     @Override
-    public void updateOrCreateCard(ReadQueue readQueue, boolean fromIssuer) {
-        String taxCode = readQueue.getTaxCode();
-        if (StringUtils.isBlank(taxCode)) {
-            manageParUpdateAndAcquirerToken(readQueue);
+    public void updateOrCreateCard(ReadQueue readQueue) {
+        if (StringUtils.isBlank(readQueue.getTaxCode())) {
+            manageNonIssuerCases(readQueue);
         } else if (readQueue.getTokens() == null) {
-            log.info("NOT IMPLEMENTED YET");
+            //aggiornare o creare carta con pan/par/hpan, e associarla al citizen
         } else {
             //TODO: gestire come adesso
-            log.info("NOT IMPLEMENTED YET");
+            //token vanno sostituiti
         }
     }
 
-    private void manageParUpdateAndAcquirerToken(ReadQueue readQueue) {
+    //NON-ISSUER
+
+    private void manageNonIssuerCases(ReadQueue readQueue) {
         String par = readQueue.getPar();
         String hpan = readQueue.getHpan();
         CircuitEnum circuit = readQueue.getCircuit();
@@ -96,6 +88,37 @@ public class CardServiceImpl implements CardService {
         if (CollectionUtils.size(tokens) > 1) {
             throw new CardException(INCONSISTENT_MESSAGE);
         }
+    }
+
+    private void manageParAndToken(String par, CircuitEnum circuit, List<ReadQueueToken> tokens) {
+        ReadQueueToken readQueueToken = tokens.get(0);
+        String token = readQueueToken.getToken();
+        log.debug("manageParAndToken with par " + par);
+        String htoken = getHtoken(readQueueToken.getHToken(), token);
+        TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
+                .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).build());
+        //Looking for the row with the par or with the token. If they exist I'll merge them
+        TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).build();
+        TkmCard tokenCard = byHtoken.getCard();
+        log.trace("TokenCard: " + tokenCard);
+        if (tokenCard != null && StringUtils.isNotBlank(tokenCard.getPar())) {
+            log.debug("Skip: Card Already Updated");
+            return;
+        }
+        TkmCard parCard = cardRepository.findByPar(par);
+        log.trace("ParCard: " + parCard);
+        //I prefer the row with the par and delete the one without
+        if (parCard != null) {
+            cardToSave = parCard;
+            mergeTokenCardIntoParCard(cardToSave, tokenCard);
+            deleteIfNotNull(tokenCard);
+        } else if (tokenCard != null) {
+            cardToSave = tokenCard;
+            cardToSave.setPar(par);
+        }
+        byHtoken.setCard(cardToSave);
+        cardToSave.getTokens().add(byHtoken);
+        cardRepository.save(cardToSave);
     }
 
     private void manageParAndHpan(String par, String hpan, CircuitEnum circuit) {
@@ -156,47 +179,16 @@ public class CardServiceImpl implements CardService {
         }
     }
 
-    private void manageParAndToken(String par, CircuitEnum circuit, List<ReadQueueToken> tokens) {
-        ReadQueueToken readQueueToken = tokens.get(0);
-        String token = readQueueToken.getToken();
-        log.debug("manageParAndToken with par " + par);
-        String htoken = getHtoken(readQueueToken.getHToken(), token);
-        TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
-                .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).build());
-        //Looking for the row with the par or with the token. If they exist I'll merge them
-        TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).build();
-        TkmCard tokenCard = byHtoken.getCard();
-        log.trace("TokenCard: " + tokenCard);
-        if (tokenCard != null && StringUtils.isNotBlank(tokenCard.getPar())) {
-            log.debug("Skip: Card Already Updated");
-            return;
-        }
-        TkmCard parCard = cardRepository.findByPar(par);
-        log.trace("ParCard: " + parCard);
-        //I prefer the row with the par and delete the one without
-        if (parCard != null) {
-            cardToSave = parCard;
-            mergeTokenCardToParCard(cardToSave, tokenCard);
-            deleteIfNotNull(tokenCard);
-        } else if (tokenCard != null) {
-            cardToSave = tokenCard;
-            cardToSave.setPar(par);
-        }
-        byHtoken.setCard(cardToSave);
-        cardToSave.getTokens().add(byHtoken);
-        cardRepository.save(cardToSave);
-    }
-
-    private void mergeTokenCardToParCard(TkmCard cardToSave, TkmCard tokenCard) {
+    private void mergeTokenCardIntoParCard(TkmCard cardToSave, TkmCard tokenCard) {
         //Adding pan and hpan if present to kept card
         if (tokenCard != null) {
             cardToSave.setPan(StringUtils.firstNonBlank(cardToSave.getPan(), tokenCard.getPan()));
             cardToSave.setHpan(StringUtils.firstNonBlank(cardToSave.getHpan(), tokenCard.getHpan()));
-            mergeTokenToParCardToken(cardToSave, tokenCard);
+            mergeTokenCardTokensIntoParCardTokens(cardToSave, tokenCard);
         }
     }
 
-    private void mergeTokenToParCardToken(TkmCard cardToSave, TkmCard tokenCard) {
+    private void mergeTokenCardTokensIntoParCardTokens(TkmCard cardToSave, TkmCard tokenCard) {
         //moving the tokens from the card that will be deleted to the card with par
         Set<TkmCardToken> tokensCard = tokenCard.getTokens();
         if (CollectionUtils.isNotEmpty(tokensCard)) {
@@ -228,6 +220,8 @@ public class CardServiceImpl implements CardService {
             return htoken;
         return callRtdForHash(token);
     }
+
+    // ISSUER
 
     //TODO USE
     /*private void writeOnQueueIfComplete(TkmCitizenCard citizenCard, Set<TkmCardToken> oldTokens, boolean merged) {
