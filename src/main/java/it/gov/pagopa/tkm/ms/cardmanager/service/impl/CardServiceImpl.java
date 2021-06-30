@@ -1,6 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
-import feign.*;
+import feign.FeignException;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
@@ -9,10 +9,12 @@ import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizenCard;
-import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
@@ -22,12 +24,12 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.*;
+import java.time.Instant;
 import java.util.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
 import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.INSERT_UPDATE;
@@ -173,8 +175,9 @@ public class CardServiceImpl implements CardService {
         log.trace("ParCard: " + parCard);
         //I prefer the row with the par and delete the one without
         if (parCard != null) {
-            deleteIfNotNull(tokenCard);
             cardToSave = parCard;
+            mergeTokenCardToParCard(cardToSave, tokenCard);
+            deleteIfNotNull(tokenCard);
         } else if (tokenCard != null) {
             cardToSave = tokenCard;
             cardToSave.setPar(par);
@@ -182,6 +185,26 @@ public class CardServiceImpl implements CardService {
         byHtoken.setCard(cardToSave);
         cardToSave.getTokens().add(byHtoken);
         cardRepository.save(cardToSave);
+    }
+
+    private void mergeTokenCardToParCard(TkmCard cardToSave, TkmCard tokenCard) {
+        //Adding pan and hpan if present
+        if (tokenCard != null) {
+            cardToSave.setPan(StringUtils.firstNonBlank(cardToSave.getPan(), tokenCard.getPan()));
+            cardToSave.setHpan(StringUtils.firstNonBlank(cardToSave.getHpan(), tokenCard.getHpan()));
+            mergeTokenToParCardToken(cardToSave, tokenCard);
+        }
+    }
+
+    private void mergeTokenToParCardToken(TkmCard cardToSave, TkmCard tokenCard) {
+        //moving the tokens from the card that will be deleted to the card with par
+        Set<TkmCardToken> tokensCard = tokenCard.getTokens();
+        if (CollectionUtils.isNotEmpty(tokensCard)) {
+            for (TkmCardToken t : tokensCard) {
+                t.setCard(cardToSave);
+            }
+            cardToSave.getTokens().addAll(tokensCard);
+        }
     }
 
     private void deleteIfNotNull(TkmCard tkmCard) {
