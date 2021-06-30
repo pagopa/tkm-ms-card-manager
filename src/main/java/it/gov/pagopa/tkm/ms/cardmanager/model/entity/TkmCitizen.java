@@ -34,6 +34,7 @@ public class TkmCitizen {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "citizen")
     @Where(clause = "deleted = false")
+    @Builder.Default
     private List<TkmCitizenCard> citizenCards = new ArrayList<>();
 
 }
