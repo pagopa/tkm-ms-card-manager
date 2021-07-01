@@ -11,7 +11,7 @@ import org.springframework.context.annotation.*;
 @SpringBootApplication
 @EnableFeignClients
 @EnableCaching
-@Import({CustomAnnotation.class, PgpUtils.class})
+@Import({CustomAnnotation.class})
 public class CardManagerApplication {
 
 	public static void main(String[] args) {
