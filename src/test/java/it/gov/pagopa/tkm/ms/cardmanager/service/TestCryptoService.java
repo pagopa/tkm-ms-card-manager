@@ -1,7 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
-import com.azure.security.keyvault.keys.cryptography.models.DecryptResult;
 import com.azure.security.keyvault.keys.cryptography.models.EncryptResult;
 import com.azure.security.keyvault.keys.cryptography.models.EncryptionAlgorithm;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
@@ -15,9 +14,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.util.Base64Utils;
 
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.KEYVAULT_DECRYPTION_FAILED;
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.KEYVAULT_ENCRYPTION_FAILED;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.never;
@@ -74,40 +71,6 @@ class TestCryptoService {
         when(client.encrypt(EncryptionAlgorithm.RSA_OAEP_256, "PLAINTEXT".getBytes())).thenReturn(enc);
         CardException cardException = assertThrows(CardException.class, () -> cryptoService.encrypt("PLAINTEXT"));
         assertEquals(KEYVAULT_ENCRYPTION_FAILED, cardException.getErrorCode());
-    }
-
-    @Test
-    void givenEncryptedString_returnPlaintext() {
-        DecryptResult dec = new DecryptResult("PLAINTEXT".getBytes(), EncryptionAlgorithm.RSA_OAEP_256, "KEY_ID");
-        when(client.decrypt(EncryptionAlgorithm.RSA_OAEP_256, Base64Utils.decodeFromString("RU5DUllQVEVE"))).thenReturn(dec);
-        assertEquals("PLAINTEXT", cryptoService.decrypt("RU5DUllQVEVE"));
-    }
-
-    @Test
-    void decryptNullable_returnPlaintextNotNull() {
-        DecryptResult dec = new DecryptResult("PLAINTEXT".getBytes(), EncryptionAlgorithm.RSA_OAEP_256, "KEY_ID");
-        when(client.decrypt(EncryptionAlgorithm.RSA_OAEP_256, Base64Utils.decodeFromString("RU5DUllQVEVE"))).thenReturn(dec);
-        assertEquals("PLAINTEXT", cryptoService.decryptNullable("RU5DUllQVEVE"));
-    }
-
-    @Test
-    void decryptNullable_returnPlaintextNull() {
-        Mockito.verify(client, never()).decrypt(Mockito.any(EncryptionAlgorithm.class), Mockito.any());
-        assertNull(cryptoService.decryptNullable(""));
-    }
-
-    @Test
-    void givenEmptyEncryptedString_throwException() {
-        CardException cardException = assertThrows(CardException.class, () -> cryptoService.decrypt(""));
-        assertEquals(KEYVAULT_DECRYPTION_FAILED, cardException.getErrorCode());
-    }
-
-    @Test
-    void givenEmptyDecryptResponse_throwException() {
-        DecryptResult dec = new DecryptResult("".getBytes(), EncryptionAlgorithm.RSA_OAEP_256, "KEY_ID");
-        when(client.decrypt(EncryptionAlgorithm.RSA_OAEP_256, Base64Utils.decodeFromString("RU5DUllQVEVE"))).thenReturn(dec);
-        CardException cardException = assertThrows(CardException.class, () -> cryptoService.decrypt("RU5DUllQVEVE"));
-        assertEquals(KEYVAULT_DECRYPTION_FAILED, cardException.getErrorCode());
     }
 
 }

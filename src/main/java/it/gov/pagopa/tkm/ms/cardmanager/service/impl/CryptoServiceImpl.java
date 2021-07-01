@@ -6,7 +6,6 @@ import com.azure.security.keyvault.keys.KeyClient;
 import com.azure.security.keyvault.keys.KeyClientBuilder;
 import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
 import com.azure.security.keyvault.keys.cryptography.CryptographyClientBuilder;
-import com.azure.security.keyvault.keys.cryptography.models.DecryptResult;
 import com.azure.security.keyvault.keys.cryptography.models.EncryptResult;
 import com.azure.security.keyvault.keys.cryptography.models.EncryptionAlgorithm;
 import com.azure.security.keyvault.keys.models.KeyVaultKey;
@@ -76,26 +75,6 @@ public class CryptoServiceImpl implements CryptoService {
             return null;
         }
         return encrypt(toEncrypt);
-    }
-
-    @Override
-    public String decrypt(String toDecrypt) {
-        if (StringUtils.isBlank(toDecrypt)) {
-            throw new CardException(ErrorCodeEnum.KEYVAULT_DECRYPTION_FAILED);
-        }
-        DecryptResult dec = cryptoClient.decrypt(EncryptionAlgorithm.RSA_OAEP_256, Base64Utils.decodeFromString(toDecrypt));
-        if (dec == null || ArrayUtils.isEmpty(dec.getPlainText())) {
-            throw new CardException(ErrorCodeEnum.KEYVAULT_DECRYPTION_FAILED);
-        }
-        return new String(dec.getPlainText());
-    }
-
-    @Override
-    public String decryptNullable(String toDecrypt) {
-        if (StringUtils.isBlank(toDecrypt)) {
-            return null;
-        }
-        return decrypt(toDecrypt);
     }
 
 }
