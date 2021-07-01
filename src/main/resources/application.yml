@@ -78,7 +78,7 @@ keyvault:
   tkmWriteUpdateTokenProducerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmWriteUpdateTokenProducerSaslJaasConfig:}
   tkmDeleteCardConsumerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDeleteCardConsumerSaslJaasConfig:}
   tkmReadTokenParPanPvtPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanPvtPgpKey}
-  tkmReadTokenParPanPvtPgpKeyPassphrase: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanPvtPgpKeyPassphrase}
+  tkmReadTokenParPanPvtPgpKeyPassphrase: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanPvtPgpKeyPassphrase:}
   cardMDbUsername: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbUsername}
   cardMDbPassword: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbPassword}
   apimSubscriptionTkmRtd: ${${AZURE_KEYVAULT_PROFILE:prod}-apimSubscriptionTkmRtd}

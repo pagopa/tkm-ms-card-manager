@@ -368,7 +368,9 @@ class TestCardService {
                 TkmCardToken.builder()
                         .token(encToken)
                         .htoken(testBeans.HTOKEN_1)
-                        .build())).build();
+                        .build()))
+                .creationDate(DefaultBeans.INSTANT)
+                .build();
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_TOKEN_1, false);
         verify(cardRepository).save(fakeCard);
     }

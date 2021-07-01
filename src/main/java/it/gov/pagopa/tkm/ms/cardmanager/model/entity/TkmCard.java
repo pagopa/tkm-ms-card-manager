@@ -42,6 +42,12 @@ public class TkmCard {
     @Column(name = "LAST_READ_DATE")
     private Instant lastReadDate;
 
+    @Column(name = "CREATION_DATE")
+    private Instant creationDate;
+
+    @Column(name = "LAST_UPDATE_DATE")
+    private Instant lastUpdateDate;
+
     @Builder.Default
     @OneToMany(mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @Where(clause = "deleted = false")

@@ -71,17 +71,20 @@ public class DefaultBeans {
             .pan(PAN_1)
             .par(PAR_1)
             .tokens(TKM_CARD_TOKENS_1)
+            .creationDate(INSTANT)
             .build();
     public final TkmCard TKM_CARD_PAN_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .hpan(HPAN_1)
             .pan(PAN_1)
             .tokens(TKM_CARD_TOKENS_1)
+            .creationDate(INSTANT)
             .build();
     public final TkmCard TKM_CARD_PAR_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .par(PAR_1)
             .tokens(TKM_CARD_TOKENS_1)
+            .creationDate(INSTANT)
             .build();
     private final TkmCard TKM_CARD_PAN_PAR_2 = TkmCard.builder()
             .circuit(CircuitEnum.VISA)
@@ -89,6 +92,7 @@ public class DefaultBeans {
             .pan(PAN_2)
             .par(PAR_2)
             .tokens(TKM_CARD_TOKENS_1)
+            .creationDate(INSTANT)
             .build();
 
     private final List<TkmCitizenCard> CITIZEN_CARD = Collections.singletonList(
