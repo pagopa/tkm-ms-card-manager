@@ -31,9 +31,6 @@ class TestParlessCardsService {
     @Mock
     private CardRepository cardRepository;
 
-    @Mock
-    private CryptoServiceImpl cryptoService;
-
     private DefaultBeans testBeans;
 
     private final MockedStatic<Instant> instantMockedStatic = mockStatic(Instant.class);
@@ -51,10 +48,6 @@ class TestParlessCardsService {
 
     @Test
     void givenMaxNumberOfCards_returnParlessCardsResponse() {
-        when(cryptoService.decryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.dec(testBeans.PAN_1));
-        when(cryptoService.decryptNullable(testBeans.PAN_2)).thenReturn(DefaultBeans.dec(testBeans.PAN_2));
-        when(cryptoService.decrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.dec(testBeans.TOKEN_1));
-        when(cryptoService.decrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.dec(testBeans.TOKEN_2));
         when(cardRepository.findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
         List<ParlessCardResponse> parlessCards = parlessCardsService.getParlessCards(2);
         verify(cardRepository).saveAll(testBeans.TKM_CARD_LIST);

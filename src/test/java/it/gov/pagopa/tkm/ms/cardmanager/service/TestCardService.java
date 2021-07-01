@@ -71,18 +71,18 @@ class TestCardService {
 
     // ISSUER
 
-    /*@Test
+    @Test
     void givenPan_returnHash() {
-        when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
-        when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
-        when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
-        when(rtdHashingClient.getHash(new WalletsHashingEvaluationInput(testBeans.PAN_1), "key")).thenReturn(new WalletsHashingEvaluation(testBeans.HPAN_1, "salt"));
-        testBeans.READ_QUEUE_PAN_1.setHpan(null);
-        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_1, true);
-        verify(rtdHashingClient).getHash(new WalletsHashingEvaluationInput(testBeans.PAN_1), "key");
+        testBeans.READ_QUEUE_PAR_TOKEN_1.getTokens().get(0).setHToken(null);
+        when(rtdHashingClient.getHash(new WalletsHashingEvaluationInput(testBeans.TOKEN_1), "key")).thenReturn(new WalletsHashingEvaluation(testBeans.HTOKEN_1, "salt"));
+        testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAN_1);
+        when(cardTokenRepository.findByHtokenAndDeletedFalse(testBeans.HTOKEN_1)).thenReturn(Optional.ofNullable(testBeans.TKM_CARD_TOKEN_1));
+        when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1, false);
+        verify(rtdHashingClient).getHash(new WalletsHashingEvaluationInput(testBeans.TOKEN_1), "key");
     }
 
-    @Test
+    /*@Test
     void givenNewCard_persistNewCard() {
         when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
