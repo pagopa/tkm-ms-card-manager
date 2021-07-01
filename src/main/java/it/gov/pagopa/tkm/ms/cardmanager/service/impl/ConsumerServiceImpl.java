@@ -38,10 +38,10 @@ public class ConsumerServiceImpl implements ConsumerService {
     private Validator validator;
 
     @Value("${keyvault.readQueuePrvPgpKey}")
-    private byte[] pgpPrivateKey;
+    private String pgpPrivateKey;
 
-    @Value("${keyvault.readQueuePrvPgpKeyPassphrase:null}")
-    private char[] pgpPassphrase;
+    @Value("${keyvault.readQueuePrvPgpKeyPassphrase}")
+    private String pgpPassphrase;
 
     @Override
     @KafkaListener(topics = "${spring.kafka.topics.read-queue.name}",
@@ -53,7 +53,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {
-            decryptedMessage = PgpStaticUtils.decryptMessage(message, pgpPrivateKey, pgpPassphrase);
+            decryptedMessage = PgpStaticUtils.decrypt(message, pgpPrivateKey, pgpPassphrase);
         } catch (Exception e) {
             log.error(e);
             throw new CardException(MESSAGE_DECRYPTION_FAILED);

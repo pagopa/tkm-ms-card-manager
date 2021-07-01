@@ -32,9 +32,9 @@ class TestConsumerService {
 
     @BeforeEach
     void init() {
-        pgpStaticUtilsMockedStatic.when(()-> PgpStaticUtils.decryptMessage(anyString(), any(byte[].class), any(char[].class))).thenReturn("MESSAGE");
-        ReflectionTestUtils.setField(consumerService, "pgpPrivateKey", "TEST_PRIVATE_KEY".getBytes());
-        ReflectionTestUtils.setField(consumerService, "pgpPassphrase", "TEST_PASSPHRASE".toCharArray());
+        pgpStaticUtilsMockedStatic.when(()-> PgpStaticUtils.decrypt(anyString(), anyString(), anyString())).thenReturn("MESSAGE");
+        ReflectionTestUtils.setField(consumerService, "pgpPrivateKey", "TEST_PRIVATE_KEY");
+        ReflectionTestUtils.setField(consumerService, "pgpPassphrase", "TEST_PASSPHRASE");
     }
 
     @AfterEach
@@ -53,7 +53,7 @@ class TestConsumerService {
     @Test
     void givenNewCard_InvalidMessageEncryption() throws Exception {
         String message = "MESSAGE";
-        when(PgpStaticUtils.decryptMessage(anyString(), any(byte[].class), any(char[].class))).thenThrow(new RuntimeException());
+        when(PgpStaticUtils.decrypt(anyString(), anyString(), anyString())).thenThrow(new RuntimeException());
         CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
         Assertions.assertEquals(MESSAGE_DECRYPTION_FAILED, cardException.getErrorCode());
     }
