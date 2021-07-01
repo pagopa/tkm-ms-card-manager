@@ -8,6 +8,9 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.response.ParlessCardResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 
 import java.time.Instant;
 import java.util.*;
@@ -230,5 +233,22 @@ public class DefaultBeans {
         serviceConsentSet.add(new ServiceConsent(ConsentRequestEnum.Deny, ServiceEnum.FA));
         return serviceConsentSet;
     }
+
+    public TopicPartition READ_TOPIC_PARTITION = new TopicPartition("deadLetterTopic", 0);
+
+    private ConsumerRecords<String, String> createConsumerRecords () {
+        ConsumerRecord<String, String> consumerRecord =
+                new ConsumerRecord<String, String>("deadLetterTopic",0, 0, "Key", "value" );
+        consumerRecord.headers().add("attemptsCounter", "1".getBytes());
+        consumerRecord.headers().add("originalTopic", "tkm-read-token-par-pan".getBytes());
+
+        Map<TopicPartition, List<ConsumerRecord>> map = new HashMap<>();
+        map.put(READ_TOPIC_PARTITION, Collections.singletonList(consumerRecord));
+
+        return new ConsumerRecords(map);
+
+    };
+
+    public ConsumerRecords<String, String> CONSUMER_RECORDS = createConsumerRecords();
 
 }

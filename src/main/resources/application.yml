@@ -13,9 +13,12 @@ spring:
   kafka:
     consumer:
       bootstrap-servers: ${KAFKA_SERVERS}
+      client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: true
+      group-id: ${KAFKA_CONSUMER_GROUP_ID}
+      auto-offset-reset: ${AUTO_OFFSET_RESET}
       properties:
         security:
           protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
