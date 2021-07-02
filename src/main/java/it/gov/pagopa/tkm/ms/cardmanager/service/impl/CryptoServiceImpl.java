@@ -9,6 +9,7 @@ import com.azure.security.keyvault.keys.cryptography.CryptographyClientBuilder;
 import com.azure.security.keyvault.keys.cryptography.models.EncryptResult;
 import com.azure.security.keyvault.keys.cryptography.models.EncryptionAlgorithm;
 import com.azure.security.keyvault.keys.models.KeyVaultKey;
+import it.gov.pagopa.tkm.annotation.EnableExecutionTime;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CryptoService;
@@ -23,6 +24,7 @@ import javax.annotation.PostConstruct;
 
 @Service
 @Log4j2
+@EnableExecutionTime
 public class CryptoServiceImpl implements CryptoService {
 
     @Value("${azure.keyvault.uri}")
