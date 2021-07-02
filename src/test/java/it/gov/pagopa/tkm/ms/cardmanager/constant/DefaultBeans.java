@@ -22,9 +22,17 @@ public class DefaultBeans {
         return "ENC_" + toEnc;
     }
 
+    public static TkmCard encCard(TkmCard card) {
+        card.setPan(enc(card.getPan()));
+        for (TkmCardToken token : card.getTokens()) {
+            token.setToken(enc(token.getToken()));
+        }
+        return card;
+    }
+
     public static final Instant INSTANT = Instant.MAX;
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
-    private final String TAX_CODE_2 = "TRRCLE04M24L219D";
+    public final String TAX_CODE_2 = "TRRCLE04M24L219D";
     public final String PAN_1 = "111111111111";
     public final String PAN_2 = "222222222222";
     public final String PAR_1 = "abc11111111111";

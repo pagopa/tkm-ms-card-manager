@@ -12,62 +12,6 @@
         <version>3.1.0</version>
     </parent>
 
-	<build>
-		<finalName>tkm-ms-${project.artifactId}-${project.version}</finalName>
-		<plugins>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.7</version>
-				<configuration>
-					<excludes>
-						<exclude>it/gov/pagopa/tkm/ms/cardmanager/config/**/*.class</exclude>
-						<exclude>it/gov/pagopa/tkm/ms/cardmanager/client/**/*.class</exclude>
-						<exclude>it/gov/pagopa/tkm/ms/cardmanager/repository/**/*.class</exclude>
-						<exclude>it/gov/pagopa/tkm/ms/cardmanager/model/**/*.class</exclude>
-						<exclude>it/gov/pagopa/tkm/ms/cardmanager/constant/**/*.class</exclude>
-						<exclude>it/gov/pagopa/tkm/ms/cardmanager/exception/**/*.class</exclude>
-						<exclude>it/gov/pagopa/tkm/ms/cardmanager/CardManagerApplication.class</exclude>
-					</excludes>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>report</id>
-						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>jacoco-check</id>
-						<phase>test</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<rule>
-									<element>BUNDLE</element>
-									<limits>
-										<limit>
-											<counter>LINE</counter>
-											<value>COVEREDRATIO</value>
-											<minimum>0.90</minimum>
-										</limit>
-									</limits>
-								</rule>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
     <dependencies>
         <dependency>
             <groupId>org.springframework.kafka</groupId>

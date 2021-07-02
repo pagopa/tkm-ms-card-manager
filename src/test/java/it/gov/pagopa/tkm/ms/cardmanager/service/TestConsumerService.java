@@ -3,13 +3,10 @@ package it.gov.pagopa.tkm.ms.cardmanager.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CardServiceImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ConsumerServiceImpl;
 import it.gov.pagopa.tkm.service.PgpStaticUtils;
 import org.bouncycastle.openpgp.PGPException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.*;
@@ -60,7 +57,7 @@ class TestConsumerService {
             String message = "MESSAGE";
             pgpStaticUtilsMockedStatic.when(() -> PgpStaticUtils.decrypt(anyString(), any(), any())).thenReturn(message);
             when(mapper.readValue(Mockito.anyString(), Mockito.eq(ReadQueue.class))).thenReturn(new ReadQueue());
-            CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message, "true"));
+            CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
             Assertions.assertEquals(MESSAGE_VALIDATION_FAILED, cardException.getErrorCode());
         }
     }
@@ -70,7 +67,7 @@ class TestConsumerService {
         try (MockedStatic<PgpStaticUtils> pgpStaticUtilsMockedStatic = mockStatic(PgpStaticUtils.class)) {
             String message = "MESSAGE";
             pgpStaticUtilsMockedStatic.when(() -> PgpStaticUtils.decrypt(anyString(), any(), any())).thenThrow(new PGPException(""));
-            CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message, "true"));
+            CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
             Assertions.assertEquals(MESSAGE_DECRYPTION_FAILED, cardException.getErrorCode());
         }
     }
