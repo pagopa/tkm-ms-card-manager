@@ -12,7 +12,8 @@ spring:
     name: Tkm Card Manager ${HOSTNAME:0}
   kafka:
     consumer:
-      bootstrap-servers: ${KAFKA_SERVERS}
+      retries: 0
+      bootstrap-servers: ${KAFKA_APPENDER_BOOTSTRAP_SERVERS}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: true
@@ -22,8 +23,8 @@ spring:
         sasl:
           mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
     producer:
-      bootstrap-servers: ${KAFKA_SERVERS}
-      client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
+      bootstrap-servers: ${KAFKA_APPENDER_BOOTSTRAP_SERVERS}
+      client-id: ${KAFKA_GROUP_ID:}${HOSTNAME:0}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
@@ -32,7 +33,7 @@ spring:
         sasl:
           mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
           jaas:
-            config: ${keyvault.cardMEventhubWriteSaslJaasConfig}
+            config: ${keyvault.tkmWriteUpdateTokenProducerSaslJaasConfig}
     topics:
       read-queue:
         name: ${KAFKA_READ_QUEUE_TOPIC}
@@ -56,11 +57,11 @@ logging:
     root: ${LOGGING_LEVEL:INFO}
     org:
       hibernate:
-        SQL: INFO
+        SQL: ${LOGGING_LEVEL_HIBERNATE:INFO}
         type:
           descriptor:
             sql:
-              BasicBinder: INFO
+              BasicBinder: ${LOGGING_LEVEL_HIBERNATE:INFO}
   pattern:
     level: "${LOGGING_PATTERN:%p [${spring.application.name}][%X{traceId}|%X{spanId}]}"
 azure:
@@ -72,16 +73,16 @@ azure:
     uri: ${AZURE_KEYVAULT_URI}
 
 keyvault:
-  eventhubLogSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-eventhubLogSaslJaasConfig:null}
-  cardMEventhubReadSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubReadSaslJaasConfig:null}
-  cardMEventhubWriteSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubWriteSaslJaasConfig:null}
-  cardMEventhubDeleteSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMEventhubDeleteSaslJaasConfig:null}
-  readQueuePrvPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePrvPgpKey}
-  readQueuePubPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePubPgpKey}
-  readQueuePrvPgpKeyPassphrase: ${${AZURE_KEYVAULT_PROFILE:prod}-readQueuePrvPgpKeyPassphrase:null}
+  eventhubLogSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-eventhubLogSaslJaasConfig:}
+  tkmReadTokenParPanConsumerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanConsumerSaslJaasConfig:}
+  tkmWriteUpdateTokenProducerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmWriteUpdateTokenProducerSaslJaasConfig:}
+  tkmDeleteCardConsumerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDeleteCardConsumerSaslJaasConfig:}
+  tkmReadTokenParPanPvtPgpKey: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanPvtPgpKey}
+  tkmReadTokenParPanPvtPgpKeyPassphrase: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanPvtPgpKeyPassphrase:}
   cardMDbUsername: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbUsername}
   cardMDbPassword: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbPassword}
   apimSubscriptionTkmRtd: ${${AZURE_KEYVAULT_PROFILE:prod}-apimSubscriptionTkmRtd}
+  cryptographicKeyId: ${AZURE_KEYVAULT_PROFILE:prod}-pan-token-rsa-key
 
 client-urls:
   consent-manager: ${CONSENT_MANAGER_URL}

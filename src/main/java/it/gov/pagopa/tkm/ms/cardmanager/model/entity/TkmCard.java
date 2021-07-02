@@ -6,7 +6,9 @@ import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -15,8 +17,8 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = "tokens")
-@ToString(exclude = "tokens")
+@EqualsAndHashCode(exclude = {"tokens", "pan", "citizenCards"})
+@ToString(exclude = {"tokens", "citizenCards"})
 public class TkmCard {
 
     @Id
@@ -24,33 +26,35 @@ public class TkmCard {
     @Column(name = "ID", unique = true, nullable = false)
     private Long id;
 
-    @Column(name = "TAX_CODE", nullable = false, length = 16)
-    private String taxCode;
-
-    @Column(name = "PAN", nullable = false, length = 32)
+    @Column(name = "PAN", length = 500)
     private String pan;
 
-    @Column(name = "HPAN", nullable = false, length = 64)
+    @Column(name = "HPAN", length = 64)
     private String hpan;
 
-    @Column(name = "PAR", nullable = false, length = 32)
+    @Column(name = "PAR", length = 32)
     private String par;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "CIRCUIT", nullable = false, length = 32)
+    @Column(name = "CIRCUIT", length = 32)
     private CircuitEnum circuit;
 
     @Column(name = "LAST_READ_DATE")
     private Instant lastReadDate;
 
+    @Column(name = "CREATION_DATE")
+    private Instant creationDate;
+
     @Column(name = "LAST_UPDATE_DATE")
     private Instant lastUpdateDate;
 
-    @Column(name = "DELETED")
-    private boolean deleted;
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @Builder.Default
+    @OneToMany(mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @Where(clause = "deleted = false")
     private Set<TkmCardToken> tokens = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "card")
+    private List<TkmCitizenCard> citizenCards = new ArrayList<>();
 
 }

@@ -20,8 +20,4 @@ public class Consent {
 
     private Set<ServiceEnum> services;
 
-    public boolean isPartial() {
-        return hpan != null;
-    }
-
 }
