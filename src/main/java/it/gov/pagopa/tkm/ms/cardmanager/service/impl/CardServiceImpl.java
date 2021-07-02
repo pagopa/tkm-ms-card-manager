@@ -93,37 +93,6 @@ public class CardServiceImpl implements CardService {
         }
     }
 
-    private void manageParAndToken(String par, CircuitEnum circuit, List<ReadQueueToken> tokens) {
-        ReadQueueToken readQueueToken = tokens.get(0);
-        String token = readQueueToken.getToken();
-        log.debug("manageParAndToken with par " + par);
-        String htoken = getHtoken(readQueueToken.getHToken(), token);
-        TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
-                .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build());
-        //Looking for the row with the par or with the token. If they exist I'll merge them
-        TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).creationDate(Instant.now()).build();
-        TkmCard tokenCard = byHtoken.getCard();
-        log.trace("TokenCard: " + tokenCard);
-        if (tokenCard != null && StringUtils.isNotBlank(tokenCard.getPar())) {
-            log.debug("Skip: Card Already Updated");
-            return;
-        }
-        TkmCard parCard = cardRepository.findByPar(par);
-        log.trace("ParCard: " + parCard);
-        //I prefer the row with the par and delete the one without
-        if (parCard != null) {
-            cardToSave = parCard;
-            mergeTokenCardIntoParCard(cardToSave, tokenCard);
-            deleteIfNotNull(tokenCard);
-        } else if (tokenCard != null) {
-            cardToSave = tokenCard;
-            cardToSave.setPar(par);
-        }
-        byHtoken.setCard(cardToSave);
-        cardToSave.getTokens().add(byHtoken);
-        cardRepository.save(cardToSave);
-    }
-
     private void manageParAndHpan(String par, String hpan, CircuitEnum circuit) {
         log.debug("manageParAndHpan with par " + par + " and hpan " + hpan);
         TkmCard cardByHpanAndPar = cardRepository.findByHpanAndPar(hpan, par);
@@ -180,6 +149,37 @@ public class CardServiceImpl implements CardService {
         } else {
             log.debug("Skip: Card Already Updated");
         }
+    }
+
+    private void manageParAndToken(String par, CircuitEnum circuit, List<ReadQueueToken> tokens) {
+        ReadQueueToken readQueueToken = tokens.get(0);
+        String token = readQueueToken.getToken();
+        log.debug("manageParAndToken with par " + par);
+        String htoken = getHtoken(readQueueToken.getHToken(), token);
+        TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
+                .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build());
+        //Looking for the row with the par or with the token. If they exist I'll merge them
+        TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).creationDate(Instant.now()).build();
+        TkmCard tokenCard = byHtoken.getCard();
+        log.trace("TokenCard: " + tokenCard);
+        if (tokenCard != null && StringUtils.isNotBlank(tokenCard.getPar())) {
+            log.debug("Skip: Card Already Updated");
+            return;
+        }
+        TkmCard parCard = cardRepository.findByPar(par);
+        log.trace("ParCard: " + parCard);
+        //I prefer the row with the par and delete the one without
+        if (parCard != null) {
+            cardToSave = parCard;
+            mergeTokenCardIntoParCard(cardToSave, tokenCard);
+            deleteIfNotNull(tokenCard);
+        } else if (tokenCard != null) {
+            cardToSave = tokenCard;
+            cardToSave.setPar(par);
+        }
+        byHtoken.setCard(cardToSave);
+        cardToSave.getTokens().add(byHtoken);
+        cardRepository.save(cardToSave);
     }
 
     private void mergeTokenCardIntoParCard(TkmCard cardToSave, TkmCard tokenCard) {
@@ -279,6 +279,7 @@ public class CardServiceImpl implements CardService {
                 .hpan(hpan)
                 .par(par)
                 .tokens(new HashSet<>())
+                .creationDate(Instant.now())
                 .build();
     }
 
@@ -318,11 +319,13 @@ public class CardServiceImpl implements CardService {
         if (par != null && foundCard.getPar() == null) {
             preexistingCard = cardRepository.findByPar(par);
             foundCard.setPar(par);
+            foundCard.setLastUpdateDate(Instant.now());
             toMerge = true;
         } else if (hpan != null && foundCard.getHpan() == null) {
             preexistingCard = cardRepository.findByHpan(hpan);
             foundCard.setPan(pan);
             foundCard.setHpan(hpan);
+            foundCard.setLastUpdateDate(Instant.now());
             toMerge = true;
         }
         if (preexistingCard != null) {
@@ -345,7 +348,11 @@ public class CardServiceImpl implements CardService {
     }
 
     private void mergeTokens(Set<TkmCardToken> oldTokens, Set<TkmCardToken> newTokens) {
-        oldTokens.stream().filter(t -> !newTokens.contains(t)).forEach(t -> t.setDeleted(true));
+        Instant now = Instant.now();
+        oldTokens.stream().filter(t -> !newTokens.contains(t)).forEach(t -> {
+            t.setDeleted(true);
+            t.setLastUpdateDate(now);
+        });
     }
 
     private Set<TkmCardToken> queueTokensToEncryptedTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
@@ -353,6 +360,7 @@ public class CardServiceImpl implements CardService {
                 .card(card)
                 .token(cryptoService.encrypt(t.getToken()))
                 .htoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callRtdForHash(t.getToken()))
+                .creationDate(Instant.now())
                 .build()
         ).collect(Collectors.toSet());
     }
