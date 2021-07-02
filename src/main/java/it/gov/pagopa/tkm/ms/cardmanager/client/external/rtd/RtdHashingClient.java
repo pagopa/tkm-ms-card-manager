@@ -1,7 +1,7 @@
-package it.gov.pagopa.tkm.ms.cardmanager.client.rtd;
+package it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd;
 
-import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.response.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
 import org.springframework.cloud.openfeign.*;
 import org.springframework.web.bind.annotation.*;

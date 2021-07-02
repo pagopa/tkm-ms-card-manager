@@ -3,7 +3,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.service;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.model.response.ParlessCardResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ParlessCardsServiceImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,9 +48,8 @@ class TestParlessCardsService {
 
     @Test
     void givenMaxNumberOfCards_returnParlessCardsResponse() {
-        int maxRecords = 2;
-        when(cardRepository.findByParIsNullAndDeletedFalseAndLastReadDateBeforeOrParIsNullAndDeletedFalseAndLastReadDateIsNull(any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
-        List<ParlessCardResponse> parlessCards = parlessCardsService.getParlessCards(maxRecords);
+        when(cardRepository.findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
+        List<ParlessCardResponse> parlessCards = parlessCardsService.getParlessCards(2);
         verify(cardRepository).saveAll(testBeans.TKM_CARD_LIST);
         assertEquals(parlessCards, testBeans.PARLESS_CARD_LIST);
     }
