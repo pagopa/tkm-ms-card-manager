@@ -99,9 +99,9 @@ public class CardServiceImpl implements CardService {
         log.debug("manageParAndToken with par " + par);
         String htoken = getHtoken(readQueueToken.getHToken(), token);
         TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
-                .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).build());
+                .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build());
         //Looking for the row with the par or with the token. If they exist I'll merge them
-        TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).build();
+        TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).creationDate(Instant.now()).build();
         TkmCard tokenCard = byHtoken.getCard();
         log.trace("TokenCard: " + tokenCard);
         if (tokenCard != null && StringUtils.isNotBlank(tokenCard.getPar())) {
@@ -153,7 +153,7 @@ public class CardServiceImpl implements CardService {
             cardRepository.save(cardByPar);
         } else {
             log.debug("No existing cards found, creating one");
-            TkmCard card = TkmCard.builder().hpan(hpan).par(par).circuit(circuit).build();
+            TkmCard card = TkmCard.builder().hpan(hpan).par(par).circuit(circuit).creationDate(Instant.now()).build();
             cardRepository.save(card);
         }
     }
@@ -173,8 +173,8 @@ public class CardServiceImpl implements CardService {
         Optional<TkmCardToken> byHtokenAndDeletedFalse = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
         if (!byHtokenAndDeletedFalse.isPresent()) {
             log.debug("Adding htoken:" + htoken);
-            TkmCard fakeCard = TkmCard.builder().circuit(circuit).build();
-            TkmCardToken build = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).card(fakeCard).build();
+            TkmCard fakeCard = TkmCard.builder().circuit(circuit).creationDate(Instant.now()).build();
+            TkmCardToken build = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).card(fakeCard).creationDate(Instant.now()).build();
             fakeCard.setTokens(new HashSet<>(Collections.singleton(build)));
             cardRepository.save(fakeCard);
         } else {
@@ -316,11 +316,11 @@ public class CardServiceImpl implements CardService {
         TkmCard preexistingCard = null;
         boolean toMerge = false;
         if (par != null && foundCard.getPar() == null) {
-            preexistingCard = cardRepository.findByParAndDeletedFalse(par);
+            preexistingCard = cardRepository.findByPar(par);
             foundCard.setPar(par);
             toMerge = true;
         } else if (hpan != null && foundCard.getHpan() == null) {
-            preexistingCard = cardRepository.findByHpanAndDeletedFalse(hpan);
+            preexistingCard = cardRepository.findByHpan(hpan);
             foundCard.setPan(pan);
             foundCard.setHpan(hpan);
             toMerge = true;

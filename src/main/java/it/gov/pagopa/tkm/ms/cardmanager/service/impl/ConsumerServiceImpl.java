@@ -1,22 +1,26 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.databind.*;
-import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
-import it.gov.pagopa.tkm.ms.cardmanager.service.*;
-import it.gov.pagopa.tkm.service.*;
-import lombok.extern.log4j.*;
-import org.springframework.beans.factory.annotation.*;
-import org.springframework.kafka.annotation.*;
-import org.springframework.stereotype.*;
-import org.springframework.util.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.DeleteQueueMessage;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
+import it.gov.pagopa.tkm.ms.cardmanager.service.ConsumerService;
+import it.gov.pagopa.tkm.service.PgpStaticUtils;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import javax.validation.*;
-
-import java.util.*;
-import java.util.stream.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.MESSAGE_DECRYPTION_FAILED;
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.MESSAGE_VALIDATION_FAILED;
@@ -37,11 +41,11 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Autowired
     private Validator validator;
 
-    @Value("${keyvault.readQueuePrvPgpKey}")
-    private String pgpPrivateKey;
+    @Value("${keyvault.tkmReadTokenParPanPvtPgpKey}")
+    private String tkmReadTokenParPanPvtPgpKey;
 
-    @Value("${keyvault.readQueuePrvPgpKeyPassphrase}")
-    private String pgpPassphrase;
+    @Value("${keyvault.tkmReadTokenParPanPvtPgpKeyPassphrase}")
+    private String tkmReadTokenParPanPvtPgpKeyPassphrase;
 
     @Override
     @KafkaListener(topics = "${spring.kafka.topics.read-queue.name}",
@@ -53,7 +57,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {
-            decryptedMessage = PgpStaticUtils.decrypt(message, pgpPrivateKey, pgpPassphrase);
+            decryptedMessage = PgpStaticUtils.decrypt(message, tkmReadTokenParPanPvtPgpKey, tkmReadTokenParPanPvtPgpKeyPassphrase);
         } catch (Exception e) {
             log.error(e);
             throw new CardException(MESSAGE_DECRYPTION_FAILED);
@@ -68,7 +72,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     @KafkaListener(topics = "${spring.kafka.topics.delete-queue.name}",
             groupId = "${spring.kafka.topics.delete-queue.group-id}",
             clientIdPrefix = "${spring.kafka.topics.delete-queue.client-id}",
-            properties = {"sasl.jaas.config:${keyvault.cardMEventhubDeleteSaslJaasConfig}"},
+            properties = {"sasl.jaas.config:${keyvault.tkmDeleteCardConsumerSaslJaasConfig}"},
             concurrency = "${spring.kafka.topics.delete-queue.concurrency}")
     public void consumeDelete(String message) {
         log.debug("Delete message not parsed " + message);

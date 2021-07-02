@@ -39,7 +39,7 @@ public class ParlessCardsServiceImpl implements ParlessCardsService {
         log.info("Found " + CollectionUtils.size(parlessCards) + " parless cards");
         return parlessCards.stream().map(c ->
                 new ParlessCardResponse(
-                        cryptoService.decryptNullable(c.getPan()),
+                        c.getPan(),
                         c.getHpan(),
                         c.getCircuit(),
                         c.getTokens().stream().map(this::toParlessCardToken).collect(Collectors.toSet()))
@@ -47,7 +47,7 @@ public class ParlessCardsServiceImpl implements ParlessCardsService {
     }
 
     private ParlessCardToken toParlessCardToken(TkmCardToken token) {
-        return new ParlessCardToken(cryptoService.decrypt(token.getToken()), token.getHtoken());
+        return new ParlessCardToken(token.getToken(), token.getHtoken());
     }
 
 }

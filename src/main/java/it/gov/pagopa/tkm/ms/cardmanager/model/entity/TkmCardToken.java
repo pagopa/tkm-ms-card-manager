@@ -36,4 +36,10 @@ public class TkmCardToken {
     @Column(name = "DELETED")
     private boolean deleted = false;
 
+    @Column(name = "CREATION_DATE")
+    private Instant creationDate;
+
+    @Column(name = "LAST_UPDATE_DATE")
+    private Instant lastUpdateDate;
+
 }

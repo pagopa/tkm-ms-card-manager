@@ -21,10 +21,6 @@ public interface CardRepository extends JpaRepository<TkmCard, Long> {
     @Cacheable(value = "first-card", unless = "#result == null")
     TkmCard findTopByOrderByIdAsc();
 
-    TkmCard findByHpanAndDeletedFalse(String hpan);
-
-    TkmCard findByParAndDeletedFalse(String par);
-
     List<TkmCard> findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
 
 }
