@@ -111,11 +111,13 @@ public class CardServiceImpl implements CardService {
             log.debug("Found card by hpan " + hpan + ", updating");
             log.trace(cardByHpan);
             cardByHpan.setPar(par);
+            cardByHpan.setLastUpdateDate(Instant.now());
             if (cardByPar != null) {
                 log.debug("Also found card by par " + par + ", merging it into card found by hpan");
                 log.trace(cardByPar);
                 for (TkmCardToken t : cardByPar.getTokens()) {
                     t.setCard(cardByHpan);
+                    t.setLastUpdateDate(Instant.now());
                 }
                 updateCitizenCardAfterMerge(cardByHpan, cardByPar);
                 cardRepository.delete(cardByPar);
@@ -124,6 +126,7 @@ public class CardServiceImpl implements CardService {
         } else if (cardByPar != null) {
             log.debug("Found card by par " + par + ", updating");
             cardByPar.setHpan(hpan);
+            cardByPar.setLastUpdateDate(Instant.now());
             cardRepository.save(cardByPar);
         } else {
             log.debug("No existing cards found, creating one");
@@ -144,8 +147,8 @@ public class CardServiceImpl implements CardService {
         ReadQueueToken readQueueToken = tokens.get(0);
         String token = readQueueToken.getToken();
         String htoken = getHtoken(readQueueToken.getHToken(), token);
-        Optional<TkmCardToken> byHtokenAndDeletedFalse = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
-        if (!byHtokenAndDeletedFalse.isPresent()) {
+        TkmCardToken byHtokenAndDeletedFalse = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
+        if (byHtokenAndDeletedFalse == null) {
             log.debug("Adding htoken:" + htoken);
             TkmCard fakeCard = TkmCard.builder().circuit(circuit).creationDate(Instant.now()).build();
             TkmCardToken build = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).card(fakeCard).creationDate(Instant.now()).build();
@@ -161,8 +164,12 @@ public class CardServiceImpl implements CardService {
         String token = readQueueToken.getToken();
         log.debug("manageParAndToken with par " + par);
         String htoken = getHtoken(readQueueToken.getHToken(), token);
-        TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken)
-                .orElse(TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build());
+        TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
+        if (byHtoken == null) {
+            byHtoken = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build();
+        } else {
+            byHtoken.setLastUpdateDate(Instant.now());
+        }
         //Looking for the row with the par or with the token. If they exist I'll merge them
         TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).creationDate(Instant.now()).build();
         TkmCard tokenCard = byHtoken.getCard();
@@ -176,6 +183,7 @@ public class CardServiceImpl implements CardService {
         //I prefer the row with the par and delete the one without
         if (parCard != null) {
             cardToSave = parCard;
+            cardToSave.setLastUpdateDate(Instant.now());
             mergeTokenCardToParCard(cardToSave, tokenCard);
             deleteIfNotNull(tokenCard);
         } else if (tokenCard != null) {
@@ -198,9 +206,11 @@ public class CardServiceImpl implements CardService {
 
     private void mergeTokenToParCardToken(TkmCard cardToSave, TkmCard tokenCard) {
         //moving the tokens from the card that will be deleted to the card with par
-        Set<TkmCardToken> tokensCard = tokenCard.getTokens();
+        List<TkmCardToken> tokensCard = new ArrayList<>(tokenCard.getTokens());
+        Instant now = Instant.now();
         if (CollectionUtils.isNotEmpty(tokensCard)) {
             for (TkmCardToken t : tokensCard) {
+                t.setLastUpdateDate(now);
                 t.setCard(cardToSave);
             }
             cardToSave.getTokens().addAll(tokensCard);
