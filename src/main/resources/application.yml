@@ -13,7 +13,7 @@ spring:
   kafka:
     consumer:
       retries: 0
-      bootstrap-servers: ${KAFKA_SERVERS}
+      bootstrap-servers: ${KAFKA_APPENDER_BOOTSTRAP_SERVERS}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: true
@@ -23,7 +23,7 @@ spring:
         sasl:
           mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
     producer:
-      bootstrap-servers: ${KAFKA_SERVERS}
+      bootstrap-servers: ${KAFKA_APPENDER_BOOTSTRAP_SERVERS}
       client-id: ${KAFKA_GROUP_ID:}${HOSTNAME:0}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer

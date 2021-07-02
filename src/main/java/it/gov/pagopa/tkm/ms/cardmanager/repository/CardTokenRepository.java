@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface CardTokenRepository extends JpaRepository<TkmCardToken, Long> {
 
-    Optional<TkmCardToken> findByHtokenAndDeletedFalse(String htoken);
+    TkmCardToken findByHtokenAndDeletedFalse(String htoken);
 
     List<TkmCardToken> findByIdGreaterThanAndIdLessThanEqual(Long min, Long max);
 
