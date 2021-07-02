@@ -20,8 +20,10 @@ The microservice fulfills the role of holder of all information and relations be
 - **CONSENT_MANAGER_URL** *Consent manager url localhost:8080*  
 - **KAFKA_WRITE_QUEUE_TOPIC** *Topic name of write queue*  
 - **KAFKA_READ_QUEUE_GROUP** *Group id of read queue*  
+- **KAFKA_READ_MAX_NUMBER_OF_THREADS** *Parallel read queue consumer. Default: 1*
 - **KAFKA_DELETE_QUEUE_TOPIC** *Topic name of delete queue*  
 - **KAFKA_DELETE_QUEUE_GROUP** *Group id of delete queue*  
+- **KAFKA_DELETE_MAX_NUMBER_OF_THREADS** *Parallel delete queue consumer. Default: 1*
 - **KAFKA_READ_QUEUE_GROUP** *Topic name of read queue*  
   
 ### Develop enviroment configuration  
