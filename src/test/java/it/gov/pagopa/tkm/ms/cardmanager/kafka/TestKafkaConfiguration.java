@@ -4,7 +4,10 @@ import it.gov.pagopa.tkm.ms.cardmanager.config.KafkaConfiguration;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -18,6 +21,7 @@ import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
@@ -40,7 +44,7 @@ public class TestKafkaConfiguration {
     }
 
     @Test
-    public void seekToCurrentErrorHandlerRecovers() {
+     void seekToCurrentErrorHandlerRecovers() {
         @SuppressWarnings("unchecked")
         BiConsumer<ConsumerRecord<?, ?>, Exception> recoverer = kafkaConfiguration.recoverer(mock(KafkaTemplate.class));
 
@@ -54,6 +58,5 @@ public class TestKafkaConfiguration {
         verify(consumer).seek(new TopicPartition("tkm-read-token-par-pan", 0),  0L);
         verifyNoMoreInteractions(consumer);
       }
-
 
 }
