@@ -34,20 +34,25 @@ spring:
           protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
         sasl:
           mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
-          jaas:
-            config: ${keyvault.cardMEventhubWriteSaslJaasConfig}
     topics:
       read-queue:
         name: ${KAFKA_READ_QUEUE_TOPIC}
         group-id: ${KAFKA_READ_QUEUE_GROUP}
         client-id: ${KAFKA_READ_QUEUE_GROUP}${HOSTNAME:0}
         concurrency: ${KAFKA_READ_MAX_NUMBER_OF_THREADS:1}
-      write-queue: ${KAFKA_WRITE_QUEUE_TOPIC}
+        jaas:
+          config: ${keyvault.tkmReadTokenParPanProducerSaslJaasConfig}
       delete-queue:
         name: ${KAFKA_DELETE_QUEUE_TOPIC}
         group-id: ${KAFKA_DELETE_QUEUE_GROUP}
         client-id: ${KAFKA_DELETE_QUEUE_GROUP}${HOSTNAME:0}
         concurrency: ${KAFKA_DELETE_MAX_NUMBER_OF_THREADS:1}
+        jaas:
+          config: ${keyvault.tkmDeleteTokenParPanProducerSaslJaasConfig}
+      write-queue:
+        name: ${KAFKA_WRITE_QUEUE_TOPIC}
+        jaas:
+          config: ${keyvault.tkmWriteTokenParPanProducerSaslJaasConfig}
       dlt-queue: ${KAFKA_DLT_QUEUE_TOPIC}
 server:
   port: ${SERVER_PORT:8080}
@@ -85,6 +90,9 @@ keyvault:
   cardMDbUsername: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbUsername}
   cardMDbPassword: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbPassword}
   apimSubscriptionTkmRtd: ${${AZURE_KEYVAULT_PROFILE:prod}-apimSubscriptionTkmRtd}
+  tkmReadTokenParPanProducerSaslJaasConfig:  ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanProducerSaslJaasConfig}
+  tkmWriteTokenParPanProducerSaslJaasConfig:  ${${AZURE_KEYVAULT_PROFILE:prod}-tkmWriteTokenParPanProducerSaslJaasConfig}
+  tkmDeleteTokenParPanProducerSaslJaasConfig:  ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDeleteTokenParPanProducerSaslJaasConfig}
 
 client-urls:
   consent-manager: ${CONSENT_MANAGER_URL}

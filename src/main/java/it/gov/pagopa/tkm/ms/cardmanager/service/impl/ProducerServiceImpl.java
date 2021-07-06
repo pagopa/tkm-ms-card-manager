@@ -23,7 +23,7 @@ public class ProducerServiceImpl implements ProducerService {
     @Autowired
     private ObjectMapper mapper;
 
-    @Value("${spring.kafka.topics.write-queue}")
+    @Value("${spring.kafka.topics.write-queue.name}")
     private String writeQueueTopic;
 
     @PostConstruct

@@ -2,17 +2,12 @@ package it.gov.pagopa.tkm.ms.cardmanager.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.StringStack;
 import it.gov.pagopa.tkm.ms.cardmanager.batch.BatchScheduler;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
-import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ConsumerServiceImpl;
 import it.gov.pagopa.tkm.service.PgpUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.TopicPartition;
-import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -26,10 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,8 +46,7 @@ public class TestKafkaDlt {
     private Consumer<String, String> dltConsumer;
 
     @Mock
-    private KafkaTemplate<String, String> dltKafkaTemplate;
-
+    private KafkaTemplate<String, String> dltReadProducer;
 
     private DefaultBeans testBeans;
 
@@ -70,13 +61,14 @@ public class TestKafkaDlt {
 
     @Test
     void givenTopicRecords_sendToOriginalTopic(){
-       String topic = "deadLetterTopic";
+
+        ReflectionTestUtils.setField(scheduler, "readQueueTopic", "tkm-read-token-par-pan");
         ReflectionTestUtils.setField(scheduler, "dltQueueTopic", "deadLetterTopic");
         ReflectionTestUtils.setField(scheduler, "partitions", Collections.singletonList(testBeans.READ_TOPIC_PARTITION));
 
         when(dltConsumer.poll(Duration.ofSeconds(5))).thenReturn(testBeans.CONSUMER_RECORDS);
         scheduler.scheduledTask();
-        verify(dltKafkaTemplate).send((ProducerRecord<String, String>) Mockito.any());
+        verify(dltReadProducer).send((ProducerRecord<String, String>) Mockito.any());
 
     }
 

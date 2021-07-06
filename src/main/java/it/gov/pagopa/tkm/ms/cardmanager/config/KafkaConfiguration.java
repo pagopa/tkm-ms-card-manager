@@ -3,6 +3,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.config;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.SaslConfigs;
@@ -11,13 +12,13 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.SeekToCurrentErrorHandler;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,8 +39,14 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.producer.value-serializer}")
     private String valueSerializer;
 
-    @Value("${spring.kafka.producer.client-id}")
-    private String producerClientId;
+    @Value("${spring.kafka.topics.read-queue.client-id}")
+    private String readProducerClientId;
+
+    @Value("${spring.kafka.topics.write-queue.client-id}")
+    private String writeProducerClientId;
+
+    @Value("${spring.kafka.producer.delete-queue.client-id}")
+    private String deleteProducerClientId;
 
     @Value("${spring.kafka.producer.properties.security.protocol}")
     private String securityProtocol;
@@ -47,8 +54,14 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.producer.properties.sasl.mechanism}")
     private String saslMechanism;
 
-    @Value("${spring.kafka.producer.properties.sasl.jaas.config}")
-    private String saslJaasConfig;
+    @Value("${spring.kafka.topics.read-queue.jaas.config}")
+    private String azureSaslJaasConfigRead;
+
+    @Value("${spring.kafka.topics.write-queue.jaas.config}")
+    private String azureSaslJaasConfigWrite;
+
+    @Value("${spring.kafka.topics.delete-queue.jaas.config}")
+    private String azureSaslJaasConfigDelete;
 
     @Value("${spring.kafka.consumer.key-deserializer}")
     private String keyDeserializer;
@@ -86,8 +99,10 @@ public class KafkaConfiguration {
 
     @Bean
     public DeadLetterPublishingRecoverer recoverer(KafkaTemplate<String, String> bytesTemplate) {
+
         return new DeadLetterPublishingRecoverer(bytesTemplate,
                 (record, ex) -> {
+
             Header retriesHeader = record.headers().lastHeader(attemptsCounterHeader);
                     String numberOfAttemptsString="1";
                    if (retriesHeader!=null) {
@@ -99,29 +114,41 @@ public class KafkaConfiguration {
                        numberOfAttemptsInt++;
                        numberOfAttemptsString= Integer.toString(numberOfAttemptsInt);
                     }
-                    record.headers().add(attemptsCounterHeader, numberOfAttemptsString.getBytes());
+
+                   record.headers().add(attemptsCounterHeader, numberOfAttemptsString.getBytes());
                     record.headers().add(originalTopicHeader, record.topic().getBytes());
                    log.info(String.format("Adding record [ %s ] to DeadLetterTopic from original Topic %s - " +
                            "attempt number %s ", record, record.topic(), numberOfAttemptsString));
 
-                    return new TopicPartition(dltQueueTopic, -1);
+                    return  new TopicPartition(dltQueueTopic, -1);
+
                 });
 
     }
 
-    @Bean(name = "dltKafkaTemplate")
-    public KafkaTemplate<String, String> dltKafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    @Primary
+    @Bean(name = "dltReadProducer")
+    public KafkaTemplate<String, String> dltReadProducer() {
+        return new KafkaTemplate<>(readProducerFactory());
+    }
+
+    @Bean(name = "dltWriteProducer")
+    public KafkaTemplate<String, String> dltWriteProducer() {
+        return new KafkaTemplate<>(writeProducerFactory());
+    }
+
+    @Bean(name = "dltDeleteProducer")
+    public KafkaTemplate<String, String> dltDeleteProducer() {
+        return new KafkaTemplate<>(deleteProducerFactory());
     }
 
     @Bean(name = "dltConsumer")
     public Consumer<String, String> dltConsumer() {
-        Consumer<String, String> consumer = consumerFactory().createConsumer();
-       return consumer;
+       return  consumerFactory().createConsumer();
     }
 
     @Bean
-    public ProducerFactory<String, String> producerFactory() {
+    public ProducerFactory<String, String> readProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -132,10 +159,52 @@ public class KafkaConfiguration {
         configProps.put(
                 ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 valueSerializer);
-        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, producerClientId);
+        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, readProducerClientId);
         configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
         configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
-        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, saslJaasConfig);
+        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigRead);
+
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+
+   @Bean
+    public ProducerFactory<String, String> writeProducerFactory() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                kafkaBootstrapServer);
+        configProps.put(
+                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                keySerializer);
+        configProps.put(
+                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                valueSerializer);
+        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, writeProducerClientId);
+        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
+        configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
+
+        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigWrite);
+
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    @Bean
+    public ProducerFactory<String, String> deleteProducerFactory() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                kafkaBootstrapServer);
+        configProps.put(
+                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                keySerializer);
+        configProps.put(
+                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                valueSerializer);
+        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, deleteProducerClientId);
+        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
+        configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
+        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigDelete);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -159,8 +228,7 @@ public class KafkaConfiguration {
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.valueOf(consumerEnableAutoCommit));
         configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
         configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
-        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, saslJaasConfig);
-
+        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigRead);
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
