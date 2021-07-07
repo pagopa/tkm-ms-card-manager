@@ -48,9 +48,6 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Value("${keyvault.tkmReadTokenParPanPvtPgpKeyPassphrase}")
     private String tkmReadTokenParPanPvtPgpKeyPassphrase;
 
-    @Autowired
-    private Tracer tracer;
-
     @Override
     @KafkaListener(topics = "${spring.kafka.topics.read-queue.name}",
             groupId = "${spring.kafka.topics.read-queue.group-id}",
@@ -61,7 +58,6 @@ public class ConsumerServiceImpl implements ConsumerService {
             @Payload String message,
             @Header(value = ApiParams.FROM_ISSUER_HEADER, required = false) String fromIssuer
     ) throws JsonProcessingException {
-        tracer.nextSpan();
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {
