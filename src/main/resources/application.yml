@@ -62,11 +62,14 @@ logging:
     root: ${LOGGING_LEVEL:INFO}
     org:
       hibernate:
-        SQL: ${LOGGING_LEVEL_HIBERNATE:INFO}
+        SQL: ${LOGGING_LEVEL_HIBERNATE:${logging.level.root}}
         type:
           descriptor:
             sql:
-              BasicBinder: ${LOGGING_LEVEL_HIBERNATE:INFO}
+              BasicBinder: ${LOGGING_LEVEL_HIBERNATE:${logging.level.root}}
+    reactor:
+      netty:
+        resources: ${NETTY_LOGGING_LEVEL:${logging.level.root}}
   pattern:
     level: "${LOGGING_PATTERN:%p [${spring.application.name}][%X{traceId}|%X{spanId}]}"
 azure:

@@ -1,28 +1,33 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
-import com.fasterxml.jackson.core.*;
-import feign.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.response.*;
-import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
-import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
+import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
+import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
+import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.response.WalletsHashingEvaluation;
+import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
+import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CardServiceImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CryptoServiceImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.*;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collections;
 
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_CONSENT_MANAGER_FAILED;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.INCONSISTENT_MESSAGE;
 import static org.mockito.Mockito.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -80,6 +85,13 @@ class TestCardService {
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1, false);
         verify(rtdHashingClient).getHash(new WalletsHashingEvaluationInput(testBeans.TOKEN_1), "key");
+    }
+
+    @Test
+    void givenPan_invalidMEssage() {
+        ReadQueue readQueue = ReadQueue.builder().build();
+        CardException cardException = Assertions.assertThrows(CardException.class, () -> cardService.updateOrCreateCard(readQueue, false));
+        Assertions.assertEquals(INCONSISTENT_MESSAGE, cardException.getErrorCode());
     }
 
     /*@Test
