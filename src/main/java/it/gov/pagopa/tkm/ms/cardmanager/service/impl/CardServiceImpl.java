@@ -1,6 +1,7 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import feign.FeignException;
+import it.gov.pagopa.tkm.annotation.EnableExecutionTime;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
@@ -224,7 +225,8 @@ public class CardServiceImpl implements CardService {
         }
     }
 
-    private String callRtdForHash(String toHash) {
+    @EnableExecutionTime
+    public String callRtdForHash(String toHash) {
         log.trace("Calling RTD for hash of " + toHash);
         try {
             return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(toHash), apimRtdSubscriptionKey).getHashPan();

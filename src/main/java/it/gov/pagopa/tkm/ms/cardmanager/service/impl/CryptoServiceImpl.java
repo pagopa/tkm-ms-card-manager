@@ -69,16 +69,17 @@ public class CryptoServiceImpl implements CryptoService {
 
     @Override
     public String encrypt(String toEncrypt) {
-        if (StringUtils.isBlank(toEncrypt)) {
-            throw new CardException(ErrorCodeEnum.KEYVAULT_ENCRYPTION_FAILED);
-        }
-        log.info("Encrypt Start " + toEncrypt);
-        EncryptResult enc = cryptoClient.encrypt(EncryptionAlgorithm.RSA_OAEP_256, toEncrypt.getBytes());
-        if (enc == null || ArrayUtils.isEmpty(enc.getCipherText())) {
-            throw new CardException(ErrorCodeEnum.KEYVAULT_ENCRYPTION_FAILED);
-        }
-        log.info("End Encrypt " + toEncrypt);
-        return Base64Utils.encodeToString(enc.getCipherText());
+        return toEncrypt;
+//        if (StringUtils.isBlank(toEncrypt)) {
+//            throw new CardException(ErrorCodeEnum.KEYVAULT_ENCRYPTION_FAILED);
+//        }
+//        log.info("Encrypt Start " + toEncrypt);
+//        EncryptResult enc = cryptoClient.encrypt(EncryptionAlgorithm.RSA_OAEP_256, toEncrypt.getBytes());
+//        if (enc == null || ArrayUtils.isEmpty(enc.getCipherText())) {
+//            throw new CardException(ErrorCodeEnum.KEYVAULT_ENCRYPTION_FAILED);
+//        }
+//        log.info("End Encrypt " + toEncrypt);
+//        return Base64Utils.encodeToString(enc.getCipherText());
     }
 
     @Override
