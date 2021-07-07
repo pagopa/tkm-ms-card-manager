@@ -11,6 +11,7 @@ import it.gov.pagopa.tkm.service.PgpStaticUtils;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -47,6 +48,9 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Value("${keyvault.tkmReadTokenParPanPvtPgpKeyPassphrase}")
     private String tkmReadTokenParPanPvtPgpKeyPassphrase;
 
+    @Autowired
+    private Tracer tracer;
+
     @Override
     @KafkaListener(topics = "${spring.kafka.topics.read-queue.name}",
             groupId = "${spring.kafka.topics.read-queue.group-id}",
@@ -57,6 +61,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             @Payload String message,
             @Header(value = ApiParams.FROM_ISSUER_HEADER, required = false) String fromIssuer
     ) throws JsonProcessingException {
+        tracer.nextSpan();
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {

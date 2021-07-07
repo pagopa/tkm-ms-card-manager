@@ -88,7 +88,7 @@ class TestCardService {
     }
 
     @Test
-    void givenPan_invalidMEssage() {
+    void givenPan_invalidMessage() {
         ReadQueue readQueue = ReadQueue.builder().build();
         CardException cardException = Assertions.assertThrows(CardException.class, () -> cardService.updateOrCreateCard(readQueue, false));
         Assertions.assertEquals(INCONSISTENT_MESSAGE, cardException.getErrorCode());

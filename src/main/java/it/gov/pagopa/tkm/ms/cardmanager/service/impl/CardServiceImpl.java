@@ -166,6 +166,7 @@ public class CardServiceImpl implements CardService {
         String htoken = getHtoken(readQueueToken.getHToken(), token);
         TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
         if (byHtoken == null) {
+            log.info("run encrypt");
             byHtoken = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build();
         } else {
             byHtoken.setLastUpdateDate(Instant.now());

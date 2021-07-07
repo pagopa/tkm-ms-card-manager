@@ -59,7 +59,7 @@ public class CryptoServiceImpl implements CryptoService {
         final KeyVaultKey key = keyClient.getKey(keyId);
         ConnectionProvider connectionProvider = ConnectionProvider.create("MyProvider", 100);
         Duration duration = Duration.ofMillis(2000);
-        HttpClient httpClient = new NettyAsyncHttpClientBuilder().connectionProvider(connectionProvider).readTimeout(duration).responseTimeout(duration).build();
+        HttpClient httpClient = new NettyAsyncHttpClientBuilder().connectionProvider(connectionProvider).readTimeout(duration).responseTimeout(duration).writeTimeout(duration).build();
         cryptoClient = new CryptographyClientBuilder()
                 .keyIdentifier(key.getId())
                 .httpClient(httpClient)
@@ -72,10 +72,12 @@ public class CryptoServiceImpl implements CryptoService {
         if (StringUtils.isBlank(toEncrypt)) {
             throw new CardException(ErrorCodeEnum.KEYVAULT_ENCRYPTION_FAILED);
         }
+        log.info("Encrypt Start " + toEncrypt);
         EncryptResult enc = cryptoClient.encrypt(EncryptionAlgorithm.RSA_OAEP_256, toEncrypt.getBytes());
         if (enc == null || ArrayUtils.isEmpty(enc.getCipherText())) {
             throw new CardException(ErrorCodeEnum.KEYVAULT_ENCRYPTION_FAILED);
         }
+        log.info("End Encrypt " + toEncrypt);
         return Base64Utils.encodeToString(enc.getCipherText());
     }
 
