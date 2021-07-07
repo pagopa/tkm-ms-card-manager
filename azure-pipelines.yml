@@ -73,7 +73,7 @@ stages:
 
   - stage: POM
     displayName: POM
-    condition: eq(variables.isToDeploy, true)
+    condition: and(eq(variables.isSIT, true), eq(variables.isUAT, true), eq(variables.isPROD, true))
     jobs:
       - job: POM
         displayName: POM
