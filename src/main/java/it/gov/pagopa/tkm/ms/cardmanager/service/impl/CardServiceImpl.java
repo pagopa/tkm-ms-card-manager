@@ -63,7 +63,7 @@ public class CardServiceImpl implements CardService {
     private CardTokenRepository cardTokenRepository;
 
     @Override
-    public void updateOrCreateCard(ReadQueue readQueue, boolean fromIssuer) {
+    public void updateOrCreateCard(ReadQueue readQueue) {
         String taxCode = readQueue.getTaxCode();
         if (StringUtils.isBlank(taxCode)) {
             manageParUpdateAndAcquirerToken(readQueue);

@@ -1,11 +1,13 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
-import org.springframework.transaction.annotation.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public interface ConsumerService {
 
-    @Transactional
-    void consume(String message, String fromIssuer) throws Exception;
+    void consume(List<String> messages) throws ExecutionException, InterruptedException, JsonProcessingException;
 
     void consumeDelete(String message);
 
