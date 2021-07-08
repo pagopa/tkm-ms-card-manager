@@ -12,13 +12,15 @@ spring:
     name: Tkm Card Manager ${HOSTNAME:0}
   kafka:
     #https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html
+    listener:
+      type: batch
     consumer:
       retries: 0
       bootstrap-servers: ${KAFKA_APPENDER_BOOTSTRAP_SERVERS}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: true
-      max-poll-records: ${KAFKA_MAX_POLL_RECORDS:10}
+      max-poll-records: ${KAFKA_MAX_POLL_RECORDS:5}
       properties:
         security:
           protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
