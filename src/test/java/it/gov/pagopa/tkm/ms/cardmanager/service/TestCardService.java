@@ -379,4 +379,17 @@ class TestCardService {
         verify(cardRepository).save(fakeCard);
     }
 
+    @Test
+    void givenMoreThanOneToken_throwsException(){
+        Assertions.assertThrows(CardException.class, () -> {
+           cardService.updateOrCreateCard(testBeans.READ_QUEUE_TOKEN_2, false);
+        });
+    }
+
+    @Test
+    void givenInconsistentMessage_throwsException(){
+        Assertions.assertThrows(CardException.class, () -> {
+           cardService.updateOrCreateCard(testBeans.READ_QUEUE_TOKEN_3, false);
+        });
+    }
 }

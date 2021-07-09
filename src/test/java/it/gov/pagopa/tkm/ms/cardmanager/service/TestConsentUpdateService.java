@@ -80,4 +80,18 @@ class TestConsentUpdateService {
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
     }
 
+    @Test
+    void noCitizenByTaxCode_return() throws JsonProcessingException {
+        when(citizenRepository.findByTaxCode(anyString())).thenReturn(null);
+        consentUpdateService.updateConsent(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        verify(producerService, never()).sendMessage(any());
+    }
+
+    @Test
+    void noCardsToUpdate_return() throws JsonProcessingException {
+        when(citizenRepository.findByTaxCode(testBeans.TAX_CODE_1)).thenReturn(testBeans.CITIZEN_2);
+        consentUpdateService.updateConsent(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        verify(producerService, never()).sendMessage(any());
+    }
+
 }

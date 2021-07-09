@@ -188,6 +188,22 @@ public class DefaultBeans {
             CircuitEnum.AMEX,
             Collections.singletonList(QUEUE_TOKEN_1));
 
+    public final ReadQueue READ_QUEUE_TOKEN_2 = new ReadQueue(
+            null,
+            null,
+            null,
+            PAR_1,
+            CircuitEnum.AMEX,
+            Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_2));
+
+    public final ReadQueue READ_QUEUE_TOKEN_3 = new ReadQueue(
+            null,
+            null,
+            HPAN_1,
+            null,
+            CircuitEnum.AMEX,
+            Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_2));
+
     private final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_NEW = new HashSet<>(Arrays.asList(
             new WriteQueueToken(
                     HTOKEN_1,
