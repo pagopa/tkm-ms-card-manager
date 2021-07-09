@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.gov.pagopa.tkm.ms.cardmanager.batch.BatchScheduler;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
-import it.gov.pagopa.tkm.service.PgpUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -35,9 +34,6 @@ public class TestKafkaDlt {
 
     @Mock
     private KafkaProducer<String, String> producer;
-
-    @Mock
-    private PgpUtils pgpUtils;
 
     @Mock
     private ObjectMapper mapper;
