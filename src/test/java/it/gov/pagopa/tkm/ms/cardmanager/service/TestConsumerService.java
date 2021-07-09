@@ -1,19 +1,18 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
-import com.fasterxml.jackson.databind.*;
-import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.*;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
-import it.gov.pagopa.tkm.service.*;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.*;
-import org.mockito.*;
-import org.mockito.junit.jupiter.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ConsumerServiceImpl;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.validation.*;
-
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
-import static org.mockito.Mockito.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 @ExtendWith(MockitoExtension.class)
 class TestConsumerService {
@@ -22,32 +21,42 @@ class TestConsumerService {
     private ConsumerServiceImpl consumerService;
 
     @Mock
-    private PgpUtils pgpUtils;
+    private ReaderQueueService readerQueueService;
 
     @Mock
-    private ObjectMapper mapper;
-
-    @Spy
-    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-
-    @Mock
-    private CardServiceImpl cardService;
+    private Future<Void> mockFuture;
 
     @Test
-    void givenNewCard_InvalidMessageFormat() throws Exception {
-        String message = "MESSAGE";
-        when(pgpUtils.decrypt(Mockito.anyString())).thenReturn(message);
-        when(mapper.readValue(Mockito.anyString(), Mockito.eq(ReadQueue.class))).thenReturn(new ReadQueue());
-        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
-        Assertions.assertEquals(MESSAGE_VALIDATION_FAILED, cardException.getErrorCode());
+    void givenNewCard_success() throws InterruptedException, ExecutionException, JsonProcessingException {
+        Mockito.when(readerQueueService.workOnMessage(Mockito.anyString())).thenReturn(mockFuture);
+        List<String> messages = Arrays.asList("m1", "m2", "m3");
+        consumerService.consume(messages);
+        Mockito.verify(readerQueueService, Mockito.times(1)).workOnMessage(messages.get(0));
+        Mockito.verify(readerQueueService, Mockito.times(1)).workOnMessage(messages.get(1));
+        Mockito.verify(readerQueueService, Mockito.times(1)).workOnMessage(messages.get(2));
+        Mockito.verify(mockFuture, Mockito.times(messages.size())).get();
     }
 
-    @Test
-    void givenNewCard_InvalidMessageEncryption() throws Exception {
-        String message = "MESSAGE";
-        when(pgpUtils.decrypt(Mockito.anyString())).thenThrow(new Exception());
-        CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message));
-        Assertions.assertEquals(MESSAGE_DECRYPTION_FAILED, cardException.getErrorCode());
-    }
+//todo giuseppe
+//    @Test
+//    void givenNewCard_InvalidMessageFormat() throws Exception {
+//        try (MockedStatic<PgpStaticUtils> pgpStaticUtilsMockedStatic = mockStatic(PgpStaticUtils.class)) {
+//            String message = "MESSAGE";
+//            pgpStaticUtilsMockedStatic.when(() -> PgpStaticUtils.decrypt(anyString(), any(), any())).thenReturn(message);
+//            when(mapper.readValue(Mockito.anyString(), Mockito.eq(ReadQueue.class))).thenReturn(new ReadQueue());
+//            CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message, "true"));
+//            Assertions.assertEquals(MESSAGE_VALIDATION_FAILED, cardException.getErrorCode());
+//        }
+//    }
+//
+//    @Test
+//    void givenNewCard_InvalidMessageEncryption() {
+//        try (MockedStatic<PgpStaticUtils> pgpStaticUtilsMockedStatic = mockStatic(PgpStaticUtils.class)) {
+//            String message = "MESSAGE";
+//            pgpStaticUtilsMockedStatic.when(() -> PgpStaticUtils.decrypt(anyString(), any(), any())).thenThrow(new PGPException(""));
+//            CardException cardException = Assertions.assertThrows(CardException.class, () -> consumerService.consume(message, "true"));
+//            Assertions.assertEquals(MESSAGE_DECRYPTION_FAILED, cardException.getErrorCode());
+//        }
+//    }
 
 }

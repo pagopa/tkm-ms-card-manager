@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: tkmmscardmanager
 spec:
-  replicas: 1
+  replicas: 6
   selector:
     matchLabels:
       app: tkmmscardmanager
@@ -30,6 +30,12 @@ spec:
                 name: tkmmscardmanager
             - configMapRef:
                 name: jvm
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 4Gi
+            requests:
+              cpu: 50m
           livenessProbe:
             httpGet:
               path: /actuator/health

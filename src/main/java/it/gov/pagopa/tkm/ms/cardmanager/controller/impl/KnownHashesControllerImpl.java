@@ -6,7 +6,6 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.util.*;
 import lombok.extern.log4j.*;
 import org.apache.commons.collections.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,17 +25,33 @@ public class KnownHashesControllerImpl implements KnownHashesController {
     private CardTokenRepository cardTokenRepository;
 
     @Override
-    public KnownHashesResponse getKnownHashes(Integer maxRecords, Integer hpanOffset, Integer htokenOffset) {
+    public KnownHashesResponse getKnownHashes(Long maxRecords, Long hpanOffset, Long htokenOffset) {
         log.info("Retrieving a maximum of " + maxRecords + " hashes with hpan offset " + hpanOffset + " and htoken offset " + htokenOffset);
         KnownHashesResponse response = new KnownHashesResponse();
-        List<TkmCard> cards = cardRepository.findByHpanIsNotNull(new OffsetBasedPageRequest(maxRecords, hpanOffset));
-        log.info("Found " + CollectionUtils.size(cards) + " hpans");
-        response.setHpans(cards.stream().map(TkmCard::getHpan).collect(Collectors.toSet()));
-        int diff = maxRecords - response.getHpans().size();
+        TkmCard firstCard = cardRepository.findTopByOrderByIdAsc();
+        if (firstCard != null && firstCard.getId() > hpanOffset + maxRecords) {
+            log.info("First card has id " + firstCard.getId() + ", returning empty hpan set");
+            response.setHpans(new HashSet<>());
+            response.setNextHpanOffset(firstCard.getId() - 1);
+        } else {
+            List<TkmCard> cards = cardRepository.findByIdGreaterThanAndIdLessThanEqual(hpanOffset, hpanOffset + maxRecords);
+            log.info("Found " + CollectionUtils.size(cards) + " hpans");
+            response.setHpans(cards.stream().map(TkmCard::getHpan).collect(Collectors.toSet()));
+            response.setNextHpanOffset(cards.stream().mapToLong(TkmCard::getId).max().orElse(hpanOffset));
+        }
+        long diff = maxRecords - response.getHpans().size();
         if (diff > 0) {
-            List<TkmCardToken> tokens = cardTokenRepository.findByHtokenIsNotNull(new OffsetBasedPageRequest(diff, htokenOffset));
-            log.info("Found " + CollectionUtils.size(tokens) + " tokens");
-            response.setHtokens(tokens.stream().map(TkmCardToken::getHtoken).collect(Collectors.toSet()));
+            TkmCardToken firstToken = cardTokenRepository.findTopByOrderByIdAsc();
+            if (firstToken != null && firstToken.getId() > htokenOffset + diff) {
+                log.info("First token has id " + firstToken.getId() + ", returning empty htoken set");
+                response.setHtokens(new HashSet<>());
+                response.setNextHtokenOffset(firstToken.getId() - 1);
+            } else {
+                List<TkmCardToken> tokens = cardTokenRepository.findByIdGreaterThanAndIdLessThanEqual(htokenOffset, htokenOffset + diff);
+                log.info("Found " + CollectionUtils.size(tokens) + " tokens");
+                response.setHtokens(tokens.stream().map(TkmCardToken::getHtoken).collect(Collectors.toSet()));
+                response.setNextHtokenOffset(tokens.stream().mapToLong(TkmCardToken::getId).max().orElse(htokenOffset));
+            }
         }
         log.trace(response);
         return response;

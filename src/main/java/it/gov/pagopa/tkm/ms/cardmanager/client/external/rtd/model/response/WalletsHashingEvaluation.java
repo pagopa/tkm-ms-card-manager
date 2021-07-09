@@ -1,4 +1,4 @@
-package it.gov.pagopa.tkm.ms.cardmanager.client.rtd.model.response;
+package it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.response;
 
 import lombok.*;
 

@@ -1,10 +1,9 @@
 package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
 import com.google.common.collect.Sets;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
-import it.gov.pagopa.tkm.ms.cardmanager.model.response.ParlessCardResponse;
+import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
@@ -28,25 +27,32 @@ public class DefaultBeans {
     public DefaultBeans() {
     }
 
-    public final static Instant INSTANT = Instant.MAX;
+    public static String enc(String toEnc) {
+        return "ENC_" + toEnc;
+    }
+
+    public static final Instant INSTANT = Instant.MAX;
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
     private final String TAX_CODE_2 = "TRRCLE04M24L219D";
-    private final String PAN_1 = "111111111111";
-    private final String PAN_2 = "222222222222";
+    public final String PAN_1 = "111111111111";
+    public final String PAN_2 = "222222222222";
     public final String PAR_1 = "abc11111111111";
     private final String PAR_2 = "cba222222222222";
     public final String HPAN_1 = "92fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6f";
-    private final String TOKEN_1 = "abcde123";
-    private final String TOKEN_2 = "xyz6543";
-    private final String TOKEN_3 = "aerr126";
-    private final String HTOKEN_1 = "12fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6a";
-    private final String HTOKEN_2 = "22fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6b";
+    public final String TOKEN_1 = "abcde123";
+    public final String TOKEN_2 = "xyz6543";
+    public final String TOKEN_3 = "aerr126";
+    public final String HTOKEN_1 = "12fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6a";
+    public final String HTOKEN_2 = "22fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6b";
     private final String HTOKEN_3 = "32fc472e8709cf61aa2b6f8bb9cf61aa2b6f8bd8267f9c14f58f59cf61aa2b6c";
 
-    private final Set<String> TOKEN_SET = new HashSet<>(Arrays.asList(TOKEN_1, TOKEN_2));
+    private final Set<ParlessCardToken> PARLESS_CARD_TOKENS = new HashSet<>(Arrays.asList(
+            new ParlessCardToken(TOKEN_1, HTOKEN_1),
+            new ParlessCardToken(TOKEN_2, HTOKEN_2)
+    ));
 
-    private final ParlessCardResponse PARLESS_CARD_1 = new ParlessCardResponse(TAX_CODE_1, PAN_1, TOKEN_SET, CircuitEnum.AMEX);
-    private final ParlessCardResponse PARLESS_CARD_2 = new ParlessCardResponse(TAX_CODE_2, PAN_2, TOKEN_SET, CircuitEnum.VISA);
+    private final ParlessCardResponse PARLESS_CARD_1 = new ParlessCardResponse(PAN_1, HPAN_1, CircuitEnum.AMEX, PARLESS_CARD_TOKENS);
+    private final ParlessCardResponse PARLESS_CARD_2 = new ParlessCardResponse(PAN_2, HPAN_1, CircuitEnum.VISA, PARLESS_CARD_TOKENS);
     public final List<ParlessCardResponse> PARLESS_CARD_LIST = Arrays.asList(PARLESS_CARD_1, PARLESS_CARD_2);
 
     public final TkmCardToken TKM_CARD_TOKEN_1 = TkmCardToken.builder()
@@ -61,37 +67,74 @@ public class DefaultBeans {
             .token(TOKEN_3)
             .htoken(HTOKEN_3)
             .build();
+
     private final Set<TkmCardToken> TKM_CARD_TOKENS_1 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2));
+
+    public final Set<TkmCardToken> TKM_CARD_TOKENS_2 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_3));
+
+    public final Set<TkmCardToken> TKM_CARD_TOKENS_ALL = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2, TKM_CARD_TOKEN_3));
 
     public final TkmCard TKM_CARD_PAN_PAR_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .hpan(HPAN_1)
             .pan(PAN_1)
             .par(PAR_1)
-            .taxCode(TAX_CODE_1)
             .tokens(TKM_CARD_TOKENS_1)
+            .creationDate(INSTANT)
             .build();
     public final TkmCard TKM_CARD_PAN_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .hpan(HPAN_1)
             .pan(PAN_1)
-            .taxCode(TAX_CODE_1)
             .tokens(TKM_CARD_TOKENS_1)
+            .creationDate(INSTANT)
             .build();
     public final TkmCard TKM_CARD_PAR_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .par(PAR_1)
-            .taxCode(TAX_CODE_1)
             .tokens(TKM_CARD_TOKENS_1)
+            .creationDate(INSTANT)
             .build();
     private final TkmCard TKM_CARD_PAN_PAR_2 = TkmCard.builder()
             .circuit(CircuitEnum.VISA)
             .hpan(HPAN_1)
             .pan(PAN_2)
             .par(PAR_2)
-            .taxCode(TAX_CODE_2)
             .tokens(TKM_CARD_TOKENS_1)
+            .creationDate(INSTANT)
             .build();
+
+    private final List<TkmCitizenCard> CITIZEN_CARD = Collections.singletonList(
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_PAR_1)
+                    .build()
+    );
+
+    public final TkmCitizen CITIZEN_1 = TkmCitizen.builder().taxCode(TAX_CODE_1).citizenCards(CITIZEN_CARD).build();
+    public final TkmCitizen CITIZEN_2 = TkmCitizen.builder().taxCode(TAX_CODE_2).build();
+    public final TkmCitizen CITIZEN_3 = TkmCitizen.builder().taxCode(TAX_CODE_1).build();
+
+    public final List<TkmCitizenCard> CITIZEN_CARDS = Arrays.asList(
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAR_1)
+                    .citizen(CITIZEN_2)
+                    .build(),
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_1)
+                    .citizen(CITIZEN_3)
+                    .build()
+    );
+
+    public final List<TkmCitizenCard> CITIZEN_CARDS_UPDATED = Arrays.asList(
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_1)
+                    .citizen(CITIZEN_2)
+                    .build(),
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_1)
+                    .citizen(CITIZEN_3)
+                    .build()
+    );
 
     public final List<TkmCard> TKM_CARD_LIST = Arrays.asList(TKM_CARD_PAN_PAR_1, TKM_CARD_PAN_PAR_2);
 
@@ -101,6 +144,7 @@ public class DefaultBeans {
     private final List<ReadQueueToken> QUEUE_TOKEN_LIST_1 = Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_2);
     public final List<ReadQueueToken> QUEUE_TOKEN_LIST_2 = Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_3);
 
+    //ISSUER
     public final ReadQueue READ_QUEUE_PAN_PAR_1 = new ReadQueue(
             TAX_CODE_1,
             PAN_1,
@@ -129,6 +173,29 @@ public class DefaultBeans {
             PAR_1,
             CircuitEnum.AMEX,
             QUEUE_TOKEN_LIST_1);
+
+    //NON-ISSUER
+    public final ReadQueue READ_QUEUE_PAR_TOKEN_1 = new ReadQueue(
+            null,
+            null,
+            null,
+            PAR_1,
+            CircuitEnum.AMEX,
+            Collections.singletonList(QUEUE_TOKEN_1));
+    public final ReadQueue READ_QUEUE_PAR_HPAN_1 = new ReadQueue(
+            null,
+            null,
+            HPAN_1,
+            PAR_1,
+            CircuitEnum.AMEX,
+            null);
+    public final ReadQueue READ_QUEUE_TOKEN_1 = new ReadQueue(
+            null,
+            null,
+            null,
+            null,
+            CircuitEnum.AMEX,
+            Collections.singletonList(QUEUE_TOKEN_1));
 
     private final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_NEW = new HashSet<>(Arrays.asList(
             new WriteQueueToken(

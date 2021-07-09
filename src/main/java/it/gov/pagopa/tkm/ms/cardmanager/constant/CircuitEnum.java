@@ -5,9 +5,6 @@ public enum CircuitEnum {
     VISA,
     MASTERCARD,
     AMEX,
-    VPAY,
-    DINERS,
-    VISA_ELECTRON,
-    MAESTRO;
+    DELETED;
 
 }

@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: tkm-ms-card-manager
   description: RESTful API provided for parless cards retrieval
-  version: 1.1.1
+  version: 1.2.0
 servers:
   - url: http://localhost:2000/tkm-ms-card-manager
   - url: http://tkm-sit/tkm-ms-card-manager
@@ -195,16 +195,23 @@ components:
     ParlessCardResponse:
       type: object
       properties:
-        taxCode:
-          type: string
         pan:
+          type: string
+        hpan:
           type: string
         circuit:
           type: string
         tokens:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/ParlessCardToken'
+    ParlessCardToken:
+      type: object
+      properties:
+        token:
+          type: string
+        htoken:
+          type: string
     CardError:
       required:
         - errorCode
@@ -271,6 +278,10 @@ components:
           type: array
           items:
             type: string
+        nextHpanOffset:
+          type: integer
+        nextHtokenOffset:
+          type: integer
     ConsentRequestEnum:
       description: Type of consent
       type: string

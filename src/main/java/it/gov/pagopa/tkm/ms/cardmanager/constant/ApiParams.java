@@ -5,7 +5,7 @@ public class ApiParams {
     private ApiParams() {
     }
 
-    //Consent Manager
+    // Consent Manager
     public static final String TAX_CODE_HEADER = "Tax-Code";
     public static final String HPAN_QUERY_PARAM = "hpan";
     public static final String SERVICES_QUERY_PARAM = "services";
@@ -17,5 +17,8 @@ public class ApiParams {
     public static final String HPAN_OFFSET_PARAM = "hpanOffset";
     public static final String HTOKEN_OFFSET_PARAM = "htokenOffset";
     public static final String REQUEST_ID_HEADER = "Request-Id";
+
+    // Kafka queue
+    public static final String FROM_ISSUER_HEADER = "From-Issuer";
 
 }
