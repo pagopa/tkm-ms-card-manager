@@ -47,20 +47,32 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.topics.delete-queue.client-id}")
     private String deleteProducerClientId;
 
-    @Value("${spring.kafka.producer.properties.security.protocol}")
-    private String securityProtocol;
+    @Value("${spring.kafka.topics.read-queue.properties.security.protocol}")
+    private String readSecurityProtocol;
 
-    @Value("${spring.kafka.producer.properties.sasl.mechanism}")
-    private String saslMechanism;
+    @Value("${spring.kafka.topics.read-queue.properties.sasl.mechanism}")
+    private String readSaslMechanism;
+
+    @Value("${spring.kafka.topics.write-queue.properties.security.protocol}")
+    private String writeSecurityProtocol;
+
+    @Value("${spring.kafka.topics.write-queue.properties.sasl.mechanism}")
+    private String writeSaslMechanism;
+
+    @Value("${spring.kafka.topics.delete-queue.properties.security.protocol}")
+    private String deleteSecurityProtocol;
+
+    @Value("${spring.kafka.topics.delete-queue.properties.sasl.mechanism}")
+    private String deleteSaslMechanism;
 
     @Value("${spring.kafka.topics.read-queue.jaas.config}")
     private String azureSaslJaasConfigRead;
 
-    //@Value("${spring.kafka.topics.write-queue.jaas.config}")
-    //private String azureSaslJaasConfigWrite;
+   /* @Value("${spring.kafka.topics.write-queue.jaas.config}")
+    private String azureSaslJaasConfigWrite;
 
-    //@Value("${spring.kafka.topics.delete-queue.jaas.config}")
-    //private String azureSaslJaasConfigDelete;
+    @Value("${spring.kafka.topics.delete-queue.jaas.config}")
+    private String azureSaslJaasConfigDelete; */
 
     @Value("${spring.kafka.consumer.key-deserializer}")
     private String keyDeserializer;
@@ -148,20 +160,11 @@ public class KafkaConfiguration {
 
     @Bean
     public ProducerFactory<String, String> readProducerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                kafkaBootstrapServer);
-        configProps.put(
-                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                keySerializer);
-        configProps.put(
-                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                valueSerializer);
+        Map<String, Object> configProps = createConfigProps();
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, readProducerClientId);
-        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
-        configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
         configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigRead);
+        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, readSecurityProtocol);
+        configProps.put(SaslConfigs.SASL_MECHANISM, readSaslMechanism);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -169,27 +172,36 @@ public class KafkaConfiguration {
 
    @Bean
     public ProducerFactory<String, String> writeProducerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                kafkaBootstrapServer);
-        configProps.put(
-                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                keySerializer);
-        configProps.put(
-                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                valueSerializer);
+        Map<String, Object> configProps = createConfigProps();;
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, writeProducerClientId);
-        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
-        configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
+     //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigWrite);
+       configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, writeSecurityProtocol);
+       configProps.put(SaslConfigs.SASL_MECHANISM, writeSaslMechanism);
 
-      //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigWrite);
 
-        return new DefaultKafkaProducerFactory<>(configProps);
+       return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
     public ProducerFactory<String, String> deleteProducerFactory() {
+        Map<String, Object> configProps = createConfigProps();
+        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, deleteProducerClientId);
+      //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigDelete);
+        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, deleteSecurityProtocol);
+        configProps.put(SaslConfigs.SASL_MECHANISM, deleteSaslMechanism);
+
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    public ConsumerFactory<String, String> consumerFactory(){
+        Map<String, Object> configProps = createConfigProps();
+        configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, consumerClientId);
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.valueOf(consumerEnableAutoCommit));
+        return new DefaultKafkaConsumerFactory<>(configProps);
+    }
+
+    private Map<String, Object> createConfigProps(){
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -200,35 +212,9 @@ public class KafkaConfiguration {
         configProps.put(
                 ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 valueSerializer);
-        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, deleteProducerClientId);
-        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
-        configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
-      //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigDelete);
 
-        return new DefaultKafkaProducerFactory<>(configProps);
+        return configProps;
     }
 
-
-    public ConsumerFactory<String, String> consumerFactory(){
-
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                kafkaBootstrapServer);
-        configProps.put(
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                keyDeserializer);
-        configProps.put(
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                valueDeserializer);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, consumerClientId);
-        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.valueOf(consumerEnableAutoCommit));
-        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
-        configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
-        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigRead);
-        return new DefaultKafkaConsumerFactory<>(configProps);
-    }
 
 }
