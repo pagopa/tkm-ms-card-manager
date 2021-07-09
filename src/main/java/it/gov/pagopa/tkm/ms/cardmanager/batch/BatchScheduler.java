@@ -50,7 +50,7 @@ public class BatchScheduler {
     private  String readQueueTopic;
 
     @Value("${spring.kafka.topics.write-queue.name}")
-    private String writeQueueTopic;
+   private String writeQueueTopic;
 
     @Value("${spring.kafka.topics.delete-queue.name}")
     private String deleteQueueTopic;

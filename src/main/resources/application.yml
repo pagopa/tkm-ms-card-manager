@@ -47,12 +47,14 @@ spring:
         group-id: ${KAFKA_DELETE_QUEUE_GROUP}
         client-id: ${KAFKA_DELETE_QUEUE_GROUP}${HOSTNAME:0}
         concurrency: ${KAFKA_DELETE_MAX_NUMBER_OF_THREADS:1}
-        jaas:
-          config: ${keyvault.tkmDeleteTokenParPanProducerSaslJaasConfig}
+       # jaas:
+         # config: ${keyvault.tkmDeleteTokenParPanProducerSaslJaasConfig}
       write-queue:
         name: ${KAFKA_WRITE_QUEUE_TOPIC}
-        jaas:
-          config: ${keyvault.tkmWriteTokenParPanProducerSaslJaasConfig}
+        group-id: ${KAFKA_WRITE_QUEUE_GROUP}
+        client-id: ${KAFKA_WRITE_QUEUE_GROUP}${HOSTNAME:0}
+        #jaas:
+          #config: ${keyvault.tkmWriteTokenParPanProducerSaslJaasConfig}
       dlt-queue: ${KAFKA_DLT_QUEUE_TOPIC}
 server:
   port: ${SERVER_PORT:8080}

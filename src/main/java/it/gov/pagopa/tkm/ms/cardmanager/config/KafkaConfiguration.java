@@ -45,7 +45,7 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.topics.write-queue.client-id}")
     private String writeProducerClientId;
 
-    @Value("${spring.kafka.producer.delete-queue.client-id}")
+    @Value("${spring.kafka.topics.delete-queue.client-id}")
     private String deleteProducerClientId;
 
     @Value("${spring.kafka.producer.properties.security.protocol}")
@@ -57,11 +57,11 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.topics.read-queue.jaas.config}")
     private String azureSaslJaasConfigRead;
 
-    @Value("${spring.kafka.topics.write-queue.jaas.config}")
-    private String azureSaslJaasConfigWrite;
+    //@Value("${spring.kafka.topics.write-queue.jaas.config}")
+    //private String azureSaslJaasConfigWrite;
 
-    @Value("${spring.kafka.topics.delete-queue.jaas.config}")
-    private String azureSaslJaasConfigDelete;
+    //@Value("${spring.kafka.topics.delete-queue.jaas.config}")
+    //private String azureSaslJaasConfigDelete;
 
     @Value("${spring.kafka.consumer.key-deserializer}")
     private String keyDeserializer;
@@ -184,7 +184,7 @@ public class KafkaConfiguration {
         configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
         configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
 
-        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigWrite);
+      //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigWrite);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -204,7 +204,7 @@ public class KafkaConfiguration {
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, deleteProducerClientId);
         configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
         configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
-        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigDelete);
+      //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigDelete);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
