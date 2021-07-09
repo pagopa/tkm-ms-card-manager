@@ -38,7 +38,7 @@ public class ReaderQueueServiceImpl implements ReaderQueueService {
 
     @Async
     @Transactional
-    public Future<Void> workOnMessage(String message) throws JsonProcessingException {
+    public Future<Void> workOnMessage(String message){
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {
@@ -47,7 +47,7 @@ public class ReaderQueueServiceImpl implements ReaderQueueService {
             ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
             validatorService.validateMessage(readQueue);
             cardService.updateOrCreateCard(readQueue);
-        } catch (KafkaProcessMessageException | PGPException | CardException e) {
+        } catch (KafkaProcessMessageException | PGPException | CardException | JsonProcessingException e) {
             log.error(e);
         }
         return null;
