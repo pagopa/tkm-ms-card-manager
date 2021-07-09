@@ -39,7 +39,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     @KafkaListener(topics = "${spring.kafka.topics.read-queue.name}",
             groupId = "${spring.kafka.topics.read-queue.group-id}",
             clientIdPrefix = "${spring.kafka.topics.read-queue.client-id}",
-            properties = {"sasl.jaas.config:${keyvault.tkmReadTokenParPanConsumerSaslJaasConfig}"},
+            properties = {"sasl.jaas.config:${spring.kafka.topics.read-queue.jaas.config.consumer}"},
             concurrency = "${spring.kafka.topics.read-queue.concurrency}")
     public void consume(@Payload List<String> messages) throws ExecutionException, InterruptedException, JsonProcessingException {
         List<Future<Void>> futures = new ArrayList<>();
@@ -56,7 +56,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     @KafkaListener(topics = "${spring.kafka.topics.delete-queue.name}",
             groupId = "${spring.kafka.topics.delete-queue.group-id}",
             clientIdPrefix = "${spring.kafka.topics.delete-queue.client-id}",
-            properties = {"sasl.jaas.config:${keyvault.tkmDeleteCardConsumerSaslJaasConfig}"},
+            properties = {"sasl.jaas.config:${spring.kafka.topics.delete-queue.jaas.config.consumer}"},
             concurrency = "${spring.kafka.topics.delete-queue.concurrency}")
     public void consumeDelete(String message) {
         log.debug("Delete message not parsed " + message);
