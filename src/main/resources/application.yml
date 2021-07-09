@@ -23,25 +23,11 @@ spring:
       enable-auto-commit: true
       max-poll-records: ${KAFKA_MAX_POLL_RECORDS:5}
       group-id: ${KAFKA_CONSUMER_GROUP_ID}
-      auto-offset-reset: ${AUTO_OFFSET_RESET}
-      properties:
-        security:
-          protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
-        sasl:
-          mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
-        partition:
-          assignment:
-            strategy: org.apache.kafka.clients.consumer.RoundRobinAssignor
     producer:
       bootstrap-servers: ${KAFKA_APPENDER_BOOTSTRAP_SERVERS}
       client-id: ${KAFKA_GROUP_ID:}${HOSTNAME:0}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      properties:
-        security:
-          protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
-        sasl:
-          mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
     topics:
       read-queue:
         name: ${KAFKA_READ_QUEUE_TOPIC}
@@ -49,21 +35,33 @@ spring:
         client-id: ${KAFKA_READ_QUEUE_GROUP}${HOSTNAME:0}
         concurrency: ${KAFKA_READ_MAX_NUMBER_OF_THREADS:1}
         jaas:
-          config: ${keyvault.tkmReadTokenParPanProducerSaslJaasConfig}
+          config:
+            producer: ${keyvault.tkmReadTokenParPanProducerSaslJaasConfig}
+            consumer: ${keyvault.tkmReadTokenParPanConsumerSaslJaasConfig}
       delete-queue:
         name: ${KAFKA_DELETE_QUEUE_TOPIC}
         group-id: ${KAFKA_DELETE_QUEUE_GROUP}
         client-id: ${KAFKA_DELETE_QUEUE_GROUP}${HOSTNAME:0}
         concurrency: ${KAFKA_DELETE_MAX_NUMBER_OF_THREADS:1}
-       # jaas:
-         # config: ${keyvault.tkmDeleteTokenParPanProducerSaslJaasConfig}
+        jaas:
+          config:
+            producer: ${keyvault.tkmDeleteCardProducerSaslJaasConfig}
+            consumer: ${keyvault.tkmDeleteCardConsumerSaslJaasConfig}
       write-queue:
         name: ${KAFKA_WRITE_QUEUE_TOPIC}
-        group-id: ${KAFKA_WRITE_QUEUE_GROUP}
         client-id: ${KAFKA_WRITE_QUEUE_GROUP}${HOSTNAME:0}
-        #jaas:
-          #config: ${keyvault.tkmWriteTokenParPanProducerSaslJaasConfig}
-      dlt-queue: ${KAFKA_DLT_QUEUE_TOPIC}
+        jaas:
+          config:
+            producer: ${keyvault.tkmWriteUpdateTokenProducerSaslJaasConfig}
+      dlt-queue:
+        name: ${KAFKA_DLT_QUEUE_TOPIC}
+        group-id: ${KAFKA_DLT_QUEUE_GROUP}
+        client-id: ${KAFKA_DLT_QUEUE_GROUP}${HOSTNAME:0}
+        concurrency: ${KAFKA_DLT_MAX_NUMBER_OF_THREADS:1}
+        jaas:
+          config:
+            producer: ${keyvault.tkmDltProducerSaslJaasConfig}
+            consumer: ${keyvault.tkmDltSaslJaasConfig}
 server:
   port: ${SERVER_PORT:8080}
   servlet:
@@ -104,9 +102,10 @@ keyvault:
   cardMDbPassword: ${${AZURE_KEYVAULT_PROFILE:prod}-cardMDbPassword}
   apimSubscriptionTkmRtd: ${${AZURE_KEYVAULT_PROFILE:prod}-apimSubscriptionTkmRtd}
   cryptographicKeyId: ${AZURE_KEYVAULT_PROFILE:prod}-pan-token-rsa-key
-  tkmReadTokenParPanProducerSaslJaasConfig:  ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanProducerSaslJaasConfig}
-  tkmWriteTokenParPanProducerSaslJaasConfig:  ${${AZURE_KEYVAULT_PROFILE:prod}-tkmWriteTokenParPanProducerSaslJaasConfig}
-  tkmDeleteTokenParPanProducerSaslJaasConfig:  ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDeleteTokenParPanProducerSaslJaasConfig}
+  tkmReadTokenParPanProducerSaslJaasConfig:  ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanProducerSaslJaasConfig:}
+  tkmDeleteCardProducerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDeleteCardProducerSaslJaasConfig:}
+  tkmDltProducerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDltProducerSaslJaasConfig:}
+  tkmDltSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDltSaslJaasConfig:}
 
 client-urls:
   consent-manager: ${CONSENT_MANAGER_URL}
