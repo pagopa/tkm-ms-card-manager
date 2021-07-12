@@ -38,19 +38,24 @@ public class ReaderQueueServiceImpl implements ReaderQueueService {
 
     @Async
     @Transactional
-    public Future<Void> workOnMessage(String message){
+    public Future<Void> workOnMessage(String message) throws KafkaProcessMessageException, PGPException {
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {
             decryptedMessage = PgpStaticUtils.decrypt(message, tkmReadTokenParPanPvtPgpKey, tkmReadTokenParPanPvtPgpKeyPassphrase);
             log.trace("Decrypted message from queue: " + decryptedMessage);
             ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
-            validatorService.validateMessage(readQueue);
+            validatorService.validateMessage(readQueue);{
+
+            }
             cardService.updateOrCreateCard(readQueue);
-        } catch (KafkaProcessMessageException | PGPException | CardException | JsonProcessingException e) {
+        } catch (//KafkaProcessMessageException |
+               // PGPException   |
+             //           CardException |
+                        JsonProcessingException e
+        ) {
             log.error(e);
         }
-
         return null;
     }
 }

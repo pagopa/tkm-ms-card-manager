@@ -2,6 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ConsumerServiceImpl;
+import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,7 +28,7 @@ class TestConsumerService {
     private Future<Void> mockFuture;
 
     @Test
-    void givenNewCard_success() throws InterruptedException, ExecutionException, JsonProcessingException {
+    void givenNewCard_success() throws InterruptedException, ExecutionException, JsonProcessingException, PGPException {
         Mockito.when(readerQueueService.workOnMessage(Mockito.anyString())).thenReturn(mockFuture);
         List<String> messages = Arrays.asList("m1", "m2", "m3");
         consumerService.consume(messages);
