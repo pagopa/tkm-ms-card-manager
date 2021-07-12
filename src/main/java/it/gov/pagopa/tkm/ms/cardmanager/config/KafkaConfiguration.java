@@ -26,7 +26,7 @@ import java.util.Map;
 @EnableKafka
 public class KafkaConfiguration {
 
-    @Value("${spring.kafka.topics.dlt-queue}")
+    @Value("${spring.kafka.topics.dlt-queue.name}")
     private String dltQueueTopic;
 
     @Value("${spring.kafka.producer.bootstrap-servers}")
@@ -38,6 +38,12 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.producer.value-serializer}")
     private String valueSerializer;
 
+    @Value("${spring.kafka.consumer.key-deserializer}")
+    private String keyDeSerializer;
+
+    @Value("${spring.kafka.consumer.value-deserializer}")
+    private String valueDeSerializer;
+
     @Value("${spring.kafka.topics.read-queue.client-id}")
     private String readProducerClientId;
 
@@ -47,25 +53,19 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.topics.delete-queue.client-id}")
     private String deleteProducerClientId;
 
-    @Value("${spring.kafka.topics.read-queue.properties.security.protocol}")
-    private String readSecurityProtocol;
+    @Value("${spring.kafka.producer.properties.security.protocol}")
+    private String producerSecurityProtocol;
 
-    @Value("${spring.kafka.topics.read-queue.properties.sasl.mechanism}")
-    private String readSaslMechanism;
+    @Value("${spring.kafka.producer.properties.sasl.mechanism}")
+    private String producerSaslMechanism;
 
-    @Value("${spring.kafka.topics.write-queue.properties.security.protocol}")
-    private String writeSecurityProtocol;
+    @Value("${spring.kafka.consumer.properties.security.protocol}")
+    private String consumerSecurityProtocol;
 
-    @Value("${spring.kafka.topics.write-queue.properties.sasl.mechanism}")
-    private String writeSaslMechanism;
+    @Value("${spring.kafka.consumer.properties.sasl.mechanism}")
+    private String consumerSaslMechanism;
 
-    @Value("${spring.kafka.topics.delete-queue.properties.security.protocol}")
-    private String deleteSecurityProtocol;
-
-    @Value("${spring.kafka.topics.delete-queue.properties.sasl.mechanism}")
-    private String deleteSaslMechanism;
-
-    @Value("${spring.kafka.topics.read-queue.jaas.config}")
+    @Value("${spring.kafka.topics.read-queue.jaas.config.producer}")
     private String azureSaslJaasConfigRead;
 
    /* @Value("${spring.kafka.topics.write-queue.jaas.config}")
@@ -160,11 +160,9 @@ public class KafkaConfiguration {
 
     @Bean
     public ProducerFactory<String, String> readProducerFactory() {
-        Map<String, Object> configProps = createConfigProps();
+        Map<String, Object> configProps = createConfigProps(false);
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, readProducerClientId);
         configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigRead);
-        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, readSecurityProtocol);
-        configProps.put(SaslConfigs.SASL_MECHANISM, readSaslMechanism);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -172,46 +170,51 @@ public class KafkaConfiguration {
 
    @Bean
     public ProducerFactory<String, String> writeProducerFactory() {
-        Map<String, Object> configProps = createConfigProps();;
+        Map<String, Object> configProps = createConfigProps(false);;
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, writeProducerClientId);
      //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigWrite);
-       configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, writeSecurityProtocol);
-       configProps.put(SaslConfigs.SASL_MECHANISM, writeSaslMechanism);
-
 
        return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
     public ProducerFactory<String, String> deleteProducerFactory() {
-        Map<String, Object> configProps = createConfigProps();
+        Map<String, Object> configProps = createConfigProps(false);
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, deleteProducerClientId);
       //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigDelete);
-        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, deleteSecurityProtocol);
-        configProps.put(SaslConfigs.SASL_MECHANISM, deleteSaslMechanism);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     public ConsumerFactory<String, String> consumerFactory(){
-        Map<String, Object> configProps = createConfigProps();
+        Map<String, Object> configProps = createConfigProps(true);
         configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, consumerClientId);
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.valueOf(consumerEnableAutoCommit));
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
-    private Map<String, Object> createConfigProps(){
+    private Map<String, Object> createConfigProps(boolean consumer){
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
                 kafkaBootstrapServer);
-        configProps.put(
-                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                keySerializer);
-        configProps.put(
-                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                valueSerializer);
+        if (consumer) {
+            configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
+            configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
+        } else {
+            configProps.put(
+                    ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                    keySerializer);
+            configProps.put(
+                    ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                    valueSerializer);
+        }
+        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG,
+                consumer?consumerSecurityProtocol:producerSecurityProtocol);
+        configProps.put(SaslConfigs.SASL_MECHANISM,
+                consumer?consumerSaslMechanism:producerSaslMechanism);
 
         return configProps;
     }

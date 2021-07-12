@@ -43,7 +43,7 @@ public class BatchScheduler {
     @Qualifier("dltConsumer")
     private Consumer<String, String> dltConsumer;
 
-    @Value("${spring.kafka.topics.dlt-queue}")
+    @Value("${spring.kafka.topics.dlt-queue.name}")
     private String dltQueueTopic;
 
     @Value("${spring.kafka.topics.read-queue.name}")
