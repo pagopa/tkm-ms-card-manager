@@ -131,7 +131,6 @@ management:
       exposure:
         include: "info,health,prometheus"
 
-
 batch:
   kafka-dlt-read:
     cron: ${KAFKA_DLT_READ_CRON:-}

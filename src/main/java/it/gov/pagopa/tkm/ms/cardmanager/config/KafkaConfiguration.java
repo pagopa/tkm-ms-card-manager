@@ -111,25 +111,35 @@ public class KafkaConfiguration {
     @Bean
     public DeadLetterPublishingRecoverer recoverer(KafkaTemplate<String, String> bytesTemplate) {
 
+        System.out.println("\n ------------------recoverer---------------------- \n ");
+
         return new DeadLetterPublishingRecoverer(bytesTemplate,
                 (record, ex) -> {
+
+                    System.out.println("\n ------------------recoverer_0---------------------- \n ");
 
             Header retriesHeader = record.headers().lastHeader(attemptsCounterHeader);
                     String numberOfAttemptsString="1";
                    if (retriesHeader!=null) {
+                       System.out.println("\n ------------------recoverer_1---------------------- \n ");
 
                         byte[] value = retriesHeader.value();
                        String stringValue = new String(value, StandardCharsets.UTF_8);
                        int numberOfAttemptsInt = Integer.parseInt(stringValue);
+                       System.out.println("\n ------------------recoverer_2---------------------- \n ");
 
                        numberOfAttemptsInt++;
                        numberOfAttemptsString= Integer.toString(numberOfAttemptsInt);
                     }
 
-                   record.headers().add(attemptsCounterHeader, numberOfAttemptsString.getBytes());
+                    System.out.println("\n ------------------recoverer_3---------------------- \n ");
+
+                    record.headers().add(attemptsCounterHeader, numberOfAttemptsString.getBytes());
                     record.headers().add(originalTopicHeader, record.topic().getBytes());
                    log.info(String.format("Adding record [ %s ] to DeadLetterTopic from original Topic %s - " +
                            "attempt number %s ", record, record.topic(), numberOfAttemptsString));
+
+                    System.out.println("\n ------------------recoverer_4---------------------- \n ");
 
                     return  new TopicPartition(dltQueueTopic, -1);
 

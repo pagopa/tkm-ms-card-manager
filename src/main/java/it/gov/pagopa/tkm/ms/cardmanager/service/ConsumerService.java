@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutionException;
 
 public interface ConsumerService {
 
-    void consume(List<String> messages) throws ExecutionException, InterruptedException, JsonProcessingException, PGPException;
+    void consume(List<String> messages) throws ExecutionException, InterruptedException, JsonProcessingException, Exception;
 
     void consumeDelete(String message);
 
