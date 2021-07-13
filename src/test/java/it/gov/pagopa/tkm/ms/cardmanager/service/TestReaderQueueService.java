@@ -1,7 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CardServiceImpl;

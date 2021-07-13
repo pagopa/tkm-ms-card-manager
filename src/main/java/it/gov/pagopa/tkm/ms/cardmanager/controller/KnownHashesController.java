@@ -1,6 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.controller;
 
-import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.response.KnownHashesResponse;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.Valid;
+
+import java.util.concurrent.ExecutionException;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiEndpoints.BASE_PATH_KNOWN_HASHES;
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams.*;
@@ -26,11 +28,11 @@ public interface KnownHashesController {
             @Valid
             @RequestParam(value = MAX_NUMBER_OF_RECORDS_PARAM, defaultValue = MAX_NUMBER_OF_RECORDS_DEFAULT)
             @Range(min = MIN_VALUE, max = MAX_VALUE)
-            Long maxRecords,
+                    Long maxRecords,
             @RequestParam(value = HPAN_OFFSET_PARAM, defaultValue = OFFSET_DEFAULT)
-            Long hpanOffset,
+                    Long hpanOffset,
             @RequestParam(value = HTOKEN_OFFSET_PARAM, defaultValue = OFFSET_DEFAULT)
-            Long htokenOffset
-    );
+                    Long htokenOffset
+    ) throws ExecutionException, InterruptedException;
 
 }
