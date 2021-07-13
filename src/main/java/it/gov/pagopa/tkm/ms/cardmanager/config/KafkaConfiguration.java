@@ -89,8 +89,8 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.consumer.enable-auto-commit}")
     private String consumerEnableAutoCommit;
 
-    @Value("${spring.kafka.consumer.auto-offset-reset}")
-    private String autoOffsetReset;
+ //   @Value("${spring.kafka.consumer.auto-offset-reset}")
+//    private String autoOffsetReset;
 
     public static final String attemptsCounterHeader="attemptsCounter" ;
     public static final String originalTopicHeader="originalTopic";
@@ -111,37 +111,27 @@ public class KafkaConfiguration {
     @Bean
     public DeadLetterPublishingRecoverer recoverer(KafkaTemplate<String, String> bytesTemplate) {
 
-        System.out.println("\n ------------------recoverer---------------------- \n ");
-
         return new DeadLetterPublishingRecoverer(bytesTemplate,
                 (record, ex) -> {
-
-                    System.out.println("\n ------------------recoverer_0---------------------- \n ");
 
             Header retriesHeader = record.headers().lastHeader(attemptsCounterHeader);
                     String numberOfAttemptsString="1";
                    if (retriesHeader!=null) {
-                       System.out.println("\n ------------------recoverer_1---------------------- \n ");
 
                         byte[] value = retriesHeader.value();
                        String stringValue = new String(value, StandardCharsets.UTF_8);
                        int numberOfAttemptsInt = Integer.parseInt(stringValue);
-                       System.out.println("\n ------------------recoverer_2---------------------- \n ");
 
                        numberOfAttemptsInt++;
                        numberOfAttemptsString= Integer.toString(numberOfAttemptsInt);
                     }
 
-                    System.out.println("\n ------------------recoverer_3---------------------- \n ");
-
-                    record.headers().add(attemptsCounterHeader, numberOfAttemptsString.getBytes());
+                   record.headers().add(attemptsCounterHeader, numberOfAttemptsString.getBytes());
                     record.headers().add(originalTopicHeader, record.topic().getBytes());
                    log.info(String.format("Adding record [ %s ] to DeadLetterTopic from original Topic %s - " +
                            "attempt number %s ", record, record.topic(), numberOfAttemptsString));
 
-                    System.out.println("\n ------------------recoverer_4---------------------- \n ");
-
-                    return  new TopicPartition(dltQueueTopic, -1);
+                    return new TopicPartition(dltQueueTopic, -1);
 
                 });
 
@@ -200,7 +190,7 @@ public class KafkaConfiguration {
         Map<String, Object> configProps = createConfigProps(true);
         configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, consumerClientId);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+      //  configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.valueOf(consumerEnableAutoCommit));
         return new DefaultKafkaConsumerFactory<>(configProps);
     }

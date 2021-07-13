@@ -48,7 +48,7 @@ public class ReaderQueueServiceImpl implements ReaderQueueService {
             ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
             validatorService.validateMessage(readQueue);
             cardService.updateOrCreateCard(readQueue);
-        } catch (/*KafkaProcessMessageException |*/ PGPException | CardException | JsonProcessingException e) {
+        } catch (/*KafkaProcessMessageException | */ PGPException | CardException | JsonProcessingException e) {
             log.error(e);
         }
         return null;
