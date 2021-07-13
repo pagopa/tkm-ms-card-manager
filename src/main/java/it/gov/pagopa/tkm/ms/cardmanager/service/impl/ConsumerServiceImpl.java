@@ -45,16 +45,17 @@ public class ConsumerServiceImpl implements ConsumerService {
             clientIdPrefix = "${spring.kafka.topics.read-queue.client-id}",
             properties = {"sasl.jaas.config:${spring.kafka.topics.read-queue.jaas.config.consumer}"},
             concurrency = "${spring.kafka.topics.read-queue.concurrency}")
-    public void consume(@Payload List<String> messages) throws ExecutionException, InterruptedException, JsonProcessingException {
-
-        List<Future<Void>> futures = new ArrayList<>();
-        log.info(String.format("Reading and processing %s messages", CollectionUtils.size(messages)));
-        for (String message : messages) {
-            futures.add((readerQueueService.workOnMessage(message)));
-        }
-        for (Future<Void> future : futures) {
-            future.get();
-        }
+    public void consume(@Payload List<String> messages) throws PGPException {
+        throw new PGPException("");
+        //
+//        List<Future<Void>> futures = new ArrayList<>();
+//        log.info(String.format("Reading and processing %s messages", CollectionUtils.size(messages)));
+//        for (String message : messages) {
+//            futures.add((readerQueueService.workOnMessage(message)));
+//        }
+//        for (Future<Void> future : futures) {
+//            future.get();
+//        }
     }
 
     @Override

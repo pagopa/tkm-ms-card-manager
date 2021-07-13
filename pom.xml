@@ -24,6 +24,10 @@
             <version>1.54</version>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.azure.spring</groupId>
             <artifactId>azure-spring-boot-starter-keyvault-secrets</artifactId>
             <version>3.2.0</version>

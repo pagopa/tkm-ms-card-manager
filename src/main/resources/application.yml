@@ -15,15 +15,11 @@ spring:
     listener:
       type: batch
     consumer:
-      retries: 0
       bootstrap-servers: ${KAFKA_APPENDER_BOOTSTRAP_SERVERS}
-      client-id: ${KAFKA_GROUP_ID}${HOSTNAME:0}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: true
       max-poll-records: ${KAFKA_MAX_POLL_RECORDS:5}
-      group-id: ${KAFKA_CONSUMER_GROUP_ID}
-     # auto-offset-reset: ${AUTO_OFFSET_RESET}
       properties:
         security:
           protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
@@ -33,6 +29,7 @@ spring:
           assignment:
             strategy: org.apache.kafka.clients.consumer.RoundRobinAssignor
     producer:
+      retries: 0
       bootstrap-servers: ${KAFKA_APPENDER_BOOTSTRAP_SERVERS}
       client-id: ${KAFKA_GROUP_ID:}${HOSTNAME:0}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -63,7 +60,7 @@ spring:
             consumer: ${keyvault.tkmDeleteCardConsumerSaslJaasConfig}
       write-queue:
         name: ${KAFKA_WRITE_QUEUE_TOPIC}
-        client-id: ${KAFKA_WRITE_QUEUE_GROUP}${HOSTNAME:0}
+        client-id: ${KAFKA_WRITE_QUEUE_GROUP:}${HOSTNAME:0}
         jaas:
           config:
             producer: ${keyvault.tkmWriteUpdateTokenProducerSaslJaasConfig}

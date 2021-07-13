@@ -80,27 +80,27 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.consumer.value-deserializer}")
     private String valueDeserializer;
 
-    @Value("${spring.kafka.consumer.group-id}")
-    private String groupId;
+    @Value("${spring.kafka.topics.dlt-queue.group-id}")
+    private String dltConsumerGroup;
 
-    @Value("${spring.kafka.consumer.client-id}")
-    private String consumerClientId;
+    @Value("${spring.kafka.topics.dlt-queue.client-id}")
+    private String dltClientId;
 
     @Value("${spring.kafka.consumer.enable-auto-commit}")
     private String consumerEnableAutoCommit;
 
- //   @Value("${spring.kafka.consumer.auto-offset-reset}")
+    //   @Value("${spring.kafka.consumer.auto-offset-reset}")
 //    private String autoOffsetReset;
 
-    public static final String attemptsCounterHeader="attemptsCounter" ;
-    public static final String originalTopicHeader="originalTopic";
+    public static final String attemptsCounterHeader = "attemptsCounter";
+    public static final String originalTopicHeader = "originalTopic";
 
     /**
      * Boot will autowire this into the container factory.
      */
-   @Bean
+    @Bean
     public SeekToCurrentErrorHandler errorHandlerKafka(DeadLetterPublishingRecoverer deadLetterPublishingRecoverer) {
-       return new SeekToCurrentErrorHandler(deadLetterPublishingRecoverer);
+        return new SeekToCurrentErrorHandler(deadLetterPublishingRecoverer);
     }
 
     /**
@@ -114,22 +114,22 @@ public class KafkaConfiguration {
         return new DeadLetterPublishingRecoverer(bytesTemplate,
                 (record, ex) -> {
 
-            Header retriesHeader = record.headers().lastHeader(attemptsCounterHeader);
-                    String numberOfAttemptsString="1";
-                   if (retriesHeader!=null) {
+                    Header retriesHeader = record.headers().lastHeader(attemptsCounterHeader);
+                    String numberOfAttemptsString = "1";
+                    if (retriesHeader != null) {
 
                         byte[] value = retriesHeader.value();
-                       String stringValue = new String(value, StandardCharsets.UTF_8);
-                       int numberOfAttemptsInt = Integer.parseInt(stringValue);
+                        String stringValue = new String(value, StandardCharsets.UTF_8);
+                        int numberOfAttemptsInt = Integer.parseInt(stringValue);
 
-                       numberOfAttemptsInt++;
-                       numberOfAttemptsString= Integer.toString(numberOfAttemptsInt);
+                        numberOfAttemptsInt++;
+                        numberOfAttemptsString = Integer.toString(numberOfAttemptsInt);
                     }
 
-                   record.headers().add(attemptsCounterHeader, numberOfAttemptsString.getBytes());
+                    record.headers().add(attemptsCounterHeader, numberOfAttemptsString.getBytes());
                     record.headers().add(originalTopicHeader, record.topic().getBytes());
-                   log.info(String.format("Adding record [ %s ] to DeadLetterTopic from original Topic %s - " +
-                           "attempt number %s ", record, record.topic(), numberOfAttemptsString));
+                    log.info(String.format("Adding record [ %s ] to DeadLetterTopic from original Topic %s - " +
+                            "attempt number %s ", record, record.topic(), numberOfAttemptsString));
 
                     return new TopicPartition(dltQueueTopic, -1);
 
@@ -155,7 +155,7 @@ public class KafkaConfiguration {
 
     @Bean(name = "dltConsumer")
     public Consumer<String, String> dltConsumer() {
-       return  consumerFactory().createConsumer();
+        return consumerFactory().createConsumer();
     }
 
     @Bean
@@ -168,34 +168,34 @@ public class KafkaConfiguration {
     }
 
 
-   @Bean
+    @Bean
     public ProducerFactory<String, String> writeProducerFactory() {
-        Map<String, Object> configProps = createConfigProps(false);;
+        Map<String, Object> configProps = createConfigProps(false);
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, writeProducerClientId);
-     //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigWrite);
+        //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigWrite);
 
-       return new DefaultKafkaProducerFactory<>(configProps);
+        return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
     public ProducerFactory<String, String> deleteProducerFactory() {
         Map<String, Object> configProps = createConfigProps(false);
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, deleteProducerClientId);
-      //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigDelete);
+        //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigDelete);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    public ConsumerFactory<String, String> consumerFactory(){
+    public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> configProps = createConfigProps(true);
-        configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, consumerClientId);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-      //  configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+        configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, dltClientId);
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, dltConsumerGroup);
+        //  configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.valueOf(consumerEnableAutoCommit));
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
-    private Map<String, Object> createConfigProps(boolean consumer){
+    private Map<String, Object> createConfigProps(boolean consumer) {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -212,9 +212,9 @@ public class KafkaConfiguration {
                     valueSerializer);
         }
         configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG,
-                consumer?consumerSecurityProtocol:producerSecurityProtocol);
+                consumer ? consumerSecurityProtocol : producerSecurityProtocol);
         configProps.put(SaslConfigs.SASL_MECHANISM,
-                consumer?consumerSaslMechanism:producerSaslMechanism);
+                consumer ? consumerSaslMechanism : producerSaslMechanism);
 
         return configProps;
     }
