@@ -4,10 +4,16 @@ spring:
     username: ${keyvault.cardMDbUsername}
     password: ${keyvault.cardMDbPassword}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximumPoolSize:  ${DATABASE_POOL_MAX_POOL:10}
+      minimumIdle:  ${DATABASE_POOL_MIN_IDLE:${spring.datasource.hikari.maximumPoolSize}}
   jpa:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        generate_statistics: false
+
+
   application:
     name: Tkm Card Manager ${HOSTNAME:0}
   kafka:
@@ -64,6 +70,7 @@ logging:
     root: ${LOGGING_LEVEL:INFO}
     org:
       hibernate:
+        stat: DEBUG
         SQL: ${LOGGING_LEVEL_HIBERNATE:${logging.level.root}}
         type:
           descriptor:
@@ -98,6 +105,11 @@ keyvault:
 client-urls:
   consent-manager: ${CONSENT_MANAGER_URL}
   rtd-hashing-url: ${RTD_HASHING_URL}
+
+thread:
+  corePoolSize: ${THREAD_CORE_POOL_SIZE:5}
+  maxPoolSize: ${THREAD_MAX_POOL_SIZE:10}
+  known-hashes: ${THREAD_KNOWN_HASHES:5}
 
 management:
   endpoints:

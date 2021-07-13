@@ -1,11 +1,12 @@
 package it.gov.pagopa.tkm.ms.cardmanager.repository;
 
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardSubSet;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.time.*;
+import java.time.Instant;
 import java.util.List;
 
 public interface CardRepository extends JpaRepository<TkmCard, Long> {
@@ -16,11 +17,12 @@ public interface CardRepository extends JpaRepository<TkmCard, Long> {
 
     TkmCard findByHpanAndPar(String hpan, String par);
 
-    List<TkmCard> findByIdGreaterThanAndIdLessThanEqual(Long min, Long max);
+    List<TkmCardSubSet> findByIdGreaterThanEqualAndIdLessThanAndHpanIsNotNull(Long min, Long max);
 
     @Cacheable(value = "first-card", unless = "#result == null")
     TkmCard findTopByOrderByIdAsc();
 
     List<TkmCard> findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(Instant oneDayAgo, Pageable pageable);
+
 
 }

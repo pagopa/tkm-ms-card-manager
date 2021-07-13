@@ -1,6 +1,8 @@
 package it.gov.pagopa.tkm.ms.cardmanager.constant;
 
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardSubSet;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,10 +11,23 @@ import java.util.List;
 
 public class CardRepositoryMock {
 
-    public static List<TkmCard> getTkmCardsList() {
-        TkmCard tkmCard = TkmCard.builder().id(1L).hpan(Constant.HASH_1).build();
-        TkmCard tkmCard2 = TkmCard.builder().id(2L).hpan(Constant.HASH_2).build();
-        return Arrays.asList(tkmCard, tkmCard2);
+    public static List<TkmCardSubSet> getTkmCardsSubSetList() {
+        return Arrays.asList(getTkmCardSubSet(1, Constant.HASH_1), getTkmCardSubSet(2, Constant.HASH_2));
+    }
+
+    @NotNull
+    private static TkmCardSubSet getTkmCardSubSet(long id, String hpan) {
+        return new TkmCardSubSet() {
+            @Override
+            public Long getId() {
+                return id;
+            }
+
+            @Override
+            public String getHpan() {
+                return hpan;
+            }
+        };
     }
 
     public static TkmCard getTkmCardFull() {
