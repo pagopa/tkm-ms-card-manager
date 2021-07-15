@@ -15,7 +15,10 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
+import org.springframework.kafka.listener.RecoveringBatchErrorHandler;
+import org.springframework.kafka.listener.RetryingBatchErrorHandler;
 import org.springframework.kafka.listener.SeekToCurrentErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -89,8 +92,8 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.consumer.enable-auto-commit}")
     private String consumerEnableAutoCommit;
 
-    //   @Value("${spring.kafka.consumer.auto-offset-reset}")
-//    private String autoOffsetReset;
+    @Value("${spring.kafka.consumer.auto-offset-reset}")
+    private String autoOffsetReset;
 
     public static final String attemptsCounterHeader = "attemptsCounter";
     public static final String originalTopicHeader = "originalTopic";
@@ -103,10 +106,29 @@ public class KafkaConfiguration {
         return new SeekToCurrentErrorHandler(deadLetterPublishingRecoverer);
     }
 
+
+    @Bean
+    public RetryingBatchErrorHandler batchErrorHandler(KafkaTemplate<String, String> template) {
+
+        DeadLetterPublishingRecoverer recoverer = recoverer(template);
+             return new RetryingBatchErrorHandler(new FixedBackOff(1000L, 1), recoverer);
+
+    }
+
+
     /**
      * Configure the {@link DeadLetterPublishingRecoverer} to publish poison pill bytes to a dead letter topic:
      * "stock-quotes-avro.DLT".
      */
+
+
+   /*@Bean
+    public RecoveringBatchErrorHandler batchErrorHandler(KafkaTemplate<String, String> template) {
+        System.out.println("______________RecoveringBatchErrorHandler__________");
+        DeadLetterPublishingRecoverer recoverer = recoverer(template);
+     //   RecoveringBatchErrorHandler errorHandler =
+              return  new RecoveringBatchErrorHandler(recoverer, new FixedBackOff(2L, 5));
+    } */
 
     @Bean
     public DeadLetterPublishingRecoverer recoverer(KafkaTemplate<String, String> bytesTemplate) {
@@ -158,6 +180,7 @@ public class KafkaConfiguration {
         return consumerFactory().createConsumer();
     }
 
+
     @Bean
     public ProducerFactory<String, String> readProducerFactory() {
         Map<String, Object> configProps = createConfigProps(false);
@@ -190,7 +213,7 @@ public class KafkaConfiguration {
         Map<String, Object> configProps = createConfigProps(true);
         configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, dltClientId);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, dltConsumerGroup);
-        //  configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.valueOf(consumerEnableAutoCommit));
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
@@ -218,6 +241,7 @@ public class KafkaConfiguration {
 
         return configProps;
     }
+
 
 
 }

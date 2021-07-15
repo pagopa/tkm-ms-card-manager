@@ -20,6 +20,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: true
       max-poll-records: ${KAFKA_MAX_POLL_RECORDS:5}
+      auto-offset-reset: ${AUTO_OFFSET_RESET}
       properties:
         security:
           protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}

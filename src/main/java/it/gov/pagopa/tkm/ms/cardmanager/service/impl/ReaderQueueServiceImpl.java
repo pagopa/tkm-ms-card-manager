@@ -2,9 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
-import it.gov.pagopa.tkm.ms.cardmanager.exception.KafkaProcessMessageException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.service.MessageValidatorService;
 import it.gov.pagopa.tkm.ms.cardmanager.service.ReaderQueueService;

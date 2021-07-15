@@ -6,5 +6,5 @@ import org.bouncycastle.openpgp.PGPException;
 import java.util.concurrent.Future;
 
 public interface ReaderQueueService {
-    Future<Void> workOnMessage(String message) throws JsonProcessingException;
+    Future<Void> workOnMessage(String message);
 }
