@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
-import org.springframework.kafka.listener.RecoveringBatchErrorHandler;
 import org.springframework.kafka.listener.RetryingBatchErrorHandler;
 import org.springframework.kafka.listener.SeekToCurrentErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
@@ -71,12 +70,6 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.topics.read-queue.jaas.config.producer}")
     private String azureSaslJaasConfigRead;
 
-   /* @Value("${spring.kafka.topics.write-queue.jaas.config}")
-    private String azureSaslJaasConfigWrite;
-
-    @Value("${spring.kafka.topics.delete-queue.jaas.config}")
-    private String azureSaslJaasConfigDelete; */
-
     @Value("${spring.kafka.consumer.key-deserializer}")
     private String keyDeserializer;
 
@@ -95,8 +88,8 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.consumer.auto-offset-reset}")
     private String autoOffsetReset;
 
-    public static final String attemptsCounterHeader = "attemptsCounter";
-    public static final String originalTopicHeader = "originalTopic";
+    public static final String ATTEMPT_COUNTER_HEADER = "attemptsCounter";
+    public static final String ORIGINAL_TOPIC_HEADER = "originalTopic";
 
     /**
      * Boot will autowire this into the container factory.
@@ -109,34 +102,22 @@ public class KafkaConfiguration {
 
     @Bean
     public RetryingBatchErrorHandler batchErrorHandler(KafkaTemplate<String, String> template) {
-
         DeadLetterPublishingRecoverer recoverer = recoverer(template);
              return new RetryingBatchErrorHandler(new FixedBackOff(1000L, 1), recoverer);
-
     }
-
 
     /**
      * Configure the {@link DeadLetterPublishingRecoverer} to publish poison pill bytes to a dead letter topic:
      * "stock-quotes-avro.DLT".
      */
 
-
-   /*@Bean
-    public RecoveringBatchErrorHandler batchErrorHandler(KafkaTemplate<String, String> template) {
-        System.out.println("______________RecoveringBatchErrorHandler__________");
-        DeadLetterPublishingRecoverer recoverer = recoverer(template);
-     //   RecoveringBatchErrorHandler errorHandler =
-              return  new RecoveringBatchErrorHandler(recoverer, new FixedBackOff(2L, 5));
-    } */
-
     @Bean
     public DeadLetterPublishingRecoverer recoverer(KafkaTemplate<String, String> bytesTemplate) {
 
         return new DeadLetterPublishingRecoverer(bytesTemplate,
-                (record, ex) -> {
+                (queueElement, ex) -> {
 
-                    Header retriesHeader = record.headers().lastHeader(attemptsCounterHeader);
+                    Header retriesHeader = queueElement.headers().lastHeader(ATTEMPT_COUNTER_HEADER);
                     String numberOfAttemptsString = "1";
                     if (retriesHeader != null) {
 
@@ -148,10 +129,10 @@ public class KafkaConfiguration {
                         numberOfAttemptsString = Integer.toString(numberOfAttemptsInt);
                     }
 
-                    record.headers().add(attemptsCounterHeader, numberOfAttemptsString.getBytes());
-                    record.headers().add(originalTopicHeader, record.topic().getBytes());
+                    queueElement.headers().add(ATTEMPT_COUNTER_HEADER, numberOfAttemptsString.getBytes());
+                    queueElement.headers().add(ORIGINAL_TOPIC_HEADER, queueElement.topic().getBytes());
                     log.info(String.format("Adding record [ %s ] to DeadLetterTopic from original Topic %s - " +
-                            "attempt number %s ", record, record.topic(), numberOfAttemptsString));
+                            "attempt number %s ", queueElement, queueElement.topic(), numberOfAttemptsString));
 
                     return new TopicPartition(dltQueueTopic, -1);
 
@@ -195,7 +176,6 @@ public class KafkaConfiguration {
     public ProducerFactory<String, String> writeProducerFactory() {
         Map<String, Object> configProps = createConfigProps(false);
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, writeProducerClientId);
-        //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigWrite);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -204,7 +184,6 @@ public class KafkaConfiguration {
     public ProducerFactory<String, String> deleteProducerFactory() {
         Map<String, Object> configProps = createConfigProps(false);
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, deleteProducerClientId);
-        //  configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigDelete);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }

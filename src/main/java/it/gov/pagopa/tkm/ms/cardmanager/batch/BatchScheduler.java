@@ -9,7 +9,6 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
-import org.apache.kafka.common.protocol.types.Field;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,17 +17,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Log4j2
 @Component
 public class BatchScheduler {
-
 
     @Autowired
     @Qualifier("dltReadProducer")
@@ -53,17 +49,15 @@ public class BatchScheduler {
     private  String readQueueTopic;
 
     @Value("${spring.kafka.topics.write-queue.name}")
-   private String writeQueueTopic;
+    private String writeQueueTopic;
 
     @Value("${spring.kafka.topics.delete-queue.name}")
     private String deleteQueueTopic;
 
-    private  List<TopicPartition> partitions;
-
     @Scheduled(cron = "${batch.kafka-dlt-read.cron}")
     public void scheduledTask() {
 
-         partitions = getTopicPartitions();
+        List<TopicPartition> partitions = getTopicPartitions();
 
         if (partitions==null) return;
 
@@ -75,16 +69,16 @@ public class BatchScheduler {
         if (consumerRecords == null) return;
 
         consumerRecords.iterator().forEachRemaining(
-                record -> {
-                    String key = record.key();
-                    String recordValue = record.value();
-                    Headers headers = record.headers();
+                queueElement -> {
+                    String key = queueElement.key();
+                    String recordValue = queueElement.value();
+                    Headers headers = queueElement.headers();
 
-                    Header originalTopicHeader = record.headers().lastHeader(KafkaConfiguration.originalTopicHeader);
+                    Header originalTopicHeader = queueElement.headers().lastHeader(KafkaConfiguration.ORIGINAL_TOPIC_HEADER);
                     byte[] originalTopicHeaderByte = originalTopicHeader.value();
                     String originalTopicHeaderString = new String(originalTopicHeaderByte, StandardCharsets.UTF_8);
 
-                    Header numberOfAttemptsHeader = record.headers().lastHeader(KafkaConfiguration.attemptsCounterHeader);
+                    Header numberOfAttemptsHeader = queueElement.headers().lastHeader(KafkaConfiguration.ATTEMPT_COUNTER_HEADER);
                     byte[] numberOfAttemptsHeaderByte = numberOfAttemptsHeader.value();
                     String numberOfAttemptsHeaderString = new String(numberOfAttemptsHeaderByte, StandardCharsets.UTF_8);
                     int headerIntValue = Integer.parseInt(numberOfAttemptsHeaderString);
@@ -102,7 +96,7 @@ public class BatchScheduler {
         List<Header> headerList = Arrays.asList(headers.toArray());
         headerList.forEach(h->producerRecord.headers().add(h.key(), h.value()));
 
-        producerRecord.headers().add(KafkaConfiguration.attemptsCounterHeader, numberOfAttemptsHeaderString.getBytes());
+        producerRecord.headers().add(KafkaConfiguration.ATTEMPT_COUNTER_HEADER, numberOfAttemptsHeaderString.getBytes());
 
         if (topic.equals(readQueueTopic)) {
             dltReadProducer.send(producerRecord);
