@@ -8,6 +8,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
   application:
     name: Tkm Card Manager ${HOSTNAME:0}
   kafka:
@@ -20,7 +21,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: true
       max-poll-records: ${KAFKA_MAX_POLL_RECORDS:5}
-      auto-offset-reset: ${AUTO_OFFSET_RESET}
+      auto-offset-reset: ${AUTO_OFFSET_RESET:earliest}
       properties:
         security:
           protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}

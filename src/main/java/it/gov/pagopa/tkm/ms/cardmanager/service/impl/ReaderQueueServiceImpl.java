@@ -3,6 +3,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.KafkaProcessMessageException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.service.MessageValidatorService;
 import it.gov.pagopa.tkm.ms.cardmanager.service.ReaderQueueService;
@@ -37,7 +38,7 @@ public class ReaderQueueServiceImpl implements ReaderQueueService {
 
     @Async
     @Transactional
-    public Future<Void> workOnMessage(String message){
+    public Future<Void> workOnMessage(String message) {
         log.debug("Reading message from queue: " + message);
         String decryptedMessage;
         try {
@@ -46,8 +47,11 @@ public class ReaderQueueServiceImpl implements ReaderQueueService {
             ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
             validatorService.validateMessage(readQueue);
             cardService.updateOrCreateCard(readQueue);
-        } catch (/*KafkaProcessMessageException | */ PGPException | CardException | JsonProcessingException e) {
+        } catch (PGPException | CardException | JsonProcessingException e) {
             log.error(e);
+        } catch (KafkaProcessMessageException kafkaProcessMessageException) {
+            kafkaProcessMessageException.setMsg(message);
+            throw kafkaProcessMessageException;
         }
         return null;
     }

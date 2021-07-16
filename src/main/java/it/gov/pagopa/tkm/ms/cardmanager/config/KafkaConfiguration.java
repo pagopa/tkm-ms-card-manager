@@ -1,6 +1,8 @@
 package it.gov.pagopa.tkm.ms.cardmanager.config;
 
+import it.gov.pagopa.tkm.ms.cardmanager.exception.KafkaProcessMessageException;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -39,12 +41,6 @@ public class KafkaConfiguration {
 
     @Value("${spring.kafka.producer.value-serializer}")
     private String valueSerializer;
-
-    @Value("${spring.kafka.consumer.key-deserializer}")
-    private String keyDeSerializer;
-
-    @Value("${spring.kafka.consumer.value-deserializer}")
-    private String valueDeSerializer;
 
     @Value("${spring.kafka.topics.read-queue.client-id}")
     private String readProducerClientId;
@@ -91,29 +87,19 @@ public class KafkaConfiguration {
     public static final String ATTEMPT_COUNTER_HEADER = "attemptsCounter";
     public static final String ORIGINAL_TOPIC_HEADER = "originalTopic";
 
-    /**
-     * Boot will autowire this into the container factory.
-     */
     @Bean
     public SeekToCurrentErrorHandler errorHandlerKafka(DeadLetterPublishingRecoverer deadLetterPublishingRecoverer) {
         return new SeekToCurrentErrorHandler(deadLetterPublishingRecoverer);
     }
 
-
     @Bean
     public RetryingBatchErrorHandler batchErrorHandler(KafkaTemplate<String, String> template) {
-        DeadLetterPublishingRecoverer recoverer = recoverer(template);
-             return new RetryingBatchErrorHandler(new FixedBackOff(1000L, 1), recoverer);
+        DeadLetterPublishingRecoverer recover = recoverer(template);
+        return new RetryingBatchErrorHandler(new FixedBackOff(1000L, 1), recover);
     }
-
-    /**
-     * Configure the {@link DeadLetterPublishingRecoverer} to publish poison pill bytes to a dead letter topic:
-     * "stock-quotes-avro.DLT".
-     */
 
     @Bean
     public DeadLetterPublishingRecoverer recoverer(KafkaTemplate<String, String> bytesTemplate) {
-
         return new DeadLetterPublishingRecoverer(bytesTemplate,
                 (queueElement, ex) -> {
 
@@ -134,10 +120,18 @@ public class KafkaConfiguration {
                     log.info(String.format("Adding record [ %s ] to DeadLetterTopic from original Topic %s - " +
                             "attempt number %s ", queueElement, queueElement.topic(), numberOfAttemptsString));
 
+                    Throwable cause = ex.getCause().getCause();
+                    if (cause instanceof KafkaProcessMessageException && !isTheSameOfException(cause, queueElement.value()))
+                        return null;
+
                     return new TopicPartition(dltQueueTopic, -1);
 
                 });
+    }
 
+    private boolean isTheSameOfException(Throwable ex, Object msg) {
+        KafkaProcessMessageException ex1 = (KafkaProcessMessageException) ex;
+        return msg instanceof String && StringUtils.equals(ex1.getMsg(), (String) msg);
     }
 
     @Primary
@@ -161,9 +155,7 @@ public class KafkaConfiguration {
         return consumerFactory().createConsumer();
     }
 
-
-    @Bean
-    public ProducerFactory<String, String> readProducerFactory() {
+    private ProducerFactory<String, String> readProducerFactory() {
         Map<String, Object> configProps = createConfigProps(false);
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, readProducerClientId);
         configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigRead);
@@ -171,24 +163,21 @@ public class KafkaConfiguration {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-
-    @Bean
-    public ProducerFactory<String, String> writeProducerFactory() {
+    private ProducerFactory<String, String> writeProducerFactory() {
         Map<String, Object> configProps = createConfigProps(false);
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, writeProducerClientId);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    @Bean
-    public ProducerFactory<String, String> deleteProducerFactory() {
+    private ProducerFactory<String, String> deleteProducerFactory() {
         Map<String, Object> configProps = createConfigProps(false);
         configProps.put(ProducerConfig.CLIENT_ID_CONFIG, deleteProducerClientId);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    public ConsumerFactory<String, String> consumerFactory() {
+    private ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> configProps = createConfigProps(true);
         configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, dltClientId);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, dltConsumerGroup);
@@ -220,7 +209,5 @@ public class KafkaConfiguration {
 
         return configProps;
     }
-
-
 
 }
