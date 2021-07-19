@@ -1,5 +1,7 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
+import com.azure.core.http.HttpClient;
+import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.security.keyvault.keys.KeyClient;
@@ -19,8 +21,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Base64Utils;
+import reactor.netty.resources.ConnectionProvider;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
 
 @Service
 @Log4j2
@@ -53,8 +57,12 @@ public class CryptoServiceImpl implements CryptoService {
                 .build();
         final KeyClient keyClient = new KeyClientBuilder().vaultUrl(keyvaultUri).credential(clientSecretCredential).buildClient();
         final KeyVaultKey key = keyClient.getKey(keyId);
+        ConnectionProvider connectionProvider = ConnectionProvider.create("MyProvider", 100);
+        Duration duration = Duration.ofMillis(2000);
+        HttpClient httpClient = new NettyAsyncHttpClientBuilder().connectionProvider(connectionProvider).readTimeout(duration).responseTimeout(duration).build();
         cryptoClient = new CryptographyClientBuilder()
                 .keyIdentifier(key.getId())
+                .httpClient(httpClient)
                 .credential(clientSecretCredential)
                 .buildClient();
     }
