@@ -22,9 +22,6 @@ public class ParlessCardsServiceImpl implements ParlessCardsService {
     @Autowired
     private CardRepository cardRepository;
 
-    @Autowired
-    private CryptoServiceImpl cryptoService;
-
     @Override
     public List<ParlessCardResponse> getParlessCards(Integer maxRecords) {
         log.info("Getting parless cards with a limit of " + maxRecords + " cards");

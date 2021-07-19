@@ -237,7 +237,7 @@ public class CardServiceImpl implements CardService {
         return callRtdForHash(token);
     }
 
-    // ISSUER
+    //ISSUER
 
     private void manageIssuerCases(ReadQueue readQueue) {
         String par = readQueue.getPar();
@@ -359,7 +359,6 @@ public class CardServiceImpl implements CardService {
         } else {
             card.getTokens().addAll(newTokens);
         }
-        card.setLastUpdateDate(Instant.now());
     }
 
     private void mergeTokens(Set<TkmCardToken> oldTokens, Set<TkmCardToken> newTokens) {

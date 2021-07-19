@@ -30,6 +30,11 @@ public class DefaultBeans {
         return card;
     }
 
+    public static TkmCitizenCard encCitizenCard(TkmCitizenCard citizenCard) {
+        citizenCard.setCard(encCard(citizenCard.getCard()));
+        return citizenCard;
+    }
+
     public static final Instant INSTANT = Instant.MAX;
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
     public final String TAX_CODE_2 = "TRRCLE04M24L219D";
@@ -103,15 +108,36 @@ public class DefaultBeans {
             .creationDate(INSTANT)
             .build();
 
-    private final List<TkmCitizenCard> CITIZEN_CARD = Collections.singletonList(
+    private final List<TkmCitizenCard> CITIZEN_CARD_LIST = Collections.singletonList(
             TkmCitizenCard.builder()
                     .card(TKM_CARD_PAN_PAR_1)
                     .build()
     );
 
-    public final TkmCitizen CITIZEN_1 = TkmCitizen.builder().taxCode(TAX_CODE_1).citizenCards(CITIZEN_CARD).build();
+    public final TkmCitizen CITIZEN_1 = TkmCitizen.builder().taxCode(TAX_CODE_1).citizenCards(CITIZEN_CARD_LIST).creationDate(INSTANT).build();
     public final TkmCitizen CITIZEN_2 = TkmCitizen.builder().taxCode(TAX_CODE_2).build();
     public final TkmCitizen CITIZEN_3 = TkmCitizen.builder().taxCode(TAX_CODE_1).build();
+
+    public final TkmCitizenCard CITIZEN_CARD_PAN_PAR = encCitizenCard(
+            TkmCitizenCard.builder()
+                    .citizen(CITIZEN_1)
+                    .card(TKM_CARD_PAN_PAR_1)
+                    .creationDate(INSTANT)
+                    .build());
+
+    public final TkmCitizenCard CITIZEN_CARD_PAR = encCitizenCard(
+            TkmCitizenCard.builder()
+                    .citizen(CITIZEN_1)
+                    .card(TKM_CARD_PAR_1)
+                    .creationDate(INSTANT)
+                    .build());
+
+    public final TkmCitizenCard CITIZEN_CARD_PAN = encCitizenCard(
+            TkmCitizenCard.builder()
+                    .citizen(CITIZEN_1)
+                    .card(TKM_CARD_PAN_1)
+                    .creationDate(INSTANT)
+                    .build());
 
     public final List<TkmCitizenCard> CITIZEN_CARDS = Arrays.asList(
             TkmCitizenCard.builder()
@@ -207,11 +233,7 @@ public class DefaultBeans {
             )
     ));
 
-    private final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_UPDATED = new HashSet<>(Arrays.asList(
-            new WriteQueueToken(
-                    HTOKEN_2,
-                    TokenActionEnum.DELETE
-            ),
+    private final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_UPDATED = new HashSet<>(Collections.singletonList(
             new WriteQueueToken(
                     HTOKEN_3,
                     TokenActionEnum.INSERT_UPDATE
