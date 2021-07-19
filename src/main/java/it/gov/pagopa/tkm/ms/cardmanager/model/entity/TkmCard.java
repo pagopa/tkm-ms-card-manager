@@ -49,9 +49,8 @@ public class TkmCard {
     private Instant lastUpdateDate;
 
     @Builder.Default
-//    @OneToMany(mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-//    @Where(clause = "deleted = false")
-    @Transient
+    @OneToMany(mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @Where(clause = "deleted = false")
     private Set<TkmCardToken> tokens = new HashSet<>();
 
     @Builder.Default

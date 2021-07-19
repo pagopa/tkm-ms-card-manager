@@ -356,8 +356,10 @@ public class CardServiceImpl implements CardService {
         Set<TkmCardToken> newTokens = queueTokensToEncryptedTkmTokens(card, readQueueTokens);
         if (CollectionUtils.isEmpty(newTokens)) {
             mergeTokens(card.getTokens(), newTokens);
+        } else {
+            card.getTokens().addAll(newTokens);
         }
-        card.getTokens().addAll(newTokens);
+        card.setLastUpdateDate(Instant.now());
     }
 
     private void mergeTokens(Set<TkmCardToken> oldTokens, Set<TkmCardToken> newTokens) {
