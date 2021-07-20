@@ -10,6 +10,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.streams.StreamsConfig;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,7 +65,19 @@ public class KafkaConfiguration {
     private String consumerSaslMechanism;
 
     @Value("${spring.kafka.topics.read-queue.jaas.config.producer}")
-    private String azureSaslJaasConfigRead;
+    private String readQueueJaasConfigProducer;
+
+    @Value("${spring.kafka.topics.write-queue.jaas.config.producer}")
+    private String writeQueueJaasConfigProducer;
+
+    @Value("${spring.kafka.topics.delete-queue.jaas.config.producer}")
+    private String deleteQueueJaasConfigProducer;
+
+    @Value("${spring.kafka.topics.dlt-queue.jaas.config.consumer}")
+    private String dltQueueJaasConfigConsumer;
+
+    @Value("${spring.kafka.topics.dlt-queue.jaas.config.producer}")
+    private String dltQueueJaasConfigProducer;
 
     @Value("${spring.kafka.consumer.key-deserializer}")
     private String keyDeserializer;
@@ -96,14 +109,14 @@ public class KafkaConfiguration {
     }
 
     @Bean
-    public RetryingBatchErrorHandler batchErrorHandler(KafkaTemplate<String, String> template) {
-        DeadLetterPublishingRecoverer recover = recoverer(template);
+    public RetryingBatchErrorHandler batchErrorHandler(@Qualifier("dltProducer") KafkaTemplate<String, String> dltProducer) {
+        DeadLetterPublishingRecoverer recover = recoverer(dltProducer);
         return new RetryingBatchErrorHandler(new FixedBackOff(1000L, 1), recover);
     }
 
     @Bean
-    public DeadLetterPublishingRecoverer recoverer(KafkaTemplate<String, String> bytesTemplate) {
-        return new DeadLetterPublishingRecoverer(bytesTemplate,
+    public DeadLetterPublishingRecoverer recoverer(@Qualifier("dltProducer") KafkaTemplate<String, String> dltProducer) {
+        return new DeadLetterPublishingRecoverer(dltProducer,
                 (queueElement, ex) -> {
 
                     Header retriesHeader = queueElement.headers().lastHeader(ATTEMPT_COUNTER_HEADER);
@@ -138,6 +151,11 @@ public class KafkaConfiguration {
     }
 
     @Primary
+    @Bean
+    public KafkaTemplate<String, String> kafkaTemplate() {
+        return null;
+    }
+
     @Bean(name = "dltReadProducer")
     public KafkaTemplate<String, String> dltReadProducer() {
         return new KafkaTemplate<>(readProducerFactory());
@@ -158,31 +176,33 @@ public class KafkaConfiguration {
         return consumerFactoryDlt().createConsumer();
     }
 
-    private ProducerFactory<String, String> readProducerFactory() {
-        Map<String, Object> configProps = createConfigProps(false);
-        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, readProducerClientId);
-        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigRead);
+    @Bean(name = "dltProducer")
+    public KafkaTemplate<String, String> dltProducer() {
+        return new KafkaTemplate<>(dltProducerFactory());
+    }
 
+    private ProducerFactory<String, String> dltProducerFactory() {
+        Map<String, Object> configProps = createConfigProps(false, dltClientId, dltQueueJaasConfigProducer);
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    private ProducerFactory<String, String> readProducerFactory() {
+        Map<String, Object> configProps = createConfigProps(false, readProducerClientId, readQueueJaasConfigProducer);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     private ProducerFactory<String, String> writeProducerFactory() {
-        Map<String, Object> configProps = createConfigProps(false);
-        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, writeProducerClientId);
-
+        Map<String, Object> configProps = createConfigProps(false, writeProducerClientId, writeQueueJaasConfigProducer);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     private ProducerFactory<String, String> deleteProducerFactory() {
-        Map<String, Object> configProps = createConfigProps(false);
-        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, deleteProducerClientId);
-
+        Map<String, Object> configProps = createConfigProps(false, deleteProducerClientId, deleteQueueJaasConfigProducer);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     private ConsumerFactory<String, String> consumerFactoryDlt() {
-        Map<String, Object> configProps = createConfigProps(true);
-        configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, dltClientId);
+        Map<String, Object> configProps = createConfigProps(true, dltClientId, dltQueueJaasConfigConsumer);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, dltConsumerGroup);
         configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.valueOf(consumerEnableAutoCommit));
@@ -190,7 +210,7 @@ public class KafkaConfiguration {
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
-    private Map<String, Object> createConfigProps(boolean consumer) {
+    private Map<String, Object> createConfigProps(boolean consumer, String clientId, String jaas) {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -199,19 +219,17 @@ public class KafkaConfiguration {
             configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
             configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
         } else {
-            configProps.put(
-                    ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                    keySerializer);
-            configProps.put(
-                    ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                    valueSerializer);
+            configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
+            configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer);
         }
         configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG,
                 consumer ? consumerSecurityProtocol : producerSecurityProtocol);
         configProps.put(SaslConfigs.SASL_MECHANISM,
                 consumer ? consumerSaslMechanism : producerSaslMechanism);
-
+        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, clientId);
+        if (StringUtils.isNotBlank(jaas)) {
+            configProps.put(SaslConfigs.SASL_JAAS_CONFIG, jaas);
+        }
         return configProps;
     }
-
 }
