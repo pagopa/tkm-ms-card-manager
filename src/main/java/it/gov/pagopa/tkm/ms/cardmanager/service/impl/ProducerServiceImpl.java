@@ -7,6 +7,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.service.ProducerService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,8 @@ import javax.annotation.PostConstruct;
 public class ProducerServiceImpl implements ProducerService {
 
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+    @Qualifier("dltWriteProducer")
+    private KafkaTemplate<String, String> dltWriteProducer;
 
     @Autowired
     private ObjectMapper mapper;
@@ -35,7 +37,7 @@ public class ProducerServiceImpl implements ProducerService {
     public void sendMessage(WriteQueue writeQueue) throws JsonProcessingException {
         String message = mapper.writeValueAsString(writeQueue);
         log.info("Writing card to queue: " + message);
-        kafkaTemplate.send(writeQueueTopic, message);
+        dltWriteProducer.send(writeQueueTopic, message);
     }
 
 }
