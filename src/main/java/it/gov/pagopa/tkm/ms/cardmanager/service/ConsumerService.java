@@ -7,7 +7,7 @@ import java.util.concurrent.*;
 
 public interface ConsumerService {
 
-    void consume(List<String> messages) throws ExecutionException, InterruptedException, JsonProcessingException;
+    void consume(List<String> messages) throws ExecutionException, InterruptedException, JsonProcessingException, Exception;
 
     void consumeDelete(String message);
 

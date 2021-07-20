@@ -7,6 +7,15 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.response.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.config.SaslConfigs;
+import org.apache.kafka.streams.StreamsConfig;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
 
 import java.time.Instant;
 import java.util.*;
@@ -327,5 +336,44 @@ public class DefaultBeans {
         serviceConsentSet.add(new ServiceConsent(ConsentRequestEnum.Deny, ServiceEnum.FA));
         return serviceConsentSet;
     }
+
+    public TopicPartition READ_TOPIC_PARTITION = new TopicPartition("deadLetterTopic", 0);
+
+    private ConsumerRecords<String, String> createConsumerRecords () {
+        ConsumerRecord<String, String> consumerRecord =
+                new ConsumerRecord<String, String>("deadLetterTopic",0, 0, "Key", "value" );
+        consumerRecord.headers().add("attemptsCounter", "1".getBytes());
+        consumerRecord.headers().add("originalTopic", "tkm-read-token-par-pan".getBytes());
+
+        Map<TopicPartition, List<ConsumerRecord>> map = new HashMap<>();
+        map.put(READ_TOPIC_PARTITION, Collections.singletonList(consumerRecord));
+
+        return new ConsumerRecords(map);
+
+    };
+
+    public ConsumerRecords<String, String> CONSUMER_RECORDS = createConsumerRecords();
+
+    public KafkaTemplate<String, String> READ_PRODUCER_KAFKA_TEMPLATE= readProducerFactory();
+
+    private KafkaTemplate<String, String> readProducerFactory() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                "localhost:9092");
+        configProps.put(
+                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringSerializer");
+        configProps.put(
+                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringSerializer");
+       /* configProps.put(ProducerConfig.CLIENT_ID_CONFIG, readProducerClientId);
+        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
+        configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
+        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigRead); */
+
+        return  new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(configProps));
+    }
+
 
 }
