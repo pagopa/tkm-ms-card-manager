@@ -1,5 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
@@ -220,6 +221,7 @@ public class CardServiceImpl implements CardService {
         }
     }
 
+    @CircuitBreaker(name = "rtdForHashCircuitBreaker", fallbackMethod = "getRtdForHashFallback")
     private String callRtdForHash(String toHash) {
         log.trace("Calling RTD for hash of " + toHash);
         try {
@@ -228,6 +230,12 @@ public class CardServiceImpl implements CardService {
             log.error(e);
             throw new KafkaProcessMessageException(CALL_TO_RTD_FAILED);
         }
+    }
+
+
+    public String getRtdForHashFallback(String toHash, Throwable t ){
+        log.info(String.format("RTD Hash fallback for hash value%s- cause {}", toHash), t.toString());
+        return "Some error occurred while calling Rtd For Hash";
     }
 
     private String getHtoken(String htoken, String token) {
