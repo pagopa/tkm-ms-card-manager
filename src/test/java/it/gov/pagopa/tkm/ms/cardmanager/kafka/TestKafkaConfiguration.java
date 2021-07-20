@@ -36,12 +36,6 @@ public class TestKafkaConfiguration {
     @InjectMocks
     private KafkaConfiguration kafkaConfiguration;
 
-    private DefaultBeans testBeans;
-
-    @BeforeEach()
-    void init() {
-        testBeans = new DefaultBeans();
-    }
 
     @Test
      void seekToCurrentErrorHandlerRecovers() {
