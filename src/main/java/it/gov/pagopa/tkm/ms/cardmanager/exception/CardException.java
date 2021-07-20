@@ -7,7 +7,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 public class CardException extends RuntimeException {
 
-    private ErrorCodeEnum errorCode;
+    private final ErrorCodeEnum errorCode;
 
     public CardException(ErrorCodeEnum ec) {
         super(ec.getStatusCode() + " - " + ec.getMessage());
