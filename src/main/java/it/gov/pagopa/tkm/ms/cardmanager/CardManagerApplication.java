@@ -1,21 +1,20 @@
 package it.gov.pagopa.tkm.ms.cardmanager;
 
-import it.gov.pagopa.tkm.annotation.EnableLoggingTableResult;
-import it.gov.pagopa.tkm.aop.AopLogging;
-import it.gov.pagopa.tkm.config.BatchResultConfig;
-import it.gov.pagopa.tkm.config.CustomAnnotation;
+import it.gov.pagopa.tkm.annotation.EnableTkmAopLogging;
+import it.gov.pagopa.tkm.annotation.EnableTkmLoggingTableResult;
+import it.gov.pagopa.tkm.annotation.EnableTkmStringAnnotation;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableFeignClients
 @EnableCaching
-@Import({CustomAnnotation.class, AopLogging.class})
-@EnableLoggingTableResult
+@EnableTkmAopLogging
+@EnableTkmStringAnnotation
+@EnableTkmLoggingTableResult
 @EnableScheduling
 public class CardManagerApplication {
 

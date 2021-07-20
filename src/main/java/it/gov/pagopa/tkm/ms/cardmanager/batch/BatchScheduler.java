@@ -1,10 +1,8 @@
 package it.gov.pagopa.tkm.ms.cardmanager.batch;
 
-import it.gov.pagopa.tkm.annotation.EnableExecutionTime;
-import it.gov.pagopa.tkm.annotation.EnableLoggingTableResult;
 import it.gov.pagopa.tkm.annotation.LoggingTableResult;
-import it.gov.pagopa.tkm.model.BaseResultDetails;
 import it.gov.pagopa.tkm.ms.cardmanager.config.KafkaConfiguration;
+import it.gov.pagopa.tkm.ms.cardmanager.model.batch.DltBatchResult;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -12,6 +10,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,9 +20,8 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Log4j2
 @Component
@@ -57,40 +55,62 @@ public class BatchScheduler {
     @Value("${spring.kafka.topics.delete-queue.name}")
     private String deleteQueueTopic;
 
+    @SuppressWarnings("UnusedReturnValue")
     @Scheduled(cron = "${batch.kafka-dlt-read.cron}")
-    @LoggingTableResult(resultClass = BaseResultDetails.class)
-    @EnableExecutionTime
-    public void scheduledTask() {
+    @LoggingTableResult(batchName = "DLT_BATCH")
+    public DltBatchResult scheduledTask() {
+        DltBatchResult dltBatchResult = new DltBatchResult();
+        dltBatchResult.setSuccess(true);
         try {
             dltConsumer.subscribe(Collections.singletonList(dltQueueTopic));
 
             ConsumerRecords<String, String> consumerRecords = consumerReceive();
 
-            if (consumerRecords == null || consumerRecords.isEmpty()) return;
-
-            consumerRecords.iterator().forEachRemaining(this::processRecoverRecord);
+            if (consumerRecords != null && !consumerRecords.isEmpty()) {
+                List<String> location = new ArrayList<>();
+                consumerRecords.iterator().forEachRemaining(queueElement -> location.add(processRecoverRecord(queueElement)));
+                addRecordsDetails(location, dltBatchResult);
+                dltBatchResult.setNumRecordProcessed(consumerRecords.count());
+            }
         } catch (Exception e) {
             log.error("Error on dlt batch recover", e);
+            dltBatchResult.setSuccess(false);
+            dltBatchResult.setErrorMessage(e.getMessage());
         }
         dltConsumer.unsubscribe();
+        return dltBatchResult;
     }
 
-    private void processRecoverRecord(ConsumerRecord<String, String> queueElement) {
+    private void addRecordsDetails(List<String> location, DltBatchResult dltBatchResult) {
+        Map<Integer, List<String>> collect = location.stream().collect(Collectors.groupingBy(String::hashCode));
+        Map<String, Integer> recordsDetails = new HashMap<>();
+        for (Map.Entry<Integer, List<String>> integerListEntry : collect.entrySet()) {
+            List<String> value = integerListEntry.getValue();
+            recordsDetails.put(value.get(0), value.size());
+        }
+        dltBatchResult.setRecordsDetails(recordsDetails);
+    }
+
+    private String processRecoverRecord(ConsumerRecord<String, String> queueElement) {
         String key = queueElement.key();
         String recordValue = queueElement.value();
         Headers headers = queueElement.headers();
 
-        Header originalTopicHeader = queueElement.headers().lastHeader(KafkaConfiguration.ORIGINAL_TOPIC_HEADER);
-        byte[] originalTopicHeaderByte = originalTopicHeader.value();
-        String originalTopicHeaderString = new String(originalTopicHeaderByte, StandardCharsets.UTF_8);
+        String originalTopicHeaderString = getValueStringFromRecordHeader(queueElement, KafkaConfiguration.ORIGINAL_TOPIC_HEADER);
 
-        Header numberOfAttemptsHeader = queueElement.headers().lastHeader(KafkaConfiguration.ATTEMPT_COUNTER_HEADER);
-        byte[] numberOfAttemptsHeaderByte = numberOfAttemptsHeader.value();
-        String numberOfAttemptsHeaderString = new String(numberOfAttemptsHeaderByte, StandardCharsets.UTF_8);
+        String numberOfAttemptsHeaderString = getValueStringFromRecordHeader(queueElement, KafkaConfiguration.ATTEMPT_COUNTER_HEADER);
         int headerIntValue = Integer.parseInt(numberOfAttemptsHeaderString);
         if (headerIntValue <= 3) {
             sendBackToOriginalQueue(originalTopicHeaderString, key, recordValue, headers, numberOfAttemptsHeaderString);
         }
+        return originalTopicHeaderString;
+    }
+
+    @NotNull
+    private String getValueStringFromRecordHeader(ConsumerRecord<String, String> queueElement, String headerName) {
+        Header originalTopicHeader = queueElement.headers().lastHeader(headerName);
+        byte[] originalTopicHeaderByte = originalTopicHeader.value();
+        return new String(originalTopicHeaderByte, StandardCharsets.UTF_8);
     }
 
     private void sendBackToOriginalQueue(String topic, String key, String recordValue, Headers headers, String numberOfAttemptsHeaderString) {
@@ -113,7 +133,7 @@ public class BatchScheduler {
 
     private ConsumerRecords<String, String> consumerReceive() {
         ConsumerRecords<String, String> records;
-        records = dltConsumer.poll(Duration.ofSeconds(5));
+        records = dltConsumer.poll(Duration.ofSeconds(1));
         dltConsumer.commitSync();
         log.info("Recover number of records: " + (records != null ? records.count() : 0));
         log.trace("Records: " + records);

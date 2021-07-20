@@ -71,6 +71,7 @@ spring:
         group-id: ${KAFKA_DLT_QUEUE_GROUP}
         client-id: ${KAFKA_DLT_QUEUE_GROUP}${HOSTNAME:0}
         concurrency: ${KAFKA_DLT_MAX_NUMBER_OF_THREADS:1}
+        max-poll-records: ${KAFKA_DLT_MAX_POLL_RECORDS:${spring.kafka.consumer.max-poll-records}}
         jaas:
           config:
             producer: ${keyvault.tkmDltProducerSaslJaasConfig}

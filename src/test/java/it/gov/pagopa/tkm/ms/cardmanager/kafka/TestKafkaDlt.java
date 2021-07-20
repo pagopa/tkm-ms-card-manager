@@ -19,15 +19,13 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
-import java.util.Collections;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
-public class TestKafkaDlt {
-
+class TestKafkaDlt {
 
     @InjectMocks
     private BatchScheduler scheduler;
@@ -56,20 +54,17 @@ public class TestKafkaDlt {
 
 
     @Test
-    void givenTopicRecords_sendToOriginalTopic(){
+    void givenTopicRecords_sendToOriginalTopic() {
 
         ReflectionTestUtils.setField(scheduler, "readQueueTopic", "tkm-read-token-par-pan");
         ReflectionTestUtils.setField(scheduler, "dltQueueTopic", "deadLetterTopic");
-        ReflectionTestUtils.setField(scheduler, "partitions", Collections.singletonList(testBeans.READ_TOPIC_PARTITION));
 
-        when(dltConsumer.poll(Duration.ofSeconds(5))).thenReturn(testBeans.CONSUMER_RECORDS);
+        when(dltConsumer.poll(Duration.ofSeconds(1))).thenReturn(testBeans.CONSUMER_RECORDS);
         scheduler.scheduledTask();
-        verify(dltReadProducer).send((ProducerRecord<String, String>) Mockito.any());
+        verify(dltReadProducer).send(Mockito.any(ProducerRecord.class));
 
 
     }
-
-
 
 
 }

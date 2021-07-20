@@ -84,6 +84,9 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.consumer.auto-offset-reset}")
     private String autoOffsetReset;
 
+    @Value("${spring.kafka.topics.dlt-queue.max-poll-records}")
+    private String maxPollRecordsDl;
+
     public static final String ATTEMPT_COUNTER_HEADER = "attemptsCounter";
     public static final String ORIGINAL_TOPIC_HEADER = "originalTopic";
 
@@ -152,7 +155,7 @@ public class KafkaConfiguration {
 
     @Bean(name = "dltConsumer")
     public Consumer<String, String> dltConsumer() {
-        return consumerFactory().createConsumer();
+        return consumerFactoryDlt().createConsumer();
     }
 
     private ProducerFactory<String, String> readProducerFactory() {
@@ -177,12 +180,13 @@ public class KafkaConfiguration {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    private ConsumerFactory<String, String> consumerFactory() {
+    private ConsumerFactory<String, String> consumerFactoryDlt() {
         Map<String, Object> configProps = createConfigProps(true);
         configProps.put(ConsumerConfig.CLIENT_ID_CONFIG, dltClientId);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, dltConsumerGroup);
         configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.valueOf(consumerEnableAutoCommit));
+        configProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecordsDl);
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 

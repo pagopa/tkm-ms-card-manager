@@ -1,11 +1,13 @@
 package it.gov.pagopa.tkm.ms.cardmanager.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.tkm.model.BaseResultDetails;
 import it.gov.pagopa.tkm.ms.cardmanager.config.ErrorHandler;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.ApiEndpoints;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.controller.impl.ParlessCardsControllerImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.model.batch.DltBatchResult;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ParlessCardsServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,6 +79,12 @@ class TestParlessCardsController {
                 get(ApiEndpoints.BASE_PATH_PARLESS_CARDS)
                         .queryParam(ApiParams.MAX_NUMBER_OF_CARDS_PARAM, "a"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void prova(){
+        System.out.println(DltBatchResult.class.isAssignableFrom(BaseResultDetails.class));
+        System.out.println(BaseResultDetails.class.isAssignableFrom(DltBatchResult.class));
     }
 
 }
