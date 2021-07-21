@@ -49,13 +49,12 @@ public class TkmCard {
     private Instant lastUpdateDate;
 
     @Builder.Default
-//    @OneToMany(mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-//    @Where(clause = "deleted = false")
-    @Transient
-    private Set<TkmCardToken> tokens = new HashSet<>();
-
-    @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "card")
     private List<TkmCitizenCard> citizenCards = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "card", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @Where(clause = "deleted = false")
+    private Set<TkmCardToken> tokens = new HashSet<>();
 
 }
