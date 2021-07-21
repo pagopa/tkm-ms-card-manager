@@ -19,9 +19,8 @@ public class TkmCardToken {
     @Column(name = "ID", unique = true)
     private Long id;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "CARD_ID", nullable = false)
-    @Transient
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CARD_ID", nullable = false)
     private TkmCard card;
 
     @Column(name = "TOKEN", nullable = false, length = 500)
