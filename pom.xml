@@ -3,13 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>card-manager</artifactId>
-    <version>0.2.11</version>
+    <version>0.2.12</version>
     <packaging>jar</packaging>
 
     <parent>
         <groupId>it.gov.pagopa.tkm.ms</groupId>
         <artifactId>starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
     </parent>
 
     <dependencies>
@@ -154,6 +154,6 @@
     </distributionManagement>
     <scm>
         <developerConnection>scm:git:https://github.com/pagopa/tkm-ms-card-manager.git</developerConnection>
-        <tag>card-manager-0.2.11</tag>
+        <tag>card-manager-0.2.12</tag>
     </scm>
 </project>
