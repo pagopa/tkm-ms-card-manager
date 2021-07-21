@@ -143,3 +143,13 @@ management:
 batch:
   kafka-dlt-read:
     cron: ${KAFKA_DLT_READ_CRON:-}
+
+resilience4j.circuitbreaker:
+  instances:
+    rtdForHashCircuitBreaker:
+      minimumNumberOfCalls: 40
+      slidingWindowSize: 80
+      ringBufferSizeInClosedState: 40
+      ringBufferSizeInHalfOpenState: 40
+      failureRateThreshold: 50
+      waitDurationInOpenState: 5s

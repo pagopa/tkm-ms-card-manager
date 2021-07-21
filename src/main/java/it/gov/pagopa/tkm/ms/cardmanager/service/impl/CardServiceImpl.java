@@ -1,6 +1,5 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
@@ -16,6 +15,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CardService;
+import it.gov.pagopa.tkm.ms.cardmanager.service.CircuitBreakerManager;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -60,8 +60,11 @@ public class CardServiceImpl implements CardService {
     @Autowired
     private CardTokenRepository cardTokenRepository;
 
+    @Autowired
+    private CircuitBreakerManager circuitBreakerManager;
+
     @Override
-    public void updateOrCreateCard(ReadQueue readQueue) {
+    public void updateOrCreateCard(ReadQueue readQueue){
         String taxCode = readQueue.getTaxCode();
         if (StringUtils.isBlank(taxCode)) {
             manageParUpdateAndAcquirerToken(readQueue);
@@ -72,6 +75,8 @@ public class CardServiceImpl implements CardService {
             log.info("NOT IMPLEMENTED YET");
         }
     }
+
+
 
     private void manageParUpdateAndAcquirerToken(ReadQueue readQueue) {
         String par = readQueue.getPar();
@@ -221,27 +226,24 @@ public class CardServiceImpl implements CardService {
         }
     }
 
-    @CircuitBreaker(name = "rtdForHashCircuitBreaker", fallbackMethod = "getRtdForHashFallback")
     private String callRtdForHash(String toHash) {
         log.trace("Calling RTD for hash of " + toHash);
         try {
             return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(toHash), apimRtdSubscriptionKey).getHashPan();
         } catch (Exception e) {
+            System.out.println("\n \n callRtdForHash THROW ExCEPTION");
             log.error(e);
             throw new KafkaProcessMessageException(CALL_TO_RTD_FAILED);
         }
     }
 
 
-    public String getRtdForHashFallback(String toHash, Throwable t ){
-        log.info(String.format("RTD Hash fallback for hash value%s- cause {}", toHash), t.toString());
-        return "Some error occurred while calling Rtd For Hash";
-    }
 
     private String getHtoken(String htoken, String token) {
         if (StringUtils.isNotBlank(htoken))
             return htoken;
-        return callRtdForHash(token);
+        return circuitBreakerManager.callRtdForHash(token, apimRtdSubscriptionKey);
+       // return callRtdForHash(token);
     }
 
     //TODO USE
