@@ -147,9 +147,25 @@ batch:
 resilience4j.circuitbreaker:
   instances:
     rtdForHashCircuitBreaker:
-      minimumNumberOfCalls: 40
-      slidingWindowSize: 80
-      ringBufferSizeInClosedState: 40
-      ringBufferSizeInHalfOpenState: 40
-      failureRateThreshold: 50
-      waitDurationInOpenState: 5s
+      minimumNumberOfCalls: ${MINUMUM_NUMBER_OF_CALLS:20}
+      slidingWindowSize: ${SLIDING_WINDOW_SIZE:40}
+      ringBufferSizeInClosedState: ${RING_BUFFER_SIZE_IN_CLOSED_STATE:20}
+      ringBufferSizeInHalfOpenState: ${RING_BUFFER_SIZE_IN_HALFOPEN_STATE:20}
+      failureRateThreshold: ${FAILURE_RATE_THRESHOLD:50}
+      waitDurationInOpenState: ${WAIT_DURATION_IN_OPENSTATE:20s}
+    consentClientGetConsentCircuitBreaker:
+      minimumNumberOfCalls: ${MINUMUM_NUMBER_OF_CALLS:20}
+      slidingWindowSize: ${SLIDING_WINDOW_SIZE:40}
+      ringBufferSizeInClosedState: ${RING_BUFFER_SIZE_IN_CLOSED_STATE:20}
+      ringBufferSizeInHalfOpenState: ${RING_BUFFER_SIZE_IN_HALFOPEN_STATE:20}
+      failureRateThreshold: ${FAILURE_RATE_THRESHOLD:50}
+      waitDurationInOpenState: ${WAIT_DURATION_IN_OPENSTATE:20s}
+
+resilience4j.retry:
+        instances:
+          rtdForHashRetry:
+            maxAttempts: ${RETRY_MAX_ATTEMPTS:3}
+            waitDuration: ${RETRY_WAIT_DURATION:1000}
+          consentClientGetConsentRetry:
+            maxAttempts: ${RETRY_MAX_ATTEMPTS:3}
+            waitDuration: ${RETRY_WAIT_DURATION:1000}

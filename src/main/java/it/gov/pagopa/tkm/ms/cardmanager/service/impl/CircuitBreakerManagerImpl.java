@@ -1,9 +1,12 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
+import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.KafkaProcessMessageException;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CircuitBreakerManager;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +21,11 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
     @Autowired
     private RtdHashingClient rtdHashingClient;
 
+    @Autowired
+    private ConsentClient consentClient;
+
     @CircuitBreaker(name = "rtdForHashCircuitBreaker", fallbackMethod = "getRtdForHashFallback")
+    @Retry(name ="rtdForHashRetry", fallbackMethod = "getRtdForHashFallback")
     public String callRtdForHash(String toHash, String apimRtdSubscriptionKey) {
         log.trace("Calling RTD for hash of " + toHash);
         try {
@@ -33,6 +40,17 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
     public String getRtdForHashFallback(String toHash, String apimRtdSubscriptionKey, Throwable t ){
         log.info("RTD Hash fallback for hash value%s- cause {} "+  t.getMessage());
         return "RTD Hash Error";
+    }
+
+    @CircuitBreaker(name = "consentClientGetConsentCircuitBreaker", fallbackMethod = "consentClientGetConsentFallback")
+    @Retry(name ="consentClientGetConsentRetry", fallbackMethod = "consentClientGetConsentFallback")
+    public void consentClientGetConsent(String taxCode, TkmCard card) {
+        consentClient.getConsent(taxCode, card.getHpan(), null);
+    };
+
+    public void consentClientGetConsentFallback(String taxCode, TkmCard card, Throwable t) throws Exception{
+        log.info("consent Client Get Consent Fallback%s- cause {} "+  t.getMessage());
+        throw new Exception();
     }
 
 }

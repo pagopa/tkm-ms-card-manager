@@ -76,8 +76,6 @@ public class CardServiceImpl implements CardService {
         }
     }
 
-
-
     private void manageParUpdateAndAcquirerToken(ReadQueue readQueue) {
         String par = readQueue.getPar();
         String hpan = readQueue.getHpan();
@@ -231,13 +229,10 @@ public class CardServiceImpl implements CardService {
         try {
             return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(toHash), apimRtdSubscriptionKey).getHashPan();
         } catch (Exception e) {
-            System.out.println("\n \n callRtdForHash THROW ExCEPTION");
             log.error(e);
             throw new KafkaProcessMessageException(CALL_TO_RTD_FAILED);
         }
     }
-
-
 
     private String getHtoken(String htoken, String token) {
         if (StringUtils.isNotBlank(htoken))
