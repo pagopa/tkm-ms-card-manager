@@ -242,9 +242,13 @@ public class DefaultBeans {
             )
     ));
 
-    private final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_UPDATED = new HashSet<>(Collections.singletonList(
+    private final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_UPDATED = new HashSet<>(Arrays.asList(
             new WriteQueueToken(
-                    HTOKEN_3,
+                    HTOKEN_1,
+                    TokenActionEnum.INSERT_UPDATE
+            ),
+            new WriteQueueToken(
+                    HTOKEN_2,
                     TokenActionEnum.INSERT_UPDATE
             )
     ));

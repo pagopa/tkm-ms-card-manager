@@ -223,9 +223,11 @@ class TestCardService {
     void givenPanParAndExistingPan_updateCard() {
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
-        when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.CITIZEN_CARD_PAN_PAR);
+        when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.CITIZEN_CARD_PAN);
+        when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
+        testBeans.TKM_CARD_PAN_PAR_1.setLastUpdateDate(DefaultBeans.INSTANT);
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
     }
 
@@ -233,10 +235,11 @@ class TestCardService {
     void givenPanParAndExistingPar_updateCard() {
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
-        when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.CITIZEN_CARD_PAR).thenReturn(null);
+        when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Par(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.CITIZEN_CARD_PAN_PAR);
+        when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
-        testBeans.CITIZEN_CARD_PAN_PAR.getCard().setLastUpdateDate(DefaultBeans.INSTANT);
+        testBeans.TKM_CARD_PAN_PAR_1.setLastUpdateDate(DefaultBeans.INSTANT);
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
     }
 
@@ -299,6 +302,7 @@ class TestCardService {
         ));
         when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.CITIZEN_CARD_PAN);
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
+        when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         testBeans.READ_QUEUE_PAN_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2);
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);

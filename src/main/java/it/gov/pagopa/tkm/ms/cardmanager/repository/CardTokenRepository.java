@@ -11,6 +11,8 @@ public interface CardTokenRepository extends JpaRepository<TkmCardToken, Long> {
 
     TkmCardToken findByHtokenAndDeletedFalse(String htoken);
 
+    List<TkmCardToken> findByHtokenInAndDeletedFalse(List<String> htokens);
+
     List<TkmCardTokenSubSet> findByIdGreaterThanEqualAndIdLessThan(Long min, Long max);
 
     @Cacheable(value = "first-token", unless = "#result == null")

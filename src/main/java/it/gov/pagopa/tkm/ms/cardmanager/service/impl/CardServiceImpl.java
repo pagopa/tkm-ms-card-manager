@@ -1,10 +1,11 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
+import feign.*;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
-import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
@@ -15,20 +16,19 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CardService;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.collections.*;
+import org.apache.commons.lang3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.*;
 
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_RTD_FAILED;
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.INCONSISTENT_MESSAGE;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
+import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.INSERT_UPDATE;
 
 @Service
 @Log4j2
@@ -244,34 +244,18 @@ public class CardServiceImpl implements CardService {
         String pan = readQueue.getPan();
         String hpan = (readQueue.getHpan() == null && pan != null) ? callRtdForHash(pan) : readQueue.getHpan();
         String taxCode = readQueue.getTaxCode();
-        Set<TkmCardToken> oldTokens = new HashSet<>();
-        TkmCitizenCard citizenCard = findCitizenCard(taxCode, hpan, par);
-        TkmCard card;
-        boolean merged = false;
-        if (citizenCard == null) {
-            log.info("Card not found on database, creating new one");
-            citizenCard = createCitizenCard(taxCode, hpan, par, pan, readQueue.getCircuit());
-            card = citizenCard.getCard();
-        } else {
-            log.info("Card found on database, updating");
-            card = citizenCard.getCard();
-            oldTokens.addAll(card.getTokens());
-            merged = updateCard(card, pan, hpan, par);
-        }
-        manageAndEncryptTokens(card, readQueue.getTokens());
-        log.info("Merged tokens: " + card.getTokens().stream().map(TkmCardToken::getHtoken).collect(Collectors.joining(", ")));
-        citizenCardRepository.save(citizenCard);
-        writeOnQueueIfComplete(citizenCard, oldTokens, merged);
-    }
-
-    private TkmCitizenCard createCitizenCard(String taxCode, String hpan, String par, String pan, CircuitEnum circuit) {
+        CircuitEnum circuit = readQueue.getCircuit();
+        Set<TkmCardToken> tokens = queueTokensToEncryptedTkmTokens(readQueue.getTokens());
+        List<String> htokens = tokens == null ? new ArrayList<>() : tokens.stream().map(TkmCardToken::getHtoken).collect(Collectors.toList());
         TkmCard card = getOrCreateCard(hpan, par, pan, circuit);
         TkmCitizen citizen = getOrCreateCitizen(taxCode);
-        return TkmCitizenCard.builder()
-                .citizen(citizen)
-                .card(card)
-                .creationDate(Instant.now())
-                .build();
+        Set<TkmCardToken> oldTokens = new HashSet<>(card.getTokens());
+        boolean merged = mergeCards(card, pan, hpan, par, htokens, citizen);
+        manageAndEncryptTokens(card, tokens);
+        log.info("Merged tokens: " + card.getTokens().stream().map(TkmCardToken::getHtoken).collect(Collectors.joining(", ")));
+        TkmCitizenCard citizenCard = getOrCreateCitizenCard(taxCode, card, citizen);
+        citizenCardRepository.save(citizenCard);
+        writeOnQueueIfComplete(citizenCard, oldTokens, merged);
     }
 
     private TkmCitizen getOrCreateCitizen(String taxCode) {
@@ -283,30 +267,6 @@ public class CardServiceImpl implements CardService {
                     .build();
         }
         return citizen;
-    }
-
-    private TkmCard createCard(String pan, String hpan, String par, CircuitEnum circuit) {
-        return TkmCard.builder()
-                .circuit(circuit)
-                .pan(cryptoService.encryptNullable(pan))
-                .hpan(hpan)
-                .par(par)
-                .tokens(new HashSet<>())
-                .creationDate(Instant.now())
-                .build();
-    }
-
-    private TkmCitizenCard findCitizenCard(String taxCode, String hpan, String par) {
-        TkmCitizenCard citizenCard = null;
-        if (hpan != null) {
-            log.info("Searching card for taxCode " + taxCode + " and hpan " + hpan);
-            citizenCard = citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(taxCode, hpan);
-        }
-        if (citizenCard == null && par != null) {
-            log.info("Card not found by hpan, searching by par " + par);
-            citizenCard = citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(taxCode, par);
-        }
-        return citizenCard;
     }
 
     private TkmCard getOrCreateCard(String hpan, String par, String pan, CircuitEnum circuit) {
@@ -321,39 +281,142 @@ public class CardServiceImpl implements CardService {
         }
         if (card == null) {
             log.info("Card not found on database, creating new one");
-            card = createCard(pan, hpan, par, circuit);
+            card = TkmCard.builder()
+                    .circuit(circuit)
+                    .pan(cryptoService.encryptNullable(pan))
+                    .hpan(hpan)
+                    .par(par)
+                    .tokens(new HashSet<>())
+                    .creationDate(Instant.now())
+                    .build();
         }
         return card;
     }
 
-    private boolean updateCard(TkmCard foundCard, String pan, String hpan, String par) {
+    private TkmCitizenCard getOrCreateCitizenCard(String taxCode, TkmCard card, TkmCitizen citizen) {
+        TkmCitizenCard citizenCard = null;
+        String hpan = card.getHpan();
+        String par = card.getPar();
+        if (hpan != null) {
+            log.info("Searching citizen card by taxCode " + taxCode + " and hpan " + hpan);
+            citizenCard = citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(taxCode, hpan);
+        }
+        if (citizenCard == null && par != null) {
+            log.info("Citizen card not found by hpan, searching by par " + par);
+            citizenCard = citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Par(taxCode, par);
+        }
+        if (citizenCard == null) {
+            log.info("Citizen card not found, creating one");
+            return TkmCitizenCard.builder()
+                    .citizen(citizen)
+                    .card(card)
+                    .creationDate(Instant.now())
+                    .build();
+        }
+        return citizenCard;
+    }
+
+    private boolean mergeCards(TkmCard survivingCard, String pan, String hpan, String par, List<String> htokens, TkmCitizen citizen) {
+        boolean mergedByTokens = CollectionUtils.isNotEmpty(htokens) && mergeCardsByToken(survivingCard, htokens, citizen);
+        boolean mergedByPanOrPar = mergeCardsByPanOrPar(survivingCard, pan, hpan, par, citizen);
+        return mergedByPanOrPar || mergedByTokens;
+    }
+
+    private boolean mergeCardsByToken(TkmCard survivingCard, List<String> htokens, TkmCitizen citizen) {
+        boolean toMerge = false;
+        List<TkmCardToken> preexistingTokens = cardTokenRepository.findByHtokenInAndDeletedFalse(htokens);
+        if (CollectionUtils.isNotEmpty(preexistingTokens)) {
+            toMerge = true;
+            List<TkmCard> cardsToDelete = preexistingTokens.stream().map(TkmCardToken::getCard).filter(card -> !card.equals(survivingCard)).collect(Collectors.toList());
+            if (survivingCard.getHpan() == null) {
+                TkmCard panCard = cardsToDelete.stream()
+                        .filter(c -> c.getHpan() != null)
+                        .findFirst().orElse(null);
+                if (panCard != null) {
+                    survivingCard.setPan(panCard.getPan());
+                    survivingCard.setHpan(panCard.getHpan());
+                }
+            } else if (survivingCard.getPar() == null) {
+                cardsToDelete.stream()
+                        .filter(c -> c.getPar() != null)
+                        .findFirst().ifPresent(
+                        parCard -> survivingCard.setPar(parCard.getPar())
+                );
+            }
+            survivingCard.getTokens().addAll(preexistingTokens);
+            updateCitizenCardsAfterMergeForIssuer(survivingCard, cardsToDelete, citizen);
+            cardRepository.deleteAll(cardsToDelete);
+        }
+        return toMerge;
+    }
+
+    private boolean mergeCardsByPanOrPar(TkmCard survivingCard, String pan, String hpan, String par, TkmCitizen citizen) {
         TkmCard preexistingCard = null;
         boolean toMerge = false;
-        if (par != null && foundCard.getPar() == null) {
+        if (par != null && survivingCard.getPar() == null) {
             preexistingCard = cardRepository.findByPar(par);
-            foundCard.setPar(par);
-            foundCard.setLastUpdateDate(Instant.now());
+            survivingCard.setPar(par);
+            survivingCard.setLastUpdateDate(Instant.now());
             toMerge = true;
-        } else if (hpan != null && foundCard.getHpan() == null) {
+        } else if (hpan != null && survivingCard.getHpan() == null) {
             preexistingCard = cardRepository.findByHpan(hpan);
-            foundCard.setPan(pan);
-            foundCard.setHpan(hpan);
-            foundCard.setLastUpdateDate(Instant.now());
+            survivingCard.setPan(pan);
+            survivingCard.setHpan(hpan);
+            survivingCard.setLastUpdateDate(Instant.now());
             toMerge = true;
         }
         if (preexistingCard != null) {
             log.info("Preexisting card found with " + (par != null ? "par " + par : "hpan " + hpan) + ", merging");
-            mergeTokens(preexistingCard.getTokens(), foundCard.getTokens());
+            mergeTokens(preexistingCard.getTokens(), survivingCard.getTokens());
+            updateCitizenCardsAfterMergeForIssuer(survivingCard, Collections.singletonList(preexistingCard), citizen);
             cardRepository.delete(preexistingCard);
         }
         return toMerge;
     }
 
-    private void manageAndEncryptTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
-        if (readQueueTokens == null) {
+    private void updateCitizenCardsAfterMergeForIssuer(TkmCard survivingCard, List<TkmCard> deletedCards, TkmCitizen citizen) {
+        cardRepository.save(survivingCard);
+        List<TkmCard> allCards = new ArrayList<>();
+        allCards.add(survivingCard);
+        allCards.addAll(deletedCards);
+        List<TkmCitizenCard> citizenCards = citizenCardRepository.findByCardIdIn(allCards.stream().map(TkmCard::getId).filter(Objects::nonNull).collect(Collectors.toList()));
+        log.trace(citizenCards);
+        Map<TkmCitizen, TkmCitizenCard> citizenCardsMap = new HashMap<>();
+        List<TkmCitizenCard> survivingCitizenCards = new ArrayList<>();
+        List<TkmCitizenCard> citizenCardsToDelete = new ArrayList<>();
+        TkmCitizenCard toExclude = citizenCards.stream().filter(c -> c.getCard().equals(survivingCard)).findFirst().orElse(null);
+        if (toExclude != null) {
+            citizenCardsMap.put(citizen, toExclude);
+            survivingCitizenCards.add(toExclude);
+        }
+        for (TkmCitizenCard c : citizenCards) {
+            TkmCitizen cardCitizen = c.getCitizen();
+            if (citizenCardsMap.get(cardCitizen) == null) {
+                citizenCardsMap.put(cardCitizen, c);
+                survivingCitizenCards.add(c);
+            } else if (!c.equals(toExclude)) {
+                citizenCardsToDelete.add(c);
+            }
+        }
+        citizenCardRepository.deleteAll(citizenCardsToDelete);
+        survivingCitizenCards.forEach(c -> c.setCard(survivingCard));
+        citizenCardRepository.saveAll(survivingCitizenCards);
+        Set<TkmCardToken> tokensToUpdate = new HashSet<>();
+        deletedCards.forEach(c -> tokensToUpdate.addAll(c.getTokens()));
+        for (TkmCardToken t : tokensToUpdate) {
+            t.setCard(survivingCard);
+            t.setLastUpdateDate(Instant.now());
+        }
+        cardTokenRepository.saveAll(tokensToUpdate);
+        citizenCards.forEach(c -> writeOnQueueIfComplete(c, tokensToUpdate, true));
+        log.debug("All cards have been merged");
+    }
+
+    private void manageAndEncryptTokens(TkmCard card, Set<TkmCardToken> newTokens) {
+        if (newTokens == null) {
             return;
         }
-        Set<TkmCardToken> newTokens = queueTokensToEncryptedTkmTokens(card, readQueueTokens);
+        newTokens.forEach(t -> t.setCard(card));
         if (CollectionUtils.isEmpty(newTokens)) {
             mergeTokens(card.getTokens(), newTokens);
         } else {
@@ -369,9 +432,11 @@ public class CardServiceImpl implements CardService {
         });
     }
 
-    private Set<TkmCardToken> queueTokensToEncryptedTkmTokens(TkmCard card, List<ReadQueueToken> readQueueTokens) {
+    private Set<TkmCardToken> queueTokensToEncryptedTkmTokens(List<ReadQueueToken> readQueueTokens) {
+        if (readQueueTokens == null) {
+            return null;
+        }
         return readQueueTokens.stream().map(t -> TkmCardToken.builder()
-                .card(card)
                 .token(cryptoService.encrypt(t.getToken()))
                 .htoken(StringUtils.isNotBlank(t.getHToken()) ? t.getHToken() : callRtdForHash(t.getToken()))
                 .creationDate(Instant.now())
