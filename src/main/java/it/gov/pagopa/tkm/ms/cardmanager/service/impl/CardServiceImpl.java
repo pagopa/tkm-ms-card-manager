@@ -42,11 +42,11 @@ public class CardServiceImpl implements CardService {
     @Autowired
     private CitizenCardRepository citizenCardRepository;
 
-    @Autowired
-    private RtdHashingClient rtdHashingClient;
+  //  @Autowired
+  //  private RtdHashingClient rtdHashingClient;
 
-    @Autowired
-    private ConsentClient consentClient;
+  //  @Autowired
+  //  private ConsentClient consentClient;
 
     @Autowired
     private ProducerServiceImpl producerService;
@@ -224,7 +224,7 @@ public class CardServiceImpl implements CardService {
         }
     }
 
-    private String callRtdForHash(String toHash) {
+   /* private String callRtdForHash(String toHash) {
         log.trace("Calling RTD for hash of " + toHash);
         try {
             return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(toHash), apimRtdSubscriptionKey).getHashPan();
@@ -232,13 +232,12 @@ public class CardServiceImpl implements CardService {
             log.error(e);
             throw new KafkaProcessMessageException(CALL_TO_RTD_FAILED);
         }
-    }
+    } */
 
     private String getHtoken(String htoken, String token) {
         if (StringUtils.isNotBlank(htoken))
             return htoken;
         return circuitBreakerManager.callRtdForHash(token, apimRtdSubscriptionKey);
-       // return callRtdForHash(token);
     }
 
     //TODO USE
