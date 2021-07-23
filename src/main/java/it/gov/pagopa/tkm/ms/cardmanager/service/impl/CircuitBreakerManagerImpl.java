@@ -25,7 +25,7 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
     private ConsentClient consentClient;
 
     @CircuitBreaker(name = "rtdForHashCircuitBreaker", fallbackMethod = "getRtdForHashFallback")
-    @Retry(name ="rtdForHashRetry", fallbackMethod = "getRtdForHashFallback")
+    //@Retry(name ="rtdForHashRetry", fallbackMethod = "getRtdForHashFallback")
     public String callRtdForHash(String toHash, String apimRtdSubscriptionKey) {
         log.trace("Calling RTD for hash of " + toHash);
         try {
@@ -43,7 +43,7 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
     }
 
     @CircuitBreaker(name = "consentClientGetConsentCircuitBreaker", fallbackMethod = "consentClientGetConsentFallback")
-    @Retry(name ="consentClientGetConsentRetry", fallbackMethod = "consentClientGetConsentFallback")
+    //@Retry(name ="consentClientGetConsentRetry", fallbackMethod = "consentClientGetConsentFallback")
     public void consentClientGetConsent(String taxCode, TkmCard card) {
         consentClient.getConsent(taxCode, card.getHpan(), null);
     };
