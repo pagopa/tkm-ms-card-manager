@@ -378,7 +378,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         testBeans.TKM_CARD_PAN_1.setId(1L);
         testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAN_1);
-        when(cardTokenRepository.findByHtokenInAndDeletedFalse(Arrays.asList(testBeans.HTOKEN_1, testBeans.HTOKEN_2))).thenReturn(Collections.singletonList(testBeans.TKM_CARD_TOKEN_1));
+        when(cardTokenRepository.findByHtokenIn(Arrays.asList(testBeans.HTOKEN_1, testBeans.HTOKEN_2))).thenReturn(Collections.singletonList(testBeans.TKM_CARD_TOKEN_1));
         when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_1);
         verify(citizenCardRepository).findByCardIdIn(Collections.singletonList(1L));
@@ -393,7 +393,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         testBeans.TKM_CARD_PAR_1.setId(1L);
         testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAR_1);
-        when(cardTokenRepository.findByHtokenInAndDeletedFalse(Arrays.asList(testBeans.HTOKEN_1, testBeans.HTOKEN_2))).thenReturn(Collections.singletonList(testBeans.TKM_CARD_TOKEN_1));
+        when(cardTokenRepository.findByHtokenIn(Arrays.asList(testBeans.HTOKEN_1, testBeans.HTOKEN_2))).thenReturn(Collections.singletonList(testBeans.TKM_CARD_TOKEN_1));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_1);
         verify(citizenCardRepository).findByCardIdIn(Collections.singletonList(1L));
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);

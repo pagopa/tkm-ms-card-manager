@@ -324,8 +324,10 @@ public class CardServiceImpl implements CardService {
 
     private boolean mergeCardsByToken(TkmCard survivingCard, List<String> htokens, TkmCitizen citizen) {
         boolean toMerge = false;
-        List<TkmCardToken> preexistingTokens = cardTokenRepository.findByHtokenInAndDeletedFalse(htokens);
+        List<TkmCardToken> preexistingTokens = cardTokenRepository.findByHtokenIn(htokens);
+        log.trace("Preexisting tokens: " + preexistingTokens);
         if (CollectionUtils.isNotEmpty(preexistingTokens)) {
+            log.info(preexistingTokens.size() + " preexisting matching tokens found, merging cards");
             toMerge = true;
             List<TkmCard> cardsToDelete = preexistingTokens.stream().map(TkmCardToken::getCard).filter(card -> !card.equals(survivingCard)).collect(Collectors.toList());
             if (survivingCard.getHpan() == null) {
@@ -409,7 +411,7 @@ public class CardServiceImpl implements CardService {
         }
         cardTokenRepository.saveAll(tokensToUpdate);
         citizenCards.forEach(c -> writeOnQueueIfComplete(c, tokensToUpdate, true));
-        log.debug("All cards have been merged");
+        log.debug("All cards have been merged by token");
     }
 
     private void manageAndEncryptTokens(TkmCard card, Set<TkmCardToken> newTokens) {
