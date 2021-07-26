@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.*;
 import it.gov.pagopa.tkm.constant.*;
 import lombok.*;
 
-import java.time.*;
-import java.util.*;
-
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,7 +16,7 @@ public class WriteQueue {
 
     private String taxCode;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss:SSSS", timezone = TkmDatetimeConstant.DATE_TIME_TIMEZONE)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TkmDatetimeConstant.DATE_TIME_PATTERN_CS, timezone = TkmDatetimeConstant.DATE_TIME_TIMEZONE)
     private Instant timestamp;
 
     @Builder.Default

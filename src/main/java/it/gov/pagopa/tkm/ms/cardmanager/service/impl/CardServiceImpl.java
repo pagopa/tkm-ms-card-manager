@@ -484,8 +484,11 @@ public class CardServiceImpl implements CardService {
     private boolean getConsentForCard(TkmCard card, String taxCode) {
         log.info("Calling Consent Manager for card with taxCode " + taxCode + " and hpan " + card.getHpan());
         try {
+            //TODO RETRY (circuit breaker)
             ConsentResponse consentResponse = consentClient.getConsent(taxCode, card.getHpan(), null);
-            return consentResponse.cardHasConsent(card.getHpan());
+            boolean hasConsent = consentResponse.cardHasConsent(card.getHpan());
+            log.info("Card has consent? " + hasConsent);
+            return hasConsent;
         } catch (FeignException fe) {
             if (fe.status() == HttpStatus.NOT_FOUND.value()) {
                 log.info("Consent not found for card");
@@ -495,7 +498,7 @@ public class CardServiceImpl implements CardService {
             throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
         } catch (Exception e) {
             log.error(e);
-            throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
+            throw new KafkaProcessMessageException(CALL_TO_CONSENT_MANAGER_FAILED);
         }
     }
 
