@@ -53,7 +53,7 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
 
     private void writeOnQueueIfComplete(List<TkmCard> cards, ConsentResponse consent) {
         try {
-            Set<WriteQueueCard> writeQueueCards = cards.stream().map(card ->
+            Set<WriteQueueCard> writeQueueCards = cards.stream().filter(c -> c.getPar() != null).map(card ->
                     new WriteQueueCard(
                                 card.getHpan(),
                                 consent.cardHasConsent(card.getHpan()) ? INSERT_UPDATE : REVOKE,
