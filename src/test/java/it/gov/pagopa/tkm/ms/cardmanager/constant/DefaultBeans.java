@@ -9,13 +9,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.config.SaslConfigs;
-import org.apache.kafka.streams.StreamsConfig;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
 
 import java.time.Instant;
 import java.util.*;
@@ -31,9 +25,22 @@ public class DefaultBeans {
         return "ENC_" + toEnc;
     }
 
+    public static TkmCard encCard(TkmCard card) {
+        card.setPan(enc(card.getPan()));
+        for (TkmCardToken token : card.getTokens()) {
+            token.setToken(enc(token.getToken()));
+        }
+        return card;
+    }
+
+    public static TkmCitizenCard encCitizenCard(TkmCitizenCard citizenCard) {
+        citizenCard.setCard(encCard(citizenCard.getCard()));
+        return citizenCard;
+    }
+
     public static final Instant INSTANT = Instant.MAX;
     public final String TAX_CODE_1 = "PCCRLE04M24L219D";
-    private final String TAX_CODE_2 = "TRRCLE04M24L219D";
+    public final String TAX_CODE_2 = "TRRCLE04M24L219D";
     public final String PAN_1 = "111111111111";
     public final String PAN_2 = "222222222222";
     public final String PAR_1 = "abc11111111111";
@@ -104,15 +111,36 @@ public class DefaultBeans {
             .creationDate(INSTANT)
             .build();
 
-    private final List<TkmCitizenCard> CITIZEN_CARD = Collections.singletonList(
+    private final List<TkmCitizenCard> CITIZEN_CARD_LIST = Collections.singletonList(
             TkmCitizenCard.builder()
                     .card(TKM_CARD_PAN_PAR_1)
                     .build()
     );
 
-    public final TkmCitizen CITIZEN_1 = TkmCitizen.builder().taxCode(TAX_CODE_1).citizenCards(CITIZEN_CARD).build();
+    public final TkmCitizen CITIZEN_1 = TkmCitizen.builder().taxCode(TAX_CODE_1).citizenCards(CITIZEN_CARD_LIST).creationDate(INSTANT).build();
     public final TkmCitizen CITIZEN_2 = TkmCitizen.builder().taxCode(TAX_CODE_2).build();
     public final TkmCitizen CITIZEN_3 = TkmCitizen.builder().taxCode(TAX_CODE_1).build();
+
+    public final TkmCitizenCard CITIZEN_CARD_PAN_PAR = encCitizenCard(
+            TkmCitizenCard.builder()
+                    .citizen(CITIZEN_1)
+                    .card(TKM_CARD_PAN_PAR_1)
+                    .creationDate(INSTANT)
+                    .build());
+
+    public final TkmCitizenCard CITIZEN_CARD_PAR = encCitizenCard(
+            TkmCitizenCard.builder()
+                    .citizen(CITIZEN_1)
+                    .card(TKM_CARD_PAR_1)
+                    .creationDate(INSTANT)
+                    .build());
+
+    public final TkmCitizenCard CITIZEN_CARD_PAN = encCitizenCard(
+            TkmCitizenCard.builder()
+                    .citizen(CITIZEN_1)
+                    .card(TKM_CARD_PAN_1)
+                    .creationDate(INSTANT)
+                    .build());
 
     public final List<TkmCitizenCard> CITIZEN_CARDS = Arrays.asList(
             TkmCitizenCard.builder()
@@ -136,9 +164,24 @@ public class DefaultBeans {
                     .build()
     );
 
+    public final List<TkmCitizenCard> CITIZEN_CARDS_2 = Arrays.asList(
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_1)
+                    .citizen(CITIZEN_1)
+                    .build(),
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAN_1)
+                    .citizen(CITIZEN_2)
+                    .build(),
+            TkmCitizenCard.builder()
+                    .card(TKM_CARD_PAR_1)
+                    .citizen(CITIZEN_2)
+                    .build()
+    );
+
     public final List<TkmCard> TKM_CARD_LIST = Arrays.asList(TKM_CARD_PAN_PAR_1, TKM_CARD_PAN_PAR_2);
 
-    private final ReadQueueToken QUEUE_TOKEN_1 = new ReadQueueToken(TOKEN_1, HTOKEN_1);
+    public final ReadQueueToken QUEUE_TOKEN_1 = new ReadQueueToken(TOKEN_1, HTOKEN_1);
     private final ReadQueueToken QUEUE_TOKEN_2 = new ReadQueueToken(TOKEN_2, HTOKEN_2);
     private final ReadQueueToken QUEUE_TOKEN_3 = new ReadQueueToken(TOKEN_3, HTOKEN_3);
     private final List<ReadQueueToken> QUEUE_TOKEN_LIST_1 = Arrays.asList(QUEUE_TOKEN_1, QUEUE_TOKEN_2);
@@ -210,11 +253,11 @@ public class DefaultBeans {
 
     private final Set<WriteQueueToken> WRITE_QUEUE_TOKENS_UPDATED = new HashSet<>(Arrays.asList(
             new WriteQueueToken(
-                    HTOKEN_2,
-                    TokenActionEnum.DELETE
+                    HTOKEN_1,
+                    TokenActionEnum.INSERT_UPDATE
             ),
             new WriteQueueToken(
-                    HTOKEN_3,
+                    HTOKEN_2,
                     TokenActionEnum.INSERT_UPDATE
             )
     ));
@@ -309,41 +352,16 @@ public class DefaultBeans {
 
     public TopicPartition READ_TOPIC_PARTITION = new TopicPartition("deadLetterTopic", 0);
 
-    private ConsumerRecords<String, String> createConsumerRecords () {
+    private ConsumerRecords<String, String> createConsumerRecords() {
         ConsumerRecord<String, String> consumerRecord =
                 new ConsumerRecord<String, String>("deadLetterTopic",0, 0, "Key", "value" );
         consumerRecord.headers().add("attemptsCounter", "1".getBytes());
         consumerRecord.headers().add("originalTopic", "tkm-read-token-par-pan".getBytes());
-
         Map<TopicPartition, List<ConsumerRecord>> map = new HashMap<>();
         map.put(READ_TOPIC_PARTITION, Collections.singletonList(consumerRecord));
-
         return new ConsumerRecords(map);
-
     };
 
     public ConsumerRecords<String, String> CONSUMER_RECORDS = createConsumerRecords();
-
-    public KafkaTemplate<String, String> READ_PRODUCER_KAFKA_TEMPLATE= readProducerFactory();
-
-    private KafkaTemplate<String, String> readProducerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                "localhost:9092");
-        configProps.put(
-                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                "org.apache.kafka.common.serialization.StringSerializer");
-        configProps.put(
-                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                "org.apache.kafka.common.serialization.StringSerializer");
-       /* configProps.put(ProducerConfig.CLIENT_ID_CONFIG, readProducerClientId);
-        configProps.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
-        configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
-        configProps.put(SaslConfigs.SASL_JAAS_CONFIG, azureSaslJaasConfigRead); */
-
-        return  new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(configProps));
-    }
-
 
 }

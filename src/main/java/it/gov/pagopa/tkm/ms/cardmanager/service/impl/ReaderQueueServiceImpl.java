@@ -12,6 +12,7 @@ import lombok.extern.log4j.Log4j2;
 import org.bouncycastle.openpgp.PGPException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +48,7 @@ public class ReaderQueueServiceImpl implements ReaderQueueService {
             ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
             validatorService.validateMessage(readQueue);
             cardService.updateOrCreateCard(readQueue);
-        } catch (PGPException | CardException | JsonProcessingException e) {
+        } catch (PGPException | CardException | JsonProcessingException | DataAccessException e) {
             log.error(e);
         } catch (KafkaProcessMessageException kafkaProcessMessageException) {
             kafkaProcessMessageException.setMsg(message);

@@ -1,7 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
-import it.gov.pagopa.tkm.ms.cardmanager.model.response.ParlessCardResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import org.junit.jupiter.api.AfterAll;
@@ -15,9 +14,6 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -49,9 +45,8 @@ class TestParlessCardsService {
     @Test
     void givenMaxNumberOfCards_returnParlessCardsResponse() {
         when(cardRepository.findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
-        List<ParlessCardResponse> parlessCards = parlessCardsService.getParlessCards(2);
+        parlessCardsService.getParlessCards(2);
         verify(cardRepository).saveAll(testBeans.TKM_CARD_LIST);
-        assertEquals(parlessCards, testBeans.PARLESS_CARD_LIST);
     }
 
 }

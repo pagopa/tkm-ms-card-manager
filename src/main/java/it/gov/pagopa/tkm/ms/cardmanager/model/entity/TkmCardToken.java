@@ -11,7 +11,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"id", "card", "token"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class TkmCardToken {
 
     @Id
@@ -26,12 +26,14 @@ public class TkmCardToken {
     @Column(name = "TOKEN", nullable = false, length = 500)
     private String token;
 
+    @EqualsAndHashCode.Include
     @Column(name = "HTOKEN", unique = true, nullable = false, length = 64)
     private String htoken;
 
     @Column(name = "LAST_READ_DATE")
     private Instant lastReadDate;
 
+    @EqualsAndHashCode.Include
     @Builder.Default
     @Column(name = "DELETED")
     private boolean deleted = false;
