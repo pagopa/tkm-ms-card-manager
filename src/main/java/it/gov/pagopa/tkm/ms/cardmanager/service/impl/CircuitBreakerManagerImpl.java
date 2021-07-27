@@ -5,6 +5,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.KafkaProcessMessageException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CircuitBreakerManager;
@@ -12,6 +13,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_CONSENT_MANAGER_FAILED;
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_RTD_FAILED;
 
 @Service
@@ -50,7 +52,7 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
 
     public void consentClientGetConsentFallback(String taxCode, TkmCard card, Throwable t) throws Exception{
         log.info("consent Client Get Consent Fallback%s- cause {} "+  t.getMessage());
-        throw new Exception();
+        throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
     }
 
 }

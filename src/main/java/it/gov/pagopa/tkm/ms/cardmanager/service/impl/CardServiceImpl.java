@@ -45,8 +45,8 @@ public class CardServiceImpl implements CardService {
   //  @Autowired
   //  private RtdHashingClient rtdHashingClient;
 
-  //  @Autowired
-  //  private ConsentClient consentClient;
+    @Autowired
+    private ConsentClient consentClient;
 
     @Autowired
     private ProducerServiceImpl producerService;
