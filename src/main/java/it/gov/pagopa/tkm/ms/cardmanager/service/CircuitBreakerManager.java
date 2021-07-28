@@ -1,13 +1,15 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
+import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
+import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
 
 public interface CircuitBreakerManager {
 
-     String callRtdForHash(String toHash, String apimRtdSubscriptionKey);
-     String getRtdForHashFallback(String toHash, String apimRtdSubscriptionKey, Throwable t );
+     String callRtdForHash(RtdHashingClient rtdHashingClient, String toHash, String apimRtdSubscriptionKey);
+     String getRtdForHashFallback(RtdHashingClient rtdHashingClient, String toHash, String apimRtdSubscriptionKey, Throwable t );
 
-     void consentClientGetConsent(String taxCode, TkmCard card);
-     void consentClientGetConsentFallback(String taxCode, TkmCard card, Throwable t) throws Exception;
+     void consentClientGetConsent(ConsentClient consentClient, String taxCode, TkmCard card);
+     void consentClientGetConsentFallback(ConsentClient consentClient, String taxCode, TkmCard card, Throwable t) throws Exception;
 }

@@ -42,8 +42,8 @@ public class CardServiceImpl implements CardService {
     @Autowired
     private CitizenCardRepository citizenCardRepository;
 
-  //  @Autowired
-  //  private RtdHashingClient rtdHashingClient;
+    @Autowired
+    private RtdHashingClient rtdHashingClient;
 
     @Autowired
     private ConsentClient consentClient;
@@ -165,6 +165,7 @@ public class CardServiceImpl implements CardService {
         String token = readQueueToken.getToken();
         log.debug("manageParAndToken with par " + par);
         String htoken = getHtoken(readQueueToken.getHToken(), token);
+        System.out.println("\n::::::: htoken " + htoken);
         TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
         if (byHtoken == null) {
             byHtoken = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build();
@@ -237,7 +238,7 @@ public class CardServiceImpl implements CardService {
     private String getHtoken(String htoken, String token) {
         if (StringUtils.isNotBlank(htoken))
             return htoken;
-        return circuitBreakerManager.callRtdForHash(token, apimRtdSubscriptionKey);
+        return circuitBreakerManager.callRtdForHash(rtdHashingClient, token, apimRtdSubscriptionKey);
     }
 
     //TODO USE

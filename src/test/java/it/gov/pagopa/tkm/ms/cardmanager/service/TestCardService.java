@@ -14,6 +14,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CardServiceImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CircuitBreakerManagerImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CryptoServiceImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
 import org.junit.jupiter.api.*;
@@ -58,6 +59,9 @@ class TestCardService {
     @Mock
     private RtdHashingClient rtdHashingClient;
 
+    @Mock
+    private CircuitBreakerManager circuitBreakerManager;
+
     private DefaultBeans testBeans;
 
     private final MockedStatic<Instant> instantMockedStatic = mockStatic(Instant.class);
@@ -67,6 +71,8 @@ class TestCardService {
         testBeans = new DefaultBeans();
         instantMockedStatic.when(Instant::now).thenReturn(DefaultBeans.INSTANT);
         ReflectionTestUtils.setField(cardService, "apimRtdSubscriptionKey", "key");
+        ReflectionTestUtils.setField(cardService, "circuitBreakerManager", new CircuitBreakerManagerImpl());
+
     }
 
     @AfterAll
