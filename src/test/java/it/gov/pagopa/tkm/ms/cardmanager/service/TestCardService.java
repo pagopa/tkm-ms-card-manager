@@ -7,6 +7,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentCl
 import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.KafkaProcessMessageException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
@@ -92,6 +93,20 @@ class TestCardService {
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1);
         verify(rtdHashingClient).getHash(new WalletsHashingEvaluationInput(testBeans.TOKEN_1), "key");
     }
+
+    @Test
+    void givenPan_returnException() {
+        testBeans.READ_QUEUE_PAR_TOKEN_1.getTokens().get(0).setHToken(null);
+        when(rtdHashingClient.getHash(new WalletsHashingEvaluationInput(testBeans.TOKEN_1), "key"))
+                .thenThrow(new RuntimeException("MOCK HASH RUNTIME EXCEPTION"));
+        testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAN_1);
+  //      when(cardTokenRepository.findByHtokenAndDeletedFalse(testBeans.HTOKEN_1)).thenReturn(testBeans.TKM_CARD_TOKEN_1);
+  //      when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
+      Assertions.assertThrows(KafkaProcessMessageException.class, ()->cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1));
+      //  verify(rtdHashingClient).getHash(new WalletsHashingEvaluationInput(testBeans.TOKEN_1), "key");
+    }
+
+
 
     @Test
     void givenPan_invalidMEssage() {
