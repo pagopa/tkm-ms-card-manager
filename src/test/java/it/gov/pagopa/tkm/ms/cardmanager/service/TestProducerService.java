@@ -2,6 +2,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.tkm.constant.*;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.Constant;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
@@ -47,9 +48,9 @@ class TestProducerService {
     @Test
     void sendMessage_validMessage() throws JsonProcessingException, ParseException {
         ReflectionTestUtils.setField(producerService, "writeQueueTopic", "value");
-        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss:SSSS");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Rome"));
-        Date date = dateFormat.parse("01/01/2000 00:00:00:00000");
+        DateFormat dateFormat = new SimpleDateFormat(TkmDatetimeConstant.DATE_TIME_PATTERN_CS);
+        dateFormat.setTimeZone(TimeZone.getTimeZone(TkmDatetimeConstant.DATE_TIME_TIMEZONE));
+        Date date = dateFormat.parse("2000-01-01 00:00:00:0000");
         String message = String.format("{\"taxCode\":\"%s\",\"timestamp\":\"%s\",\"cards\":[]}", Constant.TAX_CODE_1, dateFormat.format(date));
 
         WriteQueue build = WriteQueue.builder()
