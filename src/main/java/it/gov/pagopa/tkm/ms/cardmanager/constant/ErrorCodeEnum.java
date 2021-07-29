@@ -18,6 +18,7 @@ public enum ErrorCodeEnum {
     KEYVAULT_DECRYPTION_FAILED(2007, "Keyvault decryption failed"),
     INCONSISTENT_MESSAGE(2008, "Inconsistent message");
 
+
     @Getter
     private final Integer statusCode;
 

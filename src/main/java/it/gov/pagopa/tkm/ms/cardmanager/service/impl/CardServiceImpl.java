@@ -15,6 +15,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CardService;
+import it.gov.pagopa.tkm.ms.cardmanager.service.CircuitBreakerManager;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections.*;
 import org.apache.commons.lang3.*;
@@ -61,10 +62,16 @@ public class CardServiceImpl implements CardService {
     @Autowired
     private CardTokenRepository cardTokenRepository;
 
+    @Autowired
+    private CircuitBreakerManager circuitBreakerManager;
+
     @Override
-    public void updateOrCreateCard(ReadQueue readQueue) {
-        if (StringUtils.isBlank(readQueue.getTaxCode())) {
-            manageNonIssuerCases(readQueue);
+    public void updateOrCreateCard(ReadQueue readQueue){
+        String taxCode = readQueue.getTaxCode();
+        if (StringUtils.isBlank(taxCode)) {
+            manageParUpdateAndAcquirerToken(readQueue);
+        } else if (readQueue.getTokens() == null) {
+            log.info("NOT IMPLEMENTED YET");
         } else {
             manageIssuerCases(readQueue);
         }
@@ -162,6 +169,7 @@ public class CardServiceImpl implements CardService {
         String token = readQueueToken.getToken();
         log.debug("manageParAndToken with par " + par);
         String htoken = getHtoken(readQueueToken.getHToken(), token);
+        System.out.println("\n::::::: htoken " + htoken);
         TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
         if (byHtoken == null) {
             byHtoken = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build();
@@ -221,7 +229,7 @@ public class CardServiceImpl implements CardService {
         }
     }
 
-    private String callRtdForHash(String toHash) {
+   /* private String callRtdForHash(String toHash) {
         log.trace("Calling RTD for hash of " + toHash);
         try {
             return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(toHash), apimRtdSubscriptionKey).getHashPan();
@@ -229,12 +237,12 @@ public class CardServiceImpl implements CardService {
             log.error(e);
             throw new KafkaProcessMessageException(CALL_TO_RTD_FAILED);
         }
-    }
+    } */
 
     private String getHtoken(String htoken, String token) {
         if (StringUtils.isNotBlank(htoken))
             return htoken;
-        return callRtdForHash(token);
+        return circuitBreakerManager.callRtdForHash(rtdHashingClient, token, apimRtdSubscriptionKey);
     }
 
     //ISSUER

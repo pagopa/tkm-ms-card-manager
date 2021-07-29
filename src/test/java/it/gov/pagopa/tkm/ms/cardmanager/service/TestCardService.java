@@ -9,6 +9,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentCl
 import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.KafkaProcessMessageException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
@@ -16,6 +17,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CardServiceImpl;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CircuitBreakerManagerImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CryptoServiceImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
 import org.junit.jupiter.api.*;
@@ -64,6 +66,9 @@ class TestCardService {
     @Mock
     private RtdHashingClient rtdHashingClient;
 
+    @Mock
+    private CircuitBreakerManager circuitBreakerManager;
+
     private DefaultBeans testBeans;
 
     private final MockedStatic<Instant> instantMockedStatic = mockStatic(Instant.class);
@@ -73,6 +78,8 @@ class TestCardService {
         testBeans = new DefaultBeans();
         instantMockedStatic.when(Instant::now).thenReturn(DefaultBeans.INSTANT);
         ReflectionTestUtils.setField(cardService, "apimRtdSubscriptionKey", "key");
+        ReflectionTestUtils.setField(cardService, "circuitBreakerManager", new CircuitBreakerManagerImpl());
+
     }
 
     @AfterAll
@@ -99,6 +106,20 @@ class TestCardService {
         verify(cardRepository).delete(testBeans.TKM_CARD_PAN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAR_1);
     }
+
+    @Test
+    void givenPan_returnException() {
+        testBeans.READ_QUEUE_PAR_TOKEN_1.getTokens().get(0).setHToken(null);
+        when(rtdHashingClient.getHash(new WalletsHashingEvaluationInput(testBeans.TOKEN_1), "key"))
+                .thenThrow(new RuntimeException("MOCK HASH RUNTIME EXCEPTION"));
+        testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAN_1);
+  //      when(cardTokenRepository.findByHtokenAndDeletedFalse(testBeans.HTOKEN_1)).thenReturn(testBeans.TKM_CARD_TOKEN_1);
+  //      when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
+      Assertions.assertThrows(KafkaProcessMessageException.class, ()->cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1));
+      //  verify(rtdHashingClient).getHash(new WalletsHashingEvaluationInput(testBeans.TOKEN_1), "key");
+    }
+
+
 
     @Test
     void givenPan_invalidMEssage() {
