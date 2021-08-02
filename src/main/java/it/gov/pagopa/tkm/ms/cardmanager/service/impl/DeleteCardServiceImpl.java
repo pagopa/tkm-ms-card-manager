@@ -52,7 +52,7 @@ public class DeleteCardServiceImpl implements DeleteCardService {
     private TkmCard getTkmCard(String hpan) {
         TkmCard byHpan = cardRepository.findByHpan(hpan);
         if (byHpan == null) {
-            byHpan = TkmCard.builder().circuit(CircuitEnum.DELETED).hpan(hpan).build();
+            byHpan = TkmCard.builder().circuit(CircuitEnum.DELETED).creationDate(Instant.now()).hpan(hpan).build();
         }
         return byHpan;
     }

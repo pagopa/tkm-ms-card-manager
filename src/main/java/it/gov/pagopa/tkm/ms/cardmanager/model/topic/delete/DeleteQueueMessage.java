@@ -3,6 +3,7 @@ package it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.tkm.constant.*;
+import it.gov.pagopa.tkm.jsondeserializer.ToLowerCaseDeserializer;
 import it.gov.pagopa.tkm.jsondeserializer.ToUpperCaseDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,9 +31,10 @@ public class DeleteQueueMessage {
 
     @NotBlank
     @Length(min = 64, max = 64)
+    @JsonDeserialize(using = ToLowerCaseDeserializer.class)
     private String hpan;
 
     @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TkmDatetimeConstant.DATE_TIME_PATTERN, timezone = TkmDatetimeConstant.DATE_TIME_TIMEZONE)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TkmDatetimeConstant.DATE_TIME_PATTERN_CS, timezone = TkmDatetimeConstant.DATE_TIME_TIMEZONE)
     private Instant timestamp;
 }
