@@ -43,7 +43,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             concurrency = "${spring.kafka.topics.read-queue.concurrency}")
     public void consume(@Payload List<String> messages) throws ExecutionException, InterruptedException {
         List<Future<Void>> futures = new ArrayList<>();
-        log.info(String.format("Reading and processing %s messages", CollectionUtils.size(messages)));
+        log.debug(String.format("Reading and processing %s messages", CollectionUtils.size(messages)));
         for (String message : messages) {
             futures.add((readerQueueService.workOnMessage(message)));
         }
