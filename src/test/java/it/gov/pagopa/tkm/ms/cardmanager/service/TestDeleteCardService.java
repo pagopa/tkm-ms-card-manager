@@ -18,10 +18,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+
+import static org.mockito.Mockito.mockStatic;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
@@ -93,23 +96,26 @@ class TestDeleteCardService {
 
     @Test
     void deleteCard_noCardFoundWithCitizen() {
-        Instant creationDate = Instant.now();
-        TkmCard tkmCardFull = TkmCard.builder().circuit(CircuitEnum.DELETED).hpan(Constant.HASH_1).build();
-        TkmCitizen citizenFull = CitizenRepositoryMock.getCitizenFull(creationDate);
+        try(MockedStatic<Instant> instantMockedStatic = mockStatic(Instant.class)) {
+            instantMockedStatic.when(Instant::now).thenReturn(DefaultBeans.INSTANT);
+            Instant creationDate = Instant.now();
+            TkmCard tkmCardFull = TkmCard.builder().circuit(CircuitEnum.DELETED).hpan(Constant.HASH_1).creationDate(creationDate).build();
+            TkmCitizen citizenFull = CitizenRepositoryMock.getCitizenFull(creationDate);
 
-        Instant deletedInstant = Instant.now();
-        DeleteQueueMessage build = DeleteQueueMessage.builder()
-                .timestamp(deletedInstant)
-                .hpan(tkmCardFull.getHpan())
-                .taxCode(citizenFull.getTaxCode()).build();
+            Instant deletedInstant = Instant.now();
+            DeleteQueueMessage build = DeleteQueueMessage.builder()
+                    .timestamp(deletedInstant)
+                    .hpan(tkmCardFull.getHpan())
+                    .taxCode(citizenFull.getTaxCode()).build();
 
-        Mockito.when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(Mockito.anyString(), Mockito.anyString())).thenReturn(null);
-        Mockito.when(cardRepository.findByHpan(Mockito.anyString())).thenReturn(null);
-        Mockito.when(citizenRepository.findByTaxCodeAndDeletedFalse(Mockito.anyString())).thenReturn(citizenFull);
-        deleteCardService.deleteCard(build);
-        TkmCitizenCard citizenCard = TkmCitizenCard.builder().card(tkmCardFull).citizen(citizenFull).deleted(true)
-                .lastUpdateDate(deletedInstant).creationDate(deletedInstant).build();
-        Mockito.verify(citizenCardRepository).save(citizenCard);
+            Mockito.when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(Mockito.anyString(), Mockito.anyString())).thenReturn(null);
+            Mockito.when(cardRepository.findByHpan(Mockito.anyString())).thenReturn(null);
+            Mockito.when(citizenRepository.findByTaxCodeAndDeletedFalse(Mockito.anyString())).thenReturn(citizenFull);
+            deleteCardService.deleteCard(build);
+            TkmCitizenCard citizenCard = TkmCitizenCard.builder().card(tkmCardFull).citizen(citizenFull).deleted(true)
+                    .lastUpdateDate(deletedInstant).creationDate(deletedInstant).build();
+            Mockito.verify(citizenCardRepository).save(citizenCard);
+        }
     }
 
     @Test
