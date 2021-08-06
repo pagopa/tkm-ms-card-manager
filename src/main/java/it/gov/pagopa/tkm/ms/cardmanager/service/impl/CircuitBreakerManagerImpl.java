@@ -1,17 +1,17 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
-import feign.*;
+import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.model.request.WalletsHashingEvaluationInput;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.KafkaProcessMessageException;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CircuitBreakerManager;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_CONSENT_MANAGER_FAILED;
@@ -39,7 +39,16 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
 
     @CircuitBreaker(name = "consentClientGetConsentCircuitBreaker", fallbackMethod = "consentClientGetConsentFallback")
     public ConsentResponse consentClientGetConsent(ConsentClient consentClient, String taxCode, String hpan) {
-        return consentClient.getConsent(taxCode, hpan, null);
+        try {
+            return consentClient.getConsent(taxCode, hpan, null);
+        } catch (FeignException fe) {
+            if (fe.status() == HttpStatus.NOT_FOUND.value()) {
+                log.info("Consent not found for card");
+                return ConsentResponse.builder().consent(ConsentEntityEnum.Deny).build();
+            }
+            log.error(fe);
+            throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
+        }
     }
 
     public ConsentResponse consentClientGetConsentFallback(ConsentClient consentClient, String taxCode, String hpan, Throwable t) {

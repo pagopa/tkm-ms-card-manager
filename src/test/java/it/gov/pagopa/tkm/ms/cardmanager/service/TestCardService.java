@@ -1,8 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import feign.FeignException;
-import feign.Request;
 import it.gov.pagopa.tkm.ms.cardmanager.client.external.rtd.RtdHashingClient;
 import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentClient;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
@@ -11,9 +9,13 @@ import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CardServiceImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CryptoServiceImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
@@ -361,7 +363,7 @@ class TestCardService {
         when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
-        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenThrow(FeignException.class);
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenThrow(new CardException(CALL_TO_CONSENT_MANAGER_FAILED));
         CardException cardException = Assertions.assertThrows(CardException.class, () -> cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1));
         Assertions.assertEquals(CALL_TO_CONSENT_MANAGER_FAILED, cardException.getErrorCode());
     }
@@ -371,8 +373,7 @@ class TestCardService {
         when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
-        FeignException.NotFound notFound = new FeignException.NotFound("", mock(Request.class), null);
-        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenThrow(notFound);
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(ConsentResponse.builder().consent(ConsentEntityEnum.Deny).build());
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verify(producerService, never()).sendMessage(any(WriteQueue.class));
     }
