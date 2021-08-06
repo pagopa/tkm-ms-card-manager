@@ -7,6 +7,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager.ConsentCl
 import it.gov.pagopa.tkm.ms.cardmanager.exception.CardException;
 import it.gov.pagopa.tkm.ms.cardmanager.exception.KafkaProcessMessageException;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
+import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CircuitBreakerManager;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -30,18 +31,18 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
     }
 
 
-    public String getRtdForHashFallback(RtdHashingClient rtdHashingClient, String toHash, String apimRtdSubscriptionKey, Throwable t ){
-        log.info("RTD Hash fallback for hash value%s- cause {} "+  t.getMessage());
+    public String getRtdForHashFallback(RtdHashingClient rtdHashingClient, String toHash, String apimRtdSubscriptionKey, Throwable t) {
+        log.info("RTD Hash fallback for hash value%s- cause {} " + t.getMessage());
         return "RTD Hash Error";
     }
 
     @CircuitBreaker(name = "consentClientGetConsentCircuitBreaker", fallbackMethod = "consentClientGetConsentFallback")
-    public void consentClientGetConsent(ConsentClient consentClient, String taxCode, TkmCard card) {
-        consentClient.getConsent(taxCode, card.getHpan(), null);
-    };
+    public ConsentResponse consentClientGetConsent(ConsentClient consentClient, String taxCode, TkmCard card) {
+        return consentClient.getConsent(taxCode, card.getHpan(), null);
+    }
 
-    public void consentClientGetConsentFallback(ConsentClient consentClient, String taxCode, TkmCard card, Throwable t) throws Exception{
-        log.info("consent Client Get Consent Fallback%s- cause {} "+  t.getMessage());
+    public void consentClientGetConsentFallback(ConsentClient consentClient, String taxCode, TkmCard card, Throwable t){
+        log.info("consent Client Get Consent Fallback%s- cause {} " + t.getMessage());
         throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
     }
 
