@@ -13,10 +13,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCardToken;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.read.ReadQueue;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueue;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CardTokenRepository;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
-import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenRepository;
+import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CardServiceImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.CryptoServiceImpl;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.ProducerServiceImpl;
@@ -147,8 +144,8 @@ class TestCardService {
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
         when(citizenCardRepository.findByCardId(1L)).thenReturn(testBeans.CITIZEN_CARDS);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
-        when(consentClient.getConsent(testBeans.TAX_CODE_2, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_2, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
         verify(cardRepository).delete(testBeans.TKM_CARD_PAR_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
@@ -211,8 +208,8 @@ class TestCardService {
         when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
     }
@@ -222,7 +219,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
     }
@@ -233,7 +230,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.CITIZEN_CARD_PAN);
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         testBeans.TKM_CARD_PAN_PAR_1.setLastUpdateDate(DefaultBeans.INSTANT);
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
@@ -245,7 +242,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Par(testBeans.TAX_CODE_1, testBeans.PAR_1)).thenReturn(testBeans.CITIZEN_CARD_PAN_PAR);
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         testBeans.TKM_CARD_PAN_PAR_1.setLastUpdateDate(DefaultBeans.INSTANT);
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
@@ -265,7 +262,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.CITIZEN_CARD_PAN_PAR);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_1);
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
     }
@@ -283,7 +280,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_1);
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
     }
@@ -294,7 +291,7 @@ class TestCardService {
                 testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2, testBeans.TKM_CARD_TOKEN_3
         ));
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1).thenReturn(null);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, null, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         testBeans.READ_QUEUE_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2);
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_1);
         testBeans.TKM_CARD_PAR_1.setTokens(updatedTokens);
@@ -311,7 +308,7 @@ class TestCardService {
         when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.CITIZEN_CARD_PAN);
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         testBeans.READ_QUEUE_PAN_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2);
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verify(cardRepository).delete(testBeans.TKM_CARD_PAR_1);
@@ -334,7 +331,7 @@ class TestCardService {
         when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
     }
@@ -344,7 +341,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_3)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_3));
         when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.CITIZEN_CARD_PAN_PAR).thenReturn(null);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_2);
         verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_UPDATED_CARD);
     }
@@ -354,7 +351,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1).thenReturn(null);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Deny));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Deny));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verifyNoInteractions(producerService);
     }
@@ -364,7 +361,7 @@ class TestCardService {
         when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenThrow(FeignException.class);
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenThrow(FeignException.class);
         CardException cardException = Assertions.assertThrows(CardException.class, () -> cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1));
         Assertions.assertEquals(CALL_TO_CONSENT_MANAGER_FAILED, cardException.getErrorCode());
     }
@@ -375,7 +372,7 @@ class TestCardService {
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
         FeignException.NotFound notFound = new FeignException.NotFound("", mock(Request.class), null);
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenThrow(notFound);
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenThrow(notFound);
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_PAR_1);
         verify(producerService, never()).sendMessage(any(WriteQueue.class));
     }
@@ -387,7 +384,7 @@ class TestCardService {
         testBeans.TKM_CARD_PAN_1.setId(1L);
         testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAN_1);
         when(cardTokenRepository.findByHtokenIn(Arrays.asList(testBeans.HTOKEN_1, testBeans.HTOKEN_2))).thenReturn(Collections.singletonList(testBeans.TKM_CARD_TOKEN_1));
-        when(consentClient.getConsent(testBeans.TAX_CODE_1, testBeans.HPAN_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_1);
         verify(citizenCardRepository).findByCardIdIn(Collections.singletonList(1L));
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
