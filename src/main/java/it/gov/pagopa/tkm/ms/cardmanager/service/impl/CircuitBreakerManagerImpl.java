@@ -32,7 +32,7 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
 
 
     public String getRtdForHashFallback(RtdHashingClient rtdHashingClient, String toHash, String apimRtdSubscriptionKey, Throwable t) {
-        log.info("RTD Hash fallback for hash value%s- cause {} " + t.getMessage());
+        log.info("RTD Hash fallback for hash value %s- cause {} " + t.getMessage());
         return "RTD Hash Error";
     }
 
@@ -42,7 +42,7 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
     }
 
     public void consentClientGetConsentFallback(ConsentClient consentClient, String taxCode, TkmCard card, Throwable t){
-        log.info("consent Client Get Consent Fallback%s- cause {} " + t.getMessage());
+        log.info("consent Client Get Consent Fallback %s- cause {} " + t.getMessage());
         throw new CardException(CALL_TO_CONSENT_MANAGER_FAILED);
     }
 
