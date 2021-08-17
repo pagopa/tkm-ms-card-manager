@@ -325,27 +325,29 @@ public class CardServiceImpl implements CardService {
         List<TkmCardToken> preexistingTokens = cardTokenRepository.findByHtokenIn(htokens);
         log.trace("Preexisting tokens: " + preexistingTokens);
         if (CollectionUtils.isNotEmpty(preexistingTokens)) {
-            log.info(preexistingTokens.size() + " preexisting matching tokens found, merging cards");
-            toMerge = true;
             List<TkmCard> cardsToDelete = preexistingTokens.stream().map(TkmCardToken::getCard).filter(card -> !card.equals(survivingCard)).collect(Collectors.toList());
-            if (survivingCard.getHpan() == null) {
-                TkmCard panCard = cardsToDelete.stream()
-                        .filter(c -> c.getHpan() != null)
-                        .findFirst().orElse(null);
-                if (panCard != null) {
-                    survivingCard.setPan(panCard.getPan());
-                    survivingCard.setHpan(panCard.getHpan());
+            if (CollectionUtils.isNotEmpty(cardsToDelete)) {
+                log.info(preexistingTokens.size() + " preexisting matching tokens found, merging cards");
+                toMerge = true;
+                if (survivingCard.getHpan() == null) {
+                    TkmCard panCard = cardsToDelete.stream()
+                            .filter(c -> c.getHpan() != null)
+                            .findFirst().orElse(null);
+                    if (panCard != null) {
+                        survivingCard.setPan(panCard.getPan());
+                        survivingCard.setHpan(panCard.getHpan());
+                    }
+                } else if (survivingCard.getPar() == null) {
+                    cardsToDelete.stream()
+                            .filter(c -> c.getPar() != null)
+                            .findFirst().ifPresent(
+                                    parCard -> survivingCard.setPar(parCard.getPar())
+                            );
                 }
-            } else if (survivingCard.getPar() == null) {
-                cardsToDelete.stream()
-                        .filter(c -> c.getPar() != null)
-                        .findFirst().ifPresent(
-                        parCard -> survivingCard.setPar(parCard.getPar())
-                );
+                survivingCard.getTokens().addAll(preexistingTokens);
+                updateCitizenCardsAfterMergeForIssuer(survivingCard, cardsToDelete, citizen);
+                cardRepository.deleteAll(cardsToDelete);
             }
-            survivingCard.getTokens().addAll(preexistingTokens);
-            updateCitizenCardsAfterMergeForIssuer(survivingCard, cardsToDelete, citizen);
-            cardRepository.deleteAll(cardsToDelete);
         }
         return toMerge;
     }
@@ -462,7 +464,7 @@ public class CardServiceImpl implements CardService {
                     getTokensDiff(oldTokens, card.getTokens(), merged)
             );
             WriteQueue writeQueue = new WriteQueue(
-                    citizenCard.getCitizen().getTaxCode(),
+                    taxCode,
                     Instant.now(),
                     Collections.singleton(writeQueueCard)
             );
