@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tkmmscardmanagersit
+  name: tkmmscardmanageruat
 spec:
-  replicas: 1
+  replicas: 5
   selector:
     matchLabels:
-      app: tkmmscardmanagersit
+      app: tkmmscardmanageruat
   template:
     metadata:
       labels:
-        app: tkmmscardmanagersit
+        app: tkmmscardmanageruat
       annotations:
         prometheus.io/path: /actuator/prometheus
         prometheus.io/port: '8080'
         prometheus.io/scrape: 'true'
     spec:
       containers:
-        - name: tkmmscardmanagersit
+        - name: tkmmscardmanageruat
           image: cstaruatregistry.azurecr.io/tkmmscardmanager
           ports:
             - containerPort: 8080
@@ -27,15 +27,9 @@ spec:
             - configMapRef:
                 name: kafka-log-configuration
             - configMapRef:
-                name: tkmmscardmanager
+                name: tkmmscardmanageruat
             - configMapRef:
                 name: jvm
-          resources:
-            limits:
-              cpu: 1000m
-              memory: 4Gi
-            requests:
-              cpu: 50m
           livenessProbe:
             httpGet:
               path: /actuator/health
