@@ -79,7 +79,7 @@ spring:
         jaas:
           config:
             producer: ${keyvault.tkmDltProducerSaslJaasConfig}
-            consumer: ${keyvault.tkmDltSaslJaasConfig}
+            consumer: ${keyvault.tkmDltConsumerSaslJaasConfig}
 server:
   port: ${SERVER_PORT:8080}
   servlet:
@@ -123,7 +123,7 @@ keyvault:
   tkmReadTokenParPanProducerSaslJaasConfig:  ${${AZURE_KEYVAULT_PROFILE:prod}-tkmReadTokenParPanProducerSaslJaasConfig:}
   tkmDeleteCardProducerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDeleteCardProducerSaslJaasConfig:}
   tkmDltProducerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDltProducerSaslJaasConfig:}
-  tkmDltSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDltSaslJaasConfig:}
+  tkmDltConsumerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDltConsumerSaslJaasConfig:}
 
 client-urls:
   consent-manager: ${CONSENT_MANAGER_URL}
