@@ -27,7 +27,7 @@ spec:
             - configMapRef:
                 name: kafka-log-configuration
             - configMapRef:
-                name: tkmmscardmanageruat
+                name: tkmmscardmanager
             - configMapRef:
                 name: jvm
           livenessProbe:
