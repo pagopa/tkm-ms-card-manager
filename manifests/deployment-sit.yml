@@ -2,13 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tkmmscardmanagersit
-resources:
-  requests:
-    memory: 2Gi
-    cpu: 500m
-  limits:
-    memory: 4Gi
-    cpu: 700m
 spec:
   replicas: 1
   selector:
@@ -38,11 +31,12 @@ spec:
             - configMapRef:
                 name: jvm
           resources:
-            limits:
-              cpu: 1000m
-              memory: 4Gi
             requests:
-              cpu: 50m
+              memory: 2Gi
+              cpu: 500m
+            limits:
+              memory: 4Gi
+              cpu: 700m
           livenessProbe:
             httpGet:
               path: /actuator/health
