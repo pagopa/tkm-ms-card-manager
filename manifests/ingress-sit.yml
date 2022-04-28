@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "130"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  name: tkmmscardmanageringress
+  namespace: tkm-sit
+spec:
+  rules:
+    - http:
+        paths:
+          - backend:
+              service:
+                name: tkmmscardmanagersit
+                port:
+                  number: 8080
+            path: /tkmcardmanager(/|$)(.*)
+            pathType: Prefix
+status:
+  loadBalancer:
+    ingress:
+      - ip: 10.70.66.201

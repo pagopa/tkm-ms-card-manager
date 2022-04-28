@@ -46,6 +46,8 @@ variables:
   ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
     dockerRegistryServiceConnection: ''
 
+  maven_cache_folder: $(Pipeline.Workspace)/.m2/repository
+
 stages:
   - stage: Test_Develop
     displayName: Test Develop
@@ -62,11 +64,20 @@ stages:
             inputs:
               secureFile: 'settings_v2.xml'
               retryCount: '2'
+          - task: Cache@2
+            displayName: Cache Maven
+            inputs:
+              key: 'maven | "$(Agent.OS)" | tkmconsentmanager'
+              restoreKeys: |
+                maven | "$(Agent.OS)" | tkmconsentmanager
+                maven | "$(Agent.OS)"
+                maven
+              path: $(maven_cache_folder)
           - task: Maven@3
             inputs:
               mavenPomFile: 'pom.xml'
               goals: 'package'
-              options: '-B -s $(settingsxml.secureFilePath) -T1C -DskipTests=false'
+              options: '-B -s $(settingsxml.secureFilePath) -T1C -DskipTests=false  -Dmaven.repo.local=$(maven_cache_folder)'
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.8'
               mavenVersionOption: 'Default'
@@ -120,11 +131,20 @@ stages:
             inputs:
               secureFile: 'settings_v2.xml'
               retryCount: '2'
+          - task: Cache@2
+            displayName: Cache Maven
+            inputs:
+              key: 'maven | "$(Agent.OS)" | tkmconsentmanager'
+              restoreKeys: |
+                maven | "$(Agent.OS)" | tkmconsentmanager
+                maven | "$(Agent.OS)"
+                maven
+              path: $(maven_cache_folder)
           - task: Maven@3
             inputs:
               mavenPomFile: 'pom.xml'
               goals: 'deploy'
-              options: '-B -s $(settingsxml.secureFilePath) -DskipTests=false'
+              options: '-B -s $(settingsxml.secureFilePath) -DskipTests=false -Dmaven.repo.local=$(maven_cache_folder)'
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.8'
               mavenVersionOption: 'Default'
@@ -179,6 +199,7 @@ stages:
                     manifests: |
                       $(Pipeline.Workspace)/manifests/$(deployment).yml
                       $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
+                      $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
                     imagePullSecrets: |
                       $(imagePullSecret)
                     containers: |
@@ -230,6 +251,7 @@ stages:
                     manifests: |
                       $(Pipeline.Workspace)/manifests/$(deployment).yml
                       $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
+                      $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
                     imagePullSecrets: |
                       $(imagePullSecret)
                     containers: |
