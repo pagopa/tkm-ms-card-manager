@@ -21,7 +21,3 @@ spec:
                   number: 8080
             path: /tkmcardmanager(/|$)(.*)
             pathType: Prefix
-status:
-  loadBalancer:
-    ingress:
-      - ip: 10.70.66.201
