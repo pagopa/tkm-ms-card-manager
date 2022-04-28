@@ -67,9 +67,9 @@ stages:
           - task: Cache@2
             displayName: Cache Maven
             inputs:
-              key: 'maven | "$(Agent.OS)" | tkmconsentmanager'
+              key: 'maven | "$(Agent.OS)" | tkmcardmanager'
               restoreKeys: |
-                maven | "$(Agent.OS)" | tkmconsentmanager
+                maven | "$(Agent.OS)" | tkmcardmanager
                 maven | "$(Agent.OS)"
                 maven
               path: $(maven_cache_folder)
@@ -134,9 +134,9 @@ stages:
           - task: Cache@2
             displayName: Cache Maven
             inputs:
-              key: 'maven | "$(Agent.OS)" | tkmconsentmanager'
+              key: 'maven | "$(Agent.OS)" | tkmcardmanager'
               restoreKeys: |
-                maven | "$(Agent.OS)" | tkmconsentmanager
+                maven | "$(Agent.OS)" | tkmcardmanager
                 maven | "$(Agent.OS)"
                 maven
               path: $(maven_cache_folder)
