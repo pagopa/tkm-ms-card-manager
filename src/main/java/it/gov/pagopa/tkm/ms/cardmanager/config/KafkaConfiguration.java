@@ -37,6 +37,9 @@ public class KafkaConfiguration {
     @Value("${spring.kafka.producer.bootstrap-servers}")
     private String kafkaBootstrapServer;
 
+    @Value("${spring.kafka.producer.bootstrap-servers-cstar}")
+    private String kafkaBootstrapServerCstar;
+
     @Value("${spring.kafka.producer.key-serializer}")
     private String keySerializer;
 
@@ -192,7 +195,7 @@ public class KafkaConfiguration {
     }
 
     private ProducerFactory<String, String> writeProducerFactory() {
-        Map<String, Object> configProps = createConfigProps(false, writeProducerClientId, writeQueueJaasConfigProducer);
+        Map<String, Object> configProps = createConfigProps(false, writeProducerClientId, writeQueueJaasConfigProducer, kafkaBootstrapServerCstar);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -211,10 +214,14 @@ public class KafkaConfiguration {
     }
 
     private Map<String, Object> createConfigProps(boolean consumer, String clientId, String jaas) {
+        return createConfigProps(consumer, clientId, jaas, kafkaBootstrapServer);
+    }
+
+    private Map<String, Object> createConfigProps(boolean consumer, String clientId, String jaas, String kafkaBootstrapServerParam) {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                kafkaBootstrapServer);
+                kafkaBootstrapServerParam);
         if (consumer) {
             configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
             configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
