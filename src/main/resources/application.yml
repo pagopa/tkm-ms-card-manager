@@ -37,6 +37,7 @@ spring:
     producer:
       retries: 0
       bootstrap-servers: ${KAFKA_APPENDER_BOOTSTRAP_SERVERS}
+      bootstrap-servers-cstar: ${KAFKA_CSTAR_BOOTSTRAP_SERVERS}
       client-id: ${KAFKA_GROUP_ID:}${HOSTNAME:0}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
