@@ -28,19 +28,15 @@ variables:
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release/sit') }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: 'cstaruatregistry.azurecr.io'
-    deployment: deployment-sit
     enviroment: sit
     imagePullSecret: 'tkmsitregistry-auth'
   ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')) }}:
-    dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: 'cstaruatregistry.azurecr.io'
-    deployment: deployment-uat
     enviroment: uat
     imagePullSecret: 'tkmuatregistry-auth'
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: ''
-    deployment: ''
     imagePullSecret: ''
     enviroment: prod
   ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
@@ -197,7 +193,7 @@ stages:
                     action: deploy
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
                     manifests: |
-                      $(Pipeline.Workspace)/manifests/$(deployment).yml
+                      $(Pipeline.Workspace)/manifests/deployment-$(enviroment).yml
                       $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
                       $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
                     imagePullSecrets: |
@@ -249,7 +245,7 @@ stages:
                     action: deploy
                     kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
                     manifests: |
-                      $(Pipeline.Workspace)/manifests/$(deployment).yml
+                      $(Pipeline.Workspace)/manifests/deployment-$(enviroment).yml
                       $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
                       $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
                     imagePullSecrets: |
