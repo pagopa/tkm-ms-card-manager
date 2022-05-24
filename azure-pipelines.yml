@@ -28,19 +28,15 @@ variables:
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release/sit') }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: 'cstaruatregistry.azurecr.io'
-    deployment: deployment-sit
     enviroment: sit
     imagePullSecret: 'tkmsitregistry-auth'
   ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')) }}:
     containerRegistry: 'cstaruatregistry.azurecr.io'
-    deployment: deployment-uat
-    imagePullSecret: 'tkmuatregistry-auth'
     enviroment: uat
-    dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
+    imagePullSecret: 'tkmuatregistry-auth'
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: ''
-    deployment: ''
     imagePullSecret: ''
     enviroment: prod
   ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
@@ -197,7 +193,7 @@ stages:
                     action: deploy
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
                     manifests: |
-                      $(Pipeline.Workspace)/manifests/$(deployment).yml
+                      $(Pipeline.Workspace)/manifests/deployment-$(enviroment).yml
                       $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
                       $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
                     imagePullSecrets: |
@@ -230,7 +226,7 @@ stages:
         displayName: Deploy
         condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
         pool:
-          name: uat_agent_pool
+          name: pagopa-agent-pool-uat
         environment: 'uat'
         strategy:
           runOnce:
@@ -247,9 +243,9 @@ stages:
                   inputs:
                     namespace: tkm-uat
                     action: deploy
-                    kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-uat'
+                    kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
                     manifests: |
-                      $(Pipeline.Workspace)/manifests/$(deployment).yml
+                      $(Pipeline.Workspace)/manifests/deployment-$(enviroment).yml
                       $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
                       $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
                     imagePullSecrets: |
