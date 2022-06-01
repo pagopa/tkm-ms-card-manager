@@ -23,6 +23,9 @@ spec:
       - ip: "10.70.67.8"
         hostnames:
         - "ddstkmhub.servicebus.windows.net"
+      - ip: "10.230.11.68"
+        hostnames:
+        - "cstar-d-evh-ns.servicebus.windows.net"
       containers:
         - name: tkmmscardmanagersit
           image: cstaruatregistry.azurecr.io/tkmmscardmanager
