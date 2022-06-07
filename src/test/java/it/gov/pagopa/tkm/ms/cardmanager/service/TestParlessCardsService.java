@@ -44,7 +44,7 @@ class TestParlessCardsService {
 
     @Test
     void givenMaxNumberOfCards_returnParlessCardsResponse() {
-        when(cardRepository.findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
+        when(cardRepository.findByParIsNullAndLastReadDateBeforeAndCircuitNotAndPanIsNotNullOrParIsNullAndLastReadDateIsNullAndCircuitNotAndPanIsNotNull(any(), any(), any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
         parlessCardsService.getParlessCards(2);
         verify(cardRepository).saveAll(testBeans.TKM_CARD_LIST);
     }
