@@ -15,6 +15,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum.DELETED;
+
 @Service
 @Log4j2
 public class ParlessCardsServiceImpl implements ParlessCardsService {
@@ -25,8 +27,10 @@ public class ParlessCardsServiceImpl implements ParlessCardsService {
     @Override
     public List<ParlessCardResponse> getParlessCards(Integer maxRecords) {
         log.info("Getting parless cards with a limit of " + maxRecords + " cards");
-        List<TkmCard> parlessCards = cardRepository.findByParIsNullAndLastReadDateBeforeOrParIsNullAndLastReadDateIsNull(
+        List<TkmCard> parlessCards = cardRepository.findByParIsNullAndLastReadDateBeforeAndCircuitNotAndPanIsNotNullOrParIsNullAndLastReadDateIsNullAndCircuitNotAndPanIsNotNull(
                 Instant.now().minus(1, ChronoUnit.DAYS),
+                DELETED,
+                DELETED,
                 PageRequest.of(0, maxRecords));
         for (TkmCard c : parlessCards) {
             c.setLastReadDate(Instant.now());

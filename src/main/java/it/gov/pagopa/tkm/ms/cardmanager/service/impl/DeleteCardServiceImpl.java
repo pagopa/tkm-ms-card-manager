@@ -50,11 +50,12 @@ public class DeleteCardServiceImpl implements DeleteCardService {
     }
 
     private TkmCard getTkmCard(String hpan) {
-        TkmCard byHpan = cardRepository.findByHpan(hpan);
-        if (byHpan == null) {
-            byHpan = TkmCard.builder().circuit(CircuitEnum.DELETED).creationDate(Instant.now()).hpan(hpan).build();
+        TkmCard card = cardRepository.findByHpan(hpan);
+        if (card == null) {
+            card = TkmCard.builder().circuit(CircuitEnum.DELETED).creationDate(Instant.now()).hpan(hpan).build();
         }
-        return byHpan;
+        card.setLastReadDate(null);
+        return card;
     }
 
     private TkmCitizen getTkmCitizen(String taxCode, Instant instant) {

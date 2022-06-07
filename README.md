@@ -16,7 +16,7 @@ The following ENVIRONMENT variables are needed to deploy and run the application
 - **KAFKA_DELETE_QUEUE_TOPIC** *Topic name of delete queue*
 - **KAFKA_DELETE_QUEUE_GROUP** *Group id of delete queue*
 - **KAFKA_DELETE_MAX_NUMBER_OF_THREADS** *Parallel delete queue consumer. Default: 1*
-- **KAFKA_READ_QUEUE_GROUP** *Topic name of read queue*
+- **KAFKA_READ_QUEUE_TOPIC** *Topic name of read queue*
 - **AZURE_KEYVAULT_PROFILE** *The prefix used to search for keys in the key vault (local/sit/uat/prod)*
 - **AZURE_KEYVAULT_CLIENT_ID** *Azure Kevault authentication client id*
 - **AZURE_KEYVAULT_CLIENT_KEY** *Azure Kevault authentication client key*
