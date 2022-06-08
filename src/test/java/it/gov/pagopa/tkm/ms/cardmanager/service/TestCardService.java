@@ -126,6 +126,7 @@ class TestCardService {
     void givenParAndHpan_givenExistingCardWithParAndHpan_doNothing() {
         when(cardRepository.findByHpanAndPar(testBeans.HPAN_1, testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
+        verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
         verifyNoMoreInteractions(cardRepository, cardTokenRepository, citizenCardRepository);
     }
 
