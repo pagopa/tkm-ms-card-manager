@@ -1,5 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
+import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.DefaultBeans;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
@@ -44,7 +45,7 @@ class TestParlessCardsService {
 
     @Test
     void givenMaxNumberOfCards_returnParlessCardsResponse() {
-        when(cardRepository.findByParIsNullAndLastReadDateBeforeAndCircuitNotAndPanIsNotNullOrParIsNullAndLastReadDateIsNullAndCircuitNotAndPanIsNotNull(any(), any(), any(), any())).thenReturn(testBeans.TKM_CARD_LIST);
+        when(cardRepository.findByParIsNullAndLastReadDateBeforeAndCircuitNotAndPanIsNotNullOrParIsNullAndLastReadDateIsNullAndCircuitNotAndPanIsNotNull(any(), CircuitEnum.DELETED, CircuitEnum.DELETED, any())).thenReturn(testBeans.TKM_CARD_LIST);
         parlessCardsService.getParlessCards(2);
         verify(cardRepository).saveAll(testBeans.TKM_CARD_LIST);
     }
