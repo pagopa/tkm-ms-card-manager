@@ -294,7 +294,8 @@ class TestCardService {
                 testBeans.TKM_CARD_TOKEN_1, testBeans.TKM_CARD_TOKEN_2, testBeans.TKM_CARD_TOKEN_3
         ));
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1).thenReturn(null);
-        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        // TODO: to verify
+        // when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, null)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         testBeans.READ_QUEUE_PAR_1.setTokens(testBeans.QUEUE_TOKEN_LIST_2);
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_1);
         testBeans.TKM_CARD_PAR_1.setTokens(updatedTokens);
