@@ -398,9 +398,13 @@ class TestCardService {
     void givenTokenAndExistingParAndToken_mergeCards() {
         when(cryptoService.encrypt(testBeans.TOKEN_1)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_1));
         when(cryptoService.encrypt(testBeans.TOKEN_2)).thenReturn(DefaultBeans.enc(testBeans.TOKEN_2));
+        // TODO: to verify
+        when(cryptoService.encryptNullable(testBeans.PAN_1)).thenReturn(DefaultBeans.enc(testBeans.PAN_1));
         testBeans.TKM_CARD_PAR_1.setId(1L);
         testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAR_1);
         when(cardTokenRepository.findByHtokenIn(Arrays.asList(testBeans.HTOKEN_1, testBeans.HTOKEN_2))).thenReturn(Collections.singletonList(testBeans.TKM_CARD_TOKEN_1));
+        // TODO: to verify
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAN_1);
         verify(citizenCardRepository).findByCardIdIn(Collections.singletonList(1L));
         verify(citizenCardRepository).save(testBeans.CITIZEN_CARD_PAN_PAR);
