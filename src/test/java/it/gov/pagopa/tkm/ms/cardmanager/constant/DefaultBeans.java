@@ -26,7 +26,10 @@ public class DefaultBeans {
     }
 
     public static TkmCard encCard(TkmCard card) {
-        card.setPan(enc(card.getPan()));
+        if (card.getPan() != null) {
+            card.setPan(enc(card.getPan()));
+        }
+
         for (TkmCardToken token : card.getTokens()) {
             token.setToken(enc(token.getToken()));
         }

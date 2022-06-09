@@ -107,6 +107,8 @@ public class CardServiceImpl implements CardService {
         log.debug("manageParAndHpan with par " + par + " and hpan " + hpan);
         TkmCard cardByHpanAndPar = cardRepository.findByHpanAndPar(hpan, par);
         if (cardByHpanAndPar != null) {
+            cardByHpanAndPar.setCircuit(circuit);
+            cardRepository.save(cardByHpanAndPar);
             log.debug("A complete card with this par and hpan already exists, aborting");
             return;
         }
@@ -127,11 +129,13 @@ public class CardServiceImpl implements CardService {
                 updateCitizenCardAfterMerge(cardByHpan, cardByPar);
                 cardRepository.delete(cardByPar);
             }
+            cardByHpan.setCircuit(circuit);
             cardRepository.save(cardByHpan);
         } else if (cardByPar != null) {
             log.debug("Found card by par " + par + ", updating");
             cardByPar.setHpan(hpan);
             cardByPar.setLastUpdateDate(Instant.now());
+            cardByPar.setCircuit(circuit);
             cardRepository.save(cardByPar);
         } else {
             log.debug("No existing cards found, creating one");
@@ -288,6 +292,7 @@ public class CardServiceImpl implements CardService {
                     .creationDate(Instant.now())
                     .build();
         }
+        card.setCircuit(circuit);
         return card;
     }
 
@@ -360,9 +365,9 @@ public class CardServiceImpl implements CardService {
             survivingCard.setPar(par);
             survivingCard.setLastUpdateDate(Instant.now());
             toMerge = true;
-        } else if (hpan != null && survivingCard.getHpan() == null) {
+        } else if ((hpan != null && survivingCard.getHpan() == null) || (pan != null && survivingCard.getPan() == null)) {
             preexistingCard = cardRepository.findByHpan(hpan);
-            survivingCard.setPan(pan);
+            survivingCard.setPan(cryptoService.encryptNullable(pan));
             survivingCard.setHpan(hpan);
             survivingCard.setLastUpdateDate(Instant.now());
             toMerge = true;
