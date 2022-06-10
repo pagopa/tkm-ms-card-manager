@@ -23,7 +23,7 @@ public interface CardRepository extends JpaRepository<TkmCard, Long> {
     @Cacheable(value = "first-card", unless = "#result == null")
     TkmCard findTopByOrderByIdAsc();
 
-    List<TkmCard> findByParIsNullAndLastReadDateBeforeAndCircuitNotAndPanIsNotNullOrParIsNullAndLastReadDateIsNullAndCircuitNotAndPanIsNotNull(Instant oneDayAgo, CircuitEnum circuit1, CircuitEnum circuit2, Pageable pageable);
+    List<TkmCard> findByParIsNullAndLastReadDateBeforeAndCircuitNotOrParIsNullAndLastReadDateIsNullAndCircuitNot(Instant oneDayAgo, CircuitEnum circuit1, CircuitEnum circuit2, Pageable pageable);
 
 
 }
