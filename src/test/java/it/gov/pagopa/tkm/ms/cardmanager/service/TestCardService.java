@@ -98,13 +98,31 @@ class TestCardService {
     }
 
     @Test
-    void givenParAndToken_givenExistingCardWithPar_deleteTokenCardAndMergeTokens() {
+    void givenParAndToken_givenExistingCardWithParAndToken_deleteTokenCardAndMergeTokens() {
         testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.TKM_CARD_PAN_1);
         when(cardTokenRepository.findByHtokenAndDeletedFalse(testBeans.HTOKEN_1)).thenReturn(testBeans.TKM_CARD_TOKEN_1);
         when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1);
         verify(cardRepository).delete(testBeans.TKM_CARD_PAN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAR_1);
+    }
+
+    @Test
+    void givenParAndToken_givenExistingCardWithPar_deleteTokenCardAndMergeTokens() {
+        // in DB we have token1 linked to FAKE CARD without PAR
+        testBeans.TKM_CARD_TOKEN_1.setCard(testBeans.FAKE_CARD);
+        testBeans.FAKE_CARD.getTokens().add(testBeans.TKM_CARD_TOKEN_1);
+        when(cardTokenRepository.findByHtokenAndDeletedFalse(testBeans.HTOKEN_1)).thenReturn(testBeans.TKM_CARD_TOKEN_1);
+
+        // and we have another CARD with PAR and PAN not linked to token1
+        testBeans.TKM_CARD_PAN_PAR_1.setTokens(new HashSet<>());
+        when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAN_PAR_1);
+
+        // and we receive PAR for token1
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_TOKEN_1);
+
+        verify(cardRepository).delete(testBeans.FAKE_CARD);
+        verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
     }
 
     @Test
