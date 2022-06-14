@@ -172,24 +172,32 @@ public class CardServiceImpl implements CardService {
     private void manageParAndToken(String par, CircuitEnum circuit, List<ReadQueueToken> tokens) {
         ReadQueueToken readQueueToken = tokens.get(0);
         String token = readQueueToken.getToken();
-        log.debug("manageParAndToken with par " + par);
+        log.info("manageParAndToken with par " + par);
         String htoken = getHash(token, readQueueToken.getHToken());
         TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
         if (byHtoken == null) {
+            log.info("Token not found by htoken " + htoken);
             byHtoken = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build();
         } else {
+            log.info("Token found by htoken " + htoken + " " + byHtoken.getId());
             byHtoken.setLastUpdateDate(Instant.now());
         }
         //Looking for the row with the par or with the token. If they exist I'll merge them
         TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).creationDate(Instant.now()).build();
         TkmCard tokenCard = byHtoken.getCard();
-        log.trace("TokenCard: " + tokenCard);
+
+        log.info("TokenCard by htoken " + htoken + " " + (tokenCard != null ? tokenCard.getId() : "not found"));
+
         if (tokenCard != null && StringUtils.isNotBlank(tokenCard.getPar())) {
-            log.debug("Skip: Card Already Updated");
+            log.info("Skip: Card Already Updated " + tokenCard.getPar());
             return;
         }
+
         TkmCard parCard = cardRepository.findByPar(par);
         log.trace("ParCard: " + parCard);
+
+        log.info("ParCard by par " + par + " " + (parCard != null ? parCard.getId() : "not found - htoken " + htoken));
+
         //I prefer the row with the par and delete the one without
         if (parCard != null) {
             cardToSave = parCard;
@@ -229,6 +237,7 @@ public class CardServiceImpl implements CardService {
 
     private void deleteIfNotNull(TkmCard tkmCard) {
         if (tkmCard != null) {
+            log.info("Deleting tkmCard " + tkmCard.getId());
             cardRepository.delete(tkmCard);
         }
     }

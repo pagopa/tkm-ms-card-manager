@@ -42,6 +42,7 @@ variables:
     enviroment: prod
   ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
     dockerRegistryServiceConnection: ''
+    enviroment: sit
 
   maven_cache_folder: $(Pipeline.Workspace)/.m2/repository
 
