@@ -104,23 +104,22 @@ public class CardServiceImpl implements CardService {
     }
 
     private void manageParAndHpan(String par, String hpan, CircuitEnum circuit) {
-        log.debug("manageParAndHpan with par " + par + " and hpan " + hpan);
+        log.info("manageParAndHpan with par " + par + " and hpan " + hpan);
         TkmCard cardByHpanAndPar = cardRepository.findByHpanAndPar(hpan, par);
         if (cardByHpanAndPar != null) {
             cardByHpanAndPar.setCircuit(circuit);
             cardRepository.save(cardByHpanAndPar);
-            log.debug("A complete card with this par and hpan already exists, aborting");
+            log.info("Card found by par " + par + " and hpan " + hpan + " aborting");
             return;
         }
         TkmCard cardByHpan = cardRepository.findByHpan(hpan);
         TkmCard cardByPar = cardRepository.findByPar(par);
         if (cardByHpan != null) {
-            log.debug("Found card by hpan " + hpan + ", updating");
+            log.info("Found card by hpan " + hpan + ", updating " + cardByHpan.getId());
             log.trace(cardByHpan);
-            cardByHpan.setPar(par);
-            cardByHpan.setLastUpdateDate(Instant.now());
+
             if (cardByPar != null) {
-                log.debug("Also found card by par " + par + ", merging it into card found by hpan");
+                log.info("Also found card by par " + par + " with id " + cardByPar.getId() + " and hpan " + cardByPar.getHpan() + "merging");
                 log.trace(cardByPar);
                 for (TkmCardToken t : cardByPar.getTokens()) {
                     t.setCard(cardByHpan);
@@ -129,16 +128,18 @@ public class CardServiceImpl implements CardService {
                 updateCitizenCardAfterMerge(cardByHpan, cardByPar);
                 cardRepository.delete(cardByPar);
             }
+            cardByHpan.setPar(par);
+            cardByHpan.setLastUpdateDate(Instant.now());
             cardByHpan.setCircuit(circuit);
             cardRepository.save(cardByHpan);
         } else if (cardByPar != null) {
-            log.debug("Found card by par " + par + ", updating");
+            log.info("Found card by par " + par + ", updating");
             cardByPar.setHpan(hpan);
             cardByPar.setLastUpdateDate(Instant.now());
             cardByPar.setCircuit(circuit);
             cardRepository.save(cardByPar);
         } else {
-            log.debug("No existing cards found, creating one");
+            log.info("No existing cards found, creating one for par " + par + " and hpan " + hpan);
             TkmCard card = TkmCard.builder().hpan(hpan).par(par).circuit(circuit).creationDate(Instant.now()).build();
             cardRepository.save(card);
         }
