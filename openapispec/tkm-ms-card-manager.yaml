@@ -137,12 +137,12 @@ paths:
                 maxLength: 16
                 example: 937aee55bbabd29b
               required: true
-  /update-consent:
+  /consent-update:
     put:
       tags:
         - restricted
       summary: Writes a message on write queue on consent changes
-      operationId: updateConsent
+      operationId: consentUpdate
       requestBody:
         content:
           application/json:

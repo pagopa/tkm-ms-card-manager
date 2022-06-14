@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @FeignClient(value = "hash", url = "${client-urls.rtd-hashing-url}")
 public interface RtdHashingClient {
 
-    @GetMapping
+    @PostMapping
     WalletsHashingEvaluation getHash(
             @RequestBody WalletsHashingEvaluationInput walletsHashingEvaluationInput,
             @RequestHeader(ApiParams.OCP_APIM_SUBSCRIPTION_KEY_HEADER) String subscriptionHeader
