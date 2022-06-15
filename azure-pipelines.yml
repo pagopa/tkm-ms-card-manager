@@ -161,6 +161,15 @@ stages:
               failOnStderr: true
 
           - task: Bash@3
+            displayName: Git push on tag
+            name: gitpushtag
+            inputs:
+              targetType: 'inline'
+              script: |
+                git push -q origin --tags
+              failOnStderr: true
+
+          - task: Bash@3
             displayName: Git create tmp branch
             name: gitcreatetmp
             inputs:
