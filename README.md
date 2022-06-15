@@ -38,7 +38,7 @@ The following ENVIRONMENT variables are needed to deploy and run the application
 
 1. Run:<br>
    `$version=??` for poweshell or `version=??` for gitbash<br>
-   `mvn --batch-mode release:clean release:prepare`<br>
+   `mvn --batch-mode release:clean release:prepare -DscmCommentPrefix="[skip ci]"`<br>
    `git checkout -b tmp/${version} card-manager-${version}`<br>
    `git push --set-upstream origin tmp/${version}`<br>
 
