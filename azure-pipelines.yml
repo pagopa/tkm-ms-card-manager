@@ -56,8 +56,6 @@ stages:
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
-          - checkout: self
-            persistCredentials: true
           - task: DownloadSecureFile@1
             displayName: 'download settings.xml for Maven'
             name: settingsxml
@@ -88,9 +86,12 @@ stages:
 
       - job: Release
         displayName: Prepare release
+        dependsOn: Test
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
+          - checkout: self
+              persistCredentials: true
           - task: DownloadSecureFile@1
             displayName: 'download settings.xml for Maven'
             name: settingsxml
@@ -137,6 +138,7 @@ stages:
               mavenAuthenticateFeed: false
               effectivePomSkip: true
               sonarQubeRunAnalysis: false
+
           - task: Bash@3
             displayName: Get POM version
             name: getpomversion
@@ -150,7 +152,7 @@ stages:
 
   - stage: POM
     displayName: POM
-    condition: eq(variables.isToDeploy, true)
+    condition: and(eq(variables.isToDeploy, true),or(eq(variables.isSIT, true),eq(variables.isUAT, true),eq(variables.isPROD, true)))
     jobs:
       - job: POM
         displayName: POM
