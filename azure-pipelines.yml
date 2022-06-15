@@ -106,6 +106,7 @@ stages:
                 maven | "$(Agent.OS)"
                 maven
               path: $(maven_cache_folder)
+
           - task: Bash@3
             displayName: Set git config
             name: setgitconfig
@@ -113,6 +114,15 @@ stages:
               targetType: 'inline'
               script: |
                 git config user.name "tkm_build_service"
+              failOnStderr: true
+
+          - task: Bash@3
+            displayName: git checkout
+            name: gitcheckout
+            inputs:
+              targetType: 'inline'
+              script: |
+                git checkout ${{ variables['Build.SourceBranch'] }}
               failOnStderr: true
 
           - task: Maven@3
