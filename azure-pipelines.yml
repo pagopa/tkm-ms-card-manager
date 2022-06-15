@@ -75,7 +75,7 @@ stages:
             inputs:
               mavenPomFile: 'pom.xml'
               goals: 'package'
-              options: '-B -s $(settingsxml.secureFilePath) -T1C -DskipTests=false  -Dmaven.repo.local=$(maven_cache_folder)'
+              options: '-B -s $(settingsxml.secureFilePath) -T1C -Dmaven.repo.local=$(maven_cache_folder)'
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.8'
               mavenVersionOption: 'Default'
@@ -142,7 +142,7 @@ stages:
             inputs:
               mavenPomFile: 'pom.xml'
               goals: 'release:clean release:prepare '
-              options: '--batch-mode -DscmCommentPrefix="[skip ci]" -s $(settingsxml.secureFilePath) -T1C -DskipTests=true -Dmaven.repo.local=$(maven_cache_folder)'
+              options: '--batch-mode -DscmCommentPrefix="[skip ci]" -s $(settingsxml.secureFilePath) -T1C -Darguments=-DskipTests -Dmaven.repo.local=$(maven_cache_folder)'
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.8'
               mavenVersionOption: 'Default'
