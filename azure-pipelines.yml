@@ -47,8 +47,8 @@ variables:
   maven_cache_folder: $(Pipeline.Workspace)/.m2/repository
 
 stages:
-  - stage: Test_Develop
-    displayName: Test Develop
+  - stage: Test_Develop_Release
+    displayName: Test Develop and Prepare Release
     condition: or(eq(variables.isPullRequest, true), and(ne(variables.isSIT, true), ne(variables.isUAT, true), ne(variables.isPROD, true)))
     jobs:
       - job: Test
@@ -116,6 +116,16 @@ stages:
               mavenAuthenticateFeed: false
               effectivePomSkip: true
               sonarQubeRunAnalysis: false
+          - task: Bash@3
+            displayName: Get POM version
+            name: getpomversion
+            inputs:
+              targetType: 'inline'
+              script: |
+                version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
+                echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$version"
+                echo "Current Project Version ${version}"
+              failOnStderr: true
 
   - stage: POM
     displayName: POM
