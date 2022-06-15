@@ -122,7 +122,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                git checkout ${{ variables['Build.SourceBranchName'] }}
+                git checkout -q ${{ variables['Build.SourceBranchName'] }}
               failOnStderr: true
 
           - task: Maven@3
