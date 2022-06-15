@@ -134,7 +134,7 @@ stages:
               script: |
                 releaseVersion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
                 releaseVersion=${releaseVersion/-SNAPSHOT/}
-                echo "##vso[task.setvariable variable=releaseVersion;isOutput=true]$releaseVersion"
+                echo "##vso[task.setvariable variable=version;isOutput=true]$releaseVersion"
                 echo "Current Release Version ${releaseVersion}"
               failOnStderr: true
 
@@ -166,7 +166,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                git checkout -q -b tmp/$(var.releaseVersion) card-manager-$(var.releaseVersion)
+                git checkout -q -b tmp/$(getreleaseversion.version) card-manager-$(getreleaseversion.version)
               failOnStderr: true
 
           - task: Bash@3
@@ -175,7 +175,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                git push -q --set-upstream origin tmp/$(var.releaseVersion)
+                git push -q --set-upstream origin tmp/$(getreleaseversion.version)
               failOnStderr: true
 
   - stage: POM
