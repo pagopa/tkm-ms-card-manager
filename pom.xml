@@ -167,8 +167,8 @@
         </repository>
     </distributionManagement>
     <scm>
-        <developerConnection>scm:git:git@github.com:pagopa/tkm-ms-card-manager.git</developerConnection>
-        <!--<developerConnection>scm:git:https://github.com/pagopa/tkm-ms-card-manager.git</developerConnection>-->
+        <!--<developerConnection>scm:git:git@github.com:pagopa/tkm-ms-card-manager.git</developerConnection>-->
+        <developerConnection>scm:git:https://github.com/pagopa/tkm-ms-card-manager.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 </project>
