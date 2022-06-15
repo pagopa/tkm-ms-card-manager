@@ -31,8 +31,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.INCONSISTENT_MESSAGE;
-import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.MESSAGE_WRITE_FAILED;
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.*;
 import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.INSERT_UPDATE;
 
 @Service
@@ -104,41 +103,76 @@ public class CardServiceImpl implements CardService {
     }
 
     private void manageParAndHpan(String par, String hpan, CircuitEnum circuit) {
-        log.debug("manageParAndHpan with par " + par + " and hpan " + hpan);
+        log.info("manageParAndHpan with par " + par + " and hpan " + hpan);
         TkmCard cardByHpanAndPar = cardRepository.findByHpanAndPar(hpan, par);
         if (cardByHpanAndPar != null) {
             cardByHpanAndPar.setCircuit(circuit);
             cardRepository.save(cardByHpanAndPar);
-            log.debug("A complete card with this par and hpan already exists, aborting");
+            log.info("Card found by par " + par + " and hpan " + hpan + " aborting");
             return;
         }
         TkmCard cardByHpan = cardRepository.findByHpan(hpan);
         TkmCard cardByPar = cardRepository.findByPar(par);
         if (cardByHpan != null) {
-            log.debug("Found card by hpan " + hpan + ", updating");
+            log.info("Found card by hpan " + hpan + ", updating " + cardByHpan.getId() + " - old PAR is " + cardByHpan.getPar());
             log.trace(cardByHpan);
+
+            // if the card in the DB has a different not null PAR throw exception
+            if (StringUtils.isNotEmpty(cardByHpan.getPar()) && !StringUtils.equals(cardByHpan.getPar(), par)) {
+                throw new CardException(INCONSISTENT_MESSAGE);
+            }
+
+            if (cardByPar != null) {
+                // there is already a card in DB with the same PAR of input one but different hpan
+                // the card in DB should be a "fake" card used to temporary store tokens
+
+                log.info("Also found card by par " + par + " with id " + cardByPar.getId() + " and hpan " + cardByPar.getHpan() + "merging");
+                log.trace(cardByPar);
+
+                // if the card in the DB has a different not null hpan throw exception
+                if (StringUtils.isNotEmpty(cardByPar.getHpan()) && !StringUtils.equals(cardByPar.getHpan(), cardByHpan.getHpan())) {
+                    throw new CardException(DUPLICATE_PAR);
+                }
+
+                // the card in DB is a "fake" card so we re-link citizen to the real card with pan
+                // it is not clear how can exists a citizen linked to a "fake" card
+                updateCitizenCardAfterMerge(cardByHpan, cardByPar);
+
+                // the card in DB is a "fake" card so we re-link token to the real card with pan
+                mergeTokenIntoParCardToken(cardByHpan, cardByPar);
+            }
+
+            deleteIfNotNull(cardByPar);
+
             cardByHpan.setPar(par);
             cardByHpan.setLastUpdateDate(Instant.now());
-            if (cardByPar != null) {
-                log.debug("Also found card by par " + par + ", merging it into card found by hpan");
-                log.trace(cardByPar);
-                for (TkmCardToken t : cardByPar.getTokens()) {
-                    t.setCard(cardByHpan);
-                    t.setLastUpdateDate(Instant.now());
-                }
-                updateCitizenCardAfterMerge(cardByHpan, cardByPar);
-                cardRepository.delete(cardByPar);
-            }
             cardByHpan.setCircuit(circuit);
             cardRepository.save(cardByHpan);
+
+            // it was done before only on citizen linked to cardByPar (if not null)
+            // but there could be citizen linked also to cardByPan before, and now we receive PAR
+            // so we should send update to CSTAR
+            writeOnQueueIfCompleteForUpdatedCard(cardByHpan, cardByHpan.getTokens());
+
         } else if (cardByPar != null) {
-            log.debug("Found card by par " + par + ", updating");
+            log.info("Found card by par " + par + ", updating");
+
+            // in this case we receive a couple hpan/par not null
+            // there is already a card in DB with the same PAR of input
+            // there is no card in DB with the same hpan
+            // it is not clear the use case here (par retriever only knows hpan from card manager)
+
+            // in any case, if the card in the DB has a different not null hpan throw exception
+            if (StringUtils.isNotEmpty(cardByPar.getHpan()) && !StringUtils.equals(cardByPar.getHpan(), cardByHpan.getHpan())) {
+                throw new CardException(DUPLICATE_PAR);
+            }
+
             cardByPar.setHpan(hpan);
             cardByPar.setLastUpdateDate(Instant.now());
             cardByPar.setCircuit(circuit);
             cardRepository.save(cardByPar);
         } else {
-            log.debug("No existing cards found, creating one");
+            log.info("No existing cards found, creating one for par " + par + " and hpan " + hpan);
             TkmCard card = TkmCard.builder().hpan(hpan).par(par).circuit(circuit).creationDate(Instant.now()).build();
             cardRepository.save(card);
         }
@@ -149,7 +183,6 @@ public class CardServiceImpl implements CardService {
         log.trace(citizenCards);
         citizenCards.forEach(c -> c.setCard(survivingCard));
         citizenCardRepository.saveAll(citizenCards);
-        citizenCards.forEach(c -> writeOnQueueIfComplete(c, deletedCard.getTokens(), true));
         log.debug("All cards have been merged");
     }
 
@@ -211,6 +244,17 @@ public class CardServiceImpl implements CardService {
         byHtoken.setCard(cardToSave);
         cardToSave.getTokens().add(byHtoken);
         cardRepository.save(cardToSave);
+
+        // we need to inform CSTAR that a new token was added to the card
+        writeOnQueueIfCompleteForUpdatedCard(cardToSave, cardToSave.getTokens());
+    }
+
+    private void writeOnQueueIfCompleteForUpdatedCard(TkmCard cardToSave, Set<TkmCardToken> tokensToUpdate) {
+        List<TkmCitizenCard> citizenCards = citizenCardRepository.findByCardId(cardToSave.getId());
+
+        log.info("Write on queue for update card hpan " + cardToSave.getHpan() + " par " + cardToSave.getPar() + " - citizen to update " + citizenCards.size());
+
+        citizenCards.forEach(c -> writeOnQueueIfComplete(c, tokensToUpdate, true));
     }
 
     private void mergeTokenCardIntoParCard(TkmCard cardToSave, TkmCard tokenCard) {
@@ -239,6 +283,9 @@ public class CardServiceImpl implements CardService {
         if (tkmCard != null) {
             log.info("Deleting tkmCard " + tkmCard.getId());
             cardRepository.delete(tkmCard);
+            // force flush to avoid insert error for duplicate PAR from DB
+            // when doing other query
+            cardRepository.flush();
         }
     }
 
@@ -249,7 +296,6 @@ public class CardServiceImpl implements CardService {
     }
 
     // ISSUER
-
     private void manageIssuerCases(ReadQueue readQueue) {
         String par = readQueue.getPar();
         String pan = readQueue.getPan();
@@ -424,6 +470,7 @@ public class CardServiceImpl implements CardService {
             t.setLastUpdateDate(Instant.now());
         }
         cardTokenRepository.saveAll(tokensToUpdate);
+
         citizenCards.forEach(c -> writeOnQueueIfComplete(c, tokensToUpdate, true));
         log.debug("All cards have been merged by token");
     }
@@ -463,7 +510,7 @@ public class CardServiceImpl implements CardService {
     private void writeOnQueueIfComplete(TkmCitizenCard citizenCard, Set<TkmCardToken> oldTokens, boolean merged) {
         TkmCard card = citizenCard.getCard();
         if (StringUtils.isAnyBlank(card.getPan(), card.getPar())) {
-            log.info("Card missing pan or par, not writing on queue");
+            log.info("Card missing pan or par, not writing on queue - id " + card.getId());
             return;
         }
         String taxCode = citizenCard.getCitizen().getTaxCode();
@@ -484,7 +531,7 @@ public class CardServiceImpl implements CardService {
             );
             producerService.sendMessage(writeQueue);
         } catch (Exception e) {
-            log.error(e);
+            log.error("Error writing to queue for card hpan " + card.getHpan() + " par " + card.getPar(), e);
             throw new CardException(MESSAGE_WRITE_FAILED);
         }
     }
