@@ -175,8 +175,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                git push -q origin tmp/$(getreleaseversion.version)
-              failOnStderr: true
+                git push -q --set-upstream origin tmp/$(getreleaseversion.version)
 
   - stage: POM
     displayName: POM
