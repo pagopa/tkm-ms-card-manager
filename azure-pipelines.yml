@@ -126,6 +126,18 @@ stages:
                 git checkout -q ${{ variables['Build.SourceBranchName'] }}
               failOnStderr: true
 
+          - task: Bash@3
+            displayName: Get release version
+            name: getreleaseversion
+            inputs:
+              targetType: 'inline'
+              script: |
+                releaseVersion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
+                releaseVersion=${releaseVersion/-SNAPSHOT/}
+                echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$releaseVersion"
+                echo "Current Release Version ${releaseVersion}"
+              failOnStderr: true
+
           - task: Maven@3
             inputs:
               mavenPomFile: 'pom.xml'
@@ -140,24 +152,31 @@ stages:
               sonarQubeRunAnalysis: false
 
           - task: Bash@3
-            displayName: Get POM version
-            name: getpomversion
-            inputs:
-              targetType: 'inline'
-              script: |
-                version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
-                echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$version"
-                echo "Current Project Version ${version}"
-              failOnStderr: true
-
-          - task: Bash@3
-            displayName: Git push
-            name: gitpush
+            displayName: Git push on develop branch
+            name: gitpushdev
             inputs:
               targetType: 'inline'
               script: |
                 git push -q origin ${{ variables['Build.SourceBranchName'] }}
               failOnStderr: true
+
+#          - task: Bash@3
+#            displayName: Git create tmp branch
+#            name: gitcreatetmp
+#            inputs:
+#              targetType: 'inline'
+#              script: |
+#                git checkout -q -b tmp/$(var.releaseVersion) card-manager-$(var.releaseVersion)
+#              failOnStderr: true
+#
+#          - task: Bash@3
+#              displayName: Git push on tmp branch
+#              name: gitpushtmp
+#              inputs:
+#                targetType: 'inline'
+#                script: |
+#                  git push -q --set-upstream origin tmp/$(var.releaseVersion)
+#                failOnStderr: true
 
   - stage: POM
     displayName: POM
