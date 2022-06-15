@@ -170,13 +170,13 @@ stages:
               failOnStderr: true
 
           - task: Bash@3
-              displayName: Git push on tmp branch
-              name: gitpushtmp
-              inputs:
-                targetType: 'inline'
-                script: |
-                  git push -q --set-upstream origin tmp/$(var.releaseVersion)
-                failOnStderr: true
+            displayName: Git push on tmp branch
+            name: gitpushtmp
+            inputs:
+              targetType: 'inline'
+              script: |
+                git push -q --set-upstream origin tmp/$(var.releaseVersion)
+              failOnStderr: true
 
   - stage: POM
     displayName: POM
