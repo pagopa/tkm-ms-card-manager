@@ -91,7 +91,7 @@ stages:
           vmImage: $(vmImageNameDefault)
         steps:
           - checkout: self
-              persistCredentials: true
+            persistCredentials: true
           - task: DownloadSecureFile@1
             displayName: 'download settings.xml for Maven'
             name: settingsxml
