@@ -80,7 +80,7 @@ public class DefaultBeans {
             .htoken(HTOKEN_3)
             .build();
 
-    private final Set<TkmCardToken> TKM_CARD_TOKENS_1 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2));
+    public final Set<TkmCardToken> TKM_CARD_TOKENS_1 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2));
 
     public final Set<TkmCardToken> TKM_CARD_TOKENS_2 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_3));
 
@@ -268,6 +268,10 @@ public class DefaultBeans {
             new WriteQueueToken(
                     HTOKEN_2,
                     TokenActionEnum.INSERT_UPDATE
+            ),
+            new WriteQueueToken(
+                HTOKEN_3,
+                TokenActionEnum.INSERT_UPDATE
             )
     ));
 
@@ -298,8 +302,14 @@ public class DefaultBeans {
             WRITE_QUEUE_CARD_NEW
     );
 
-    public final WriteQueue WRITE_QUEUE_FOR_UPDATED_CARD = new WriteQueue(
+    public final WriteQueue WRITE_QUEUE_FOR_MERGED_CARD_1 = new WriteQueue(
             TAX_CODE_1,
+            INSTANT,
+            WRITE_QUEUE_CARD_UPDATED
+    );
+
+    public final WriteQueue WRITE_QUEUE_FOR_MERGED_CARD_2 = new WriteQueue(
+            TAX_CODE_2,
             INSTANT,
             WRITE_QUEUE_CARD_UPDATED
     );

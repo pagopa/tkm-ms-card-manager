@@ -16,8 +16,8 @@ public enum ErrorCodeEnum {
     CALL_TO_RTD_FAILED(2005, "Could not execute call to RTD"),
     KEYVAULT_ENCRYPTION_FAILED(2006, "Keyvault encryption failed"),
     KEYVAULT_DECRYPTION_FAILED(2007, "Keyvault decryption failed"),
-    INCONSISTENT_MESSAGE(2008, "Inconsistent message");
-
+    INCONSISTENT_MESSAGE(2008, "Inconsistent message"),
+    DUPLICATE_PAR(2009, "PAR already exists for a different hpan");
 
     @Getter
     private final Integer statusCode;
