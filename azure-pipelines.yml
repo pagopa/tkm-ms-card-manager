@@ -106,6 +106,15 @@ stages:
                 maven | "$(Agent.OS)"
                 maven
               path: $(maven_cache_folder)
+          - task: Bash@3
+            displayName: Set git config
+            name: setgitconfig
+            inputs:
+              targetType: 'inline'
+              script: |
+                git config user.name "tkm_build_service"
+              failOnStderr: true
+
           - task: Maven@3
             inputs:
               mavenPomFile: 'pom.xml'
