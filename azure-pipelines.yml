@@ -134,7 +134,7 @@ stages:
               script: |
                 releaseVersion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
                 releaseVersion=${releaseVersion/-SNAPSHOT/}
-                echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$releaseVersion"
+                echo "##vso[task.setvariable variable=releaseVersion;isOutput=true]$releaseVersion"
                 echo "Current Release Version ${releaseVersion}"
               failOnStderr: true
 
