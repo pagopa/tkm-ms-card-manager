@@ -149,28 +149,70 @@ class TestCardService {
     }
 
     @Test
-    void givenParAndHpan_givenExistingCardWithHpan_updateCard() {
+    void givenParAndHpan_givenExistingCardWithHpan_updateCard(){
+        testBeans.TKM_CARD_PAN_1.setId(1L);
+
+        testBeans.TKM_CARD_PAN_PAR_1.setId(1L);
+        testBeans.TKM_CARD_PAN_PAR_1.setTokens(testBeans.TKM_CARD_TOKENS_1);
         testBeans.TKM_CARD_PAN_PAR_1.setLastUpdateDate(DefaultBeans.INSTANT);
+
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
+        when(citizenCardRepository.findByCardId(1L)).thenReturn(testBeans.CITIZEN_CARDS);
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Deny));
+
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
+        verifyNoMoreInteractions(producerService);
     }
 
     @Test
-    void givenParAndHpan_givenExistingCardWithHpanAndExistingCardWithPar_mergeCards() {
-        testBeans.TKM_CARD_PAN_PAR_1.setTokens(testBeans.TKM_CARD_TOKENS_ALL);
+    void givenParAndHpan_givenExistingCardWithHpanAndConsentAllow_updateCard() throws JsonProcessingException {
+        testBeans.TKM_CARD_PAN_1.setId(1L);
+
+        testBeans.TKM_CARD_PAN_PAR_1.setId(1L);
+        testBeans.TKM_CARD_PAN_PAR_1.setTokens(testBeans.TKM_CARD_TOKENS_1);
         testBeans.TKM_CARD_PAN_PAR_1.setLastUpdateDate(DefaultBeans.INSTANT);
-        testBeans.TKM_CARD_PAR_1.setTokens(testBeans.TKM_CARD_TOKENS_2);
-        testBeans.TKM_CARD_PAR_1.setId(1L);
+
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
-        when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
         when(citizenCardRepository.findByCardId(1L)).thenReturn(testBeans.CITIZEN_CARDS);
         when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
-        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_2, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+
         cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
+        verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
+        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_NEW_CARD);
+    }
+
+
+    @Test
+    void givenParAndHpan_givenExistingCardWithHpanAndExistingCardWithPar_mergeCards() throws JsonProcessingException {
+
+        //existing card with par
+        testBeans.TKM_CARD_PAR_1.setTokens(testBeans.TKM_CARD_TOKENS_2);
+        testBeans.TKM_CARD_PAR_1.setId(1L);
+
+        //existing card with pan
+        testBeans.TKM_CARD_PAN_1.setId(2L);
+
+        //merged card
+        testBeans.TKM_CARD_PAN_PAR_1.setTokens(testBeans.TKM_CARD_TOKENS_ALL);
+        testBeans.TKM_CARD_PAN_PAR_1.setLastUpdateDate(DefaultBeans.INSTANT);
+        testBeans.TKM_CARD_PAN_PAR_1.setId(2L);
+
+        when(cardRepository.findByPar(testBeans.PAR_1)).thenReturn(testBeans.TKM_CARD_PAR_1);
+        when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(testBeans.TKM_CARD_PAN_1);
+        when(citizenCardRepository.findByCardId(1L)).thenReturn(testBeans.CITIZEN_CARDS);
+        when(citizenCardRepository.findByCardId(2L)).thenReturn(testBeans.CITIZEN_CARDS_UPDATED);
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_1, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+        when(circuitBreakerManager.consentClientGetConsent(consentClient, testBeans.TAX_CODE_2, testBeans.HPAN_1)).thenReturn(testBeans.getConsentUpdateGlobal(ConsentEntityEnum.Allow));
+
+        cardService.updateOrCreateCard(testBeans.READ_QUEUE_PAR_HPAN_1);
+
         verify(cardRepository).delete(testBeans.TKM_CARD_PAR_1);
         verify(cardRepository).save(testBeans.TKM_CARD_PAN_PAR_1);
         verify(citizenCardRepository).saveAll(testBeans.CITIZEN_CARDS_UPDATED);
+
+        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_MERGED_CARD_1);
+        verify(producerService).sendMessage(testBeans.WRITE_QUEUE_FOR_MERGED_CARD_2);
     }
 
     @Test
