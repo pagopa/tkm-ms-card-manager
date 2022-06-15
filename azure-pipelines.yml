@@ -51,42 +51,42 @@ stages:
     displayName: Test Develop and Prepare Release
     condition: or(eq(variables.isPullRequest, true), and(ne(variables.isSIT, true), ne(variables.isUAT, true), ne(variables.isPROD, true)))
     jobs:
-      - job: Test
-        displayName: Test
-        pool:
-          vmImage: $(vmImageNameDefault)
-        steps:
-          - task: DownloadSecureFile@1
-            displayName: 'download settings.xml for Maven'
-            name: settingsxml
-            inputs:
-              secureFile: 'settings_v2.xml'
-              retryCount: '2'
-          - task: Cache@2
-            displayName: Cache Maven
-            inputs:
-              key: 'maven | "$(Agent.OS)" | tkmcardmanager'
-              restoreKeys: |
-                maven | "$(Agent.OS)" | tkmcardmanager
-                maven | "$(Agent.OS)"
-                maven
-              path: $(maven_cache_folder)
-          - task: Maven@3
-            inputs:
-              mavenPomFile: 'pom.xml'
-              goals: 'package'
-              options: '-B -s $(settingsxml.secureFilePath) -T1C -DskipTests=false  -Dmaven.repo.local=$(maven_cache_folder)'
-              javaHomeOption: 'JDKVersion'
-              jdkVersionOption: '1.8'
-              mavenVersionOption: 'Default'
-              mavenOptions: '-Xmx3072m'
-              mavenAuthenticateFeed: false
-              effectivePomSkip: true
-              sonarQubeRunAnalysis: false
+#      - job: Test
+#        displayName: Test
+#        pool:
+#          vmImage: $(vmImageNameDefault)
+#        steps:
+#          - task: DownloadSecureFile@1
+#            displayName: 'download settings.xml for Maven'
+#            name: settingsxml
+#            inputs:
+#              secureFile: 'settings_v2.xml'
+#              retryCount: '2'
+#          - task: Cache@2
+#            displayName: Cache Maven
+#            inputs:
+#              key: 'maven | "$(Agent.OS)" | tkmcardmanager'
+#              restoreKeys: |
+#                maven | "$(Agent.OS)" | tkmcardmanager
+#                maven | "$(Agent.OS)"
+#                maven
+#              path: $(maven_cache_folder)
+#          - task: Maven@3
+#            inputs:
+#              mavenPomFile: 'pom.xml'
+#              goals: 'package'
+#              options: '-B -s $(settingsxml.secureFilePath) -T1C -DskipTests=false  -Dmaven.repo.local=$(maven_cache_folder)'
+#              javaHomeOption: 'JDKVersion'
+#              jdkVersionOption: '1.8'
+#              mavenVersionOption: 'Default'
+#              mavenOptions: '-Xmx3072m'
+#              mavenAuthenticateFeed: false
+#              effectivePomSkip: true
+#              sonarQubeRunAnalysis: false
 
       - job: Release
         displayName: Prepare release
-        dependsOn: Test
+#        dependsOn: Test
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
@@ -109,7 +109,7 @@ stages:
               path: $(maven_cache_folder)
 
           - task: Bash@3
-            displayName: Set git config
+            displayName: Git config
             name: setgitconfig
             inputs:
               targetType: 'inline'
@@ -118,7 +118,7 @@ stages:
               failOnStderr: true
 
           - task: Bash@3
-            displayName: git checkout
+            displayName: Git checkout
             name: gitcheckout
             inputs:
               targetType: 'inline'
@@ -148,6 +148,15 @@ stages:
                 version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
                 echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$version"
                 echo "Current Project Version ${version}"
+              failOnStderr: true
+
+          - task: Bash@3
+            displayName: Git push
+            name: gitpush
+            inputs:
+              targetType: 'inline'
+              script: |
+                git push -q origin ${{ variables['Build.SourceBranchName'] }}
               failOnStderr: true
 
   - stage: POM
