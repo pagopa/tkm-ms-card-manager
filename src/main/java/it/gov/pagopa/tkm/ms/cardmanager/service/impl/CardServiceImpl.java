@@ -142,11 +142,11 @@ public class CardServiceImpl implements CardService {
                 mergeTokenIntoParCardToken(cardByHpan, cardByPar);
             }
 
+            deleteIfNotNull(cardByPar);
+
             cardByHpan.setPar(par);
             cardByHpan.setLastUpdateDate(Instant.now());
             cardByHpan.setCircuit(circuit);
-
-            deleteIfNotNull(cardByPar);
             cardRepository.save(cardByHpan);
 
             // it was done before only on citizen linked to cardByPar (if not null)
@@ -283,6 +283,9 @@ public class CardServiceImpl implements CardService {
         if (tkmCard != null) {
             log.info("Deleting tkmCard " + tkmCard.getId());
             cardRepository.delete(tkmCard);
+            // force flush to avoid insert error for duplicate PAR from DB
+            // when doing other query
+            cardRepository.flush();
         }
     }
 
@@ -293,7 +296,6 @@ public class CardServiceImpl implements CardService {
     }
 
     // ISSUER
-
     private void manageIssuerCases(ReadQueue readQueue) {
         String par = readQueue.getPar();
         String pan = readQueue.getPan();
