@@ -44,22 +44,22 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
         List<TkmCard> cardsToUpdate = ConsentEntityEnum.Partial.equals(consent.getConsent()) ?
             citizenCards.stream().filter(c -> consent.retrieveHpans().contains(c.getHpan())).collect(Collectors.toList())
             : citizenCards;
+        cardsToUpdate = cardsToUpdate.stream().filter(c -> c.getPar() != null).collect(Collectors.toList());
         log.info("Cards to update: " + cardsToUpdate.stream().map(TkmCard::getHpan).collect(Collectors.joining(", ")));
-        if (CollectionUtils.isEmpty(cardsToUpdate)) {
-            return;
+        if (!CollectionUtils.isEmpty(cardsToUpdate)) {
+            writeOnQueueIfComplete(cardsToUpdate, consent);
         }
-        writeOnQueueIfComplete(cardsToUpdate, consent);
     }
 
     private void writeOnQueueIfComplete(List<TkmCard> cards, ConsentResponse consent) {
         try {
-            Set<WriteQueueCard> writeQueueCards = cards.stream().filter(c -> c.getPar() != null).map(card ->
+            Set<WriteQueueCard> writeQueueCards = cards.stream().map(card ->
                     new WriteQueueCard(
-                                card.getHpan(),
-                                consent.cardHasConsent(card.getHpan()) ? INSERT_UPDATE : REVOKE,
-                                card.getPar(),
-                                consent.cardHasConsent(card.getHpan()) ? card.getTokens().stream().map(WriteQueueToken::new).collect(Collectors.toSet()) : null
-                        )
+                            card.getHpan(),
+                            consent.cardHasConsent(card.getHpan()) ? INSERT_UPDATE : REVOKE,
+                            card.getPar(),
+                            consent.cardHasConsent(card.getHpan()) ? card.getTokens().stream().map(WriteQueueToken::new).collect(Collectors.toSet()) : null
+                    )
             ).collect(Collectors.toSet());
             WriteQueue writeQueue = new WriteQueue(
                     consent.getTaxCode(),

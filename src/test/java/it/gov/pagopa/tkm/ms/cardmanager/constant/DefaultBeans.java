@@ -26,7 +26,10 @@ public class DefaultBeans {
     }
 
     public static TkmCard encCard(TkmCard card) {
-        card.setPan(enc(card.getPan()));
+        if (card.getPan() != null) {
+            card.setPan(enc(card.getPan()));
+        }
+
         for (TkmCardToken token : card.getTokens()) {
             token.setToken(enc(token.getToken()));
         }
@@ -62,6 +65,8 @@ public class DefaultBeans {
     private final ParlessCardResponse PARLESS_CARD_2 = new ParlessCardResponse(PAN_2, HPAN_1, CircuitEnum.VISA, PARLESS_CARD_TOKENS);
     public final List<ParlessCardResponse> PARLESS_CARD_LIST = Arrays.asList(PARLESS_CARD_1, PARLESS_CARD_2);
 
+
+
     public final TkmCardToken TKM_CARD_TOKEN_1 = TkmCardToken.builder()
             .token(TOKEN_1)
             .htoken(HTOKEN_1)
@@ -75,12 +80,16 @@ public class DefaultBeans {
             .htoken(HTOKEN_3)
             .build();
 
-    private final Set<TkmCardToken> TKM_CARD_TOKENS_1 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2));
+    public final Set<TkmCardToken> TKM_CARD_TOKENS_1 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2));
 
     public final Set<TkmCardToken> TKM_CARD_TOKENS_2 = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_3));
 
     public final Set<TkmCardToken> TKM_CARD_TOKENS_ALL = new HashSet<>(Arrays.asList(TKM_CARD_TOKEN_1, TKM_CARD_TOKEN_2, TKM_CARD_TOKEN_3));
 
+    public final TkmCard FAKE_CARD = TkmCard.builder()
+            .circuit(CircuitEnum.AMEX)
+            .creationDate(INSTANT)
+            .build();
     public final TkmCard TKM_CARD_PAN_PAR_1 = TkmCard.builder()
             .circuit(CircuitEnum.AMEX)
             .hpan(HPAN_1)
@@ -259,6 +268,10 @@ public class DefaultBeans {
             new WriteQueueToken(
                     HTOKEN_2,
                     TokenActionEnum.INSERT_UPDATE
+            ),
+            new WriteQueueToken(
+                HTOKEN_3,
+                TokenActionEnum.INSERT_UPDATE
             )
     ));
 
@@ -289,8 +302,14 @@ public class DefaultBeans {
             WRITE_QUEUE_CARD_NEW
     );
 
-    public final WriteQueue WRITE_QUEUE_FOR_UPDATED_CARD = new WriteQueue(
+    public final WriteQueue WRITE_QUEUE_FOR_MERGED_CARD_1 = new WriteQueue(
             TAX_CODE_1,
+            INSTANT,
+            WRITE_QUEUE_CARD_UPDATED
+    );
+
+    public final WriteQueue WRITE_QUEUE_FOR_MERGED_CARD_2 = new WriteQueue(
+            TAX_CODE_2,
             INSTANT,
             WRITE_QUEUE_CARD_UPDATED
     );
