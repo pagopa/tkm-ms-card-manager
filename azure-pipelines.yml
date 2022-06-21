@@ -264,7 +264,7 @@ stages:
             condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/target'
-              artifact: 'tkm-ms-card-manager'
+              artifact: 'target'
               publishLocation: 'pipeline'
 
       - job: Push
@@ -282,7 +282,7 @@ stages:
           - task: DownloadPipelineArtifact@2
             inputs:
               buildType: 'current'
-              artifactName: 'tkm-ms-card-manager'
+              artifactName: 'target'
               targetPath: '$(Pipeline.Workspace)/target'
           - task: Bash@3
             displayName: test
