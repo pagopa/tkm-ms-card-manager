@@ -310,18 +310,11 @@ stages:
               repository: '$(imageRepository)'
               command: 'buildAndPush'
               Dockerfile: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)'
-              buildContext: '$(Build.Repository.LocalPath)'
+              buildContext: '$(Pipeline.Workspace)'
               tags: |
                 $(Build.BuildId)
                 latest
                 $(pomversion)
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
-            inputs:
-              targetPath: '$(Build.Repository.LocalPath)/manifests'
-              artifact: 'manifests'
-              publishLocation: 'pipeline'
 
       - deployment: Deploy
         displayName: Deploy
