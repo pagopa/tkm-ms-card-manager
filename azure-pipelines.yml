@@ -260,12 +260,12 @@ stages:
               artifact: 'manifests'
               publishLocation: 'pipeline'
           - task: PublishPipelineArtifact@1
-              displayName: 'Publish Atrifact target'
-              condition: and(succeeded(), eq(variables.isToDeploy, true))
-              inputs:
-                targetPath: '$(Build.Repository.LocalPath)/target'
-                artifact: 'tkm-ms-card-manager'
-                publishLocation: 'pipeline'
+            displayName: 'Publish Atrifact target'
+            condition: and(succeeded(), eq(variables.isToDeploy, true))
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/target'
+              artifact: 'tkm-ms-card-manager'
+              publishLocation: 'pipeline'
 
       - job: Push
         displayName: Push
