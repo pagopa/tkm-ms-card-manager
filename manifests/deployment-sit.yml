@@ -71,7 +71,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: NOME_ENV_VAR
-                  name: name-secretName
+                  name: name-secret-name
           livenessProbe:
             httpGet:
               path: /actuator/health
