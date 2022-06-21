@@ -259,6 +259,13 @@ stages:
               targetPath: '$(Build.Repository.LocalPath)/manifests'
               artifact: 'manifests'
               publishLocation: 'pipeline'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Atrifact target'
+            condition: and(succeeded(), eq(variables.isToDeploy, true))
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/target'
+              artifact: 'tkm-ms-card-manager'
+              publishLocation: 'pipeline'
 
       - job: Push
         displayName: Push
@@ -271,7 +278,12 @@ stages:
             inputs:
               buildType: 'current'
               artifactName: 'manifests'
-              targetPath: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)/target'
+              targetPath: '$(Pipeline.Workspace)/manifests'
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'current'
+              artifactName: 'tkm-ms-card-manager'
+              targetPath: '$(Pipeline.Workspace)/target'
           - task: Bash@3
             displayName: test
             name: test
