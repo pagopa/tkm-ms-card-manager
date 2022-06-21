@@ -297,7 +297,7 @@ stages:
                                 objectType: secret
                                 objectVersion: ""
                         secretObjects:
-                          - secretName: name-secretName
+                          - secretName: name-secret-name
                             type: Opaque
                             data:
                               - key: NOME_ENV_VAR
