@@ -26,15 +26,15 @@ spec:
         - ip: "10.230.11.68"
           hostnames:
             - "cstar-d-evh-ns.servicebus.windows.net"
-      volumes:
-        - name: secrets-store-inline
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: tkm-card-manager-spc
-            #nodePublishSecretRef:
-            #  name: tkm-card-manager-kv-store-creds
+#      volumes:
+#        - name: secrets-store-inline
+#          csi:
+#            driver: secrets-store.csi.k8s.io
+#            readOnly: true
+#            volumeAttributes:
+#              secretProviderClass: tkm-card-manager-spc
+#            #nodePublishSecretRef:
+#            #  name: tkm-card-manager-kv-store-creds
       containers:
         - name: tkmmscardmanagersit
           image: cstaruatregistry.azurecr.io/tkmmscardmanager
@@ -56,22 +56,22 @@ spec:
             limits:
               memory: 8Gi
               cpu: 1000m
-          volumeMounts:
-            - name: secrets-store-inline
-              mountPath: /mnt/secrets-store
-              readOnly: true
-          securityContext:
-            readOnlyRootFilesystem: true
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - all
-          env:
-            - name: NOME_ENV_VAR
-              valueFrom:
-                secretKeyRef:
-                  key: NOME_ENV_VAR
-                  name: name-secret-name
+#          volumeMounts:
+#            - name: secrets-store-inline
+#              mountPath: /mnt/secrets-store
+#              readOnly: true
+#          securityContext:
+#            readOnlyRootFilesystem: true
+#            allowPrivilegeEscalation: false
+#            capabilities:
+#              drop:
+#                - all
+#          env:
+#            - name: NOME_ENV_VAR
+#              valueFrom:
+#                secretKeyRef:
+#                  key: NOME_ENV_VAR
+#                  name: name-secret-name
           livenessProbe:
             httpGet:
               path: /actuator/health
