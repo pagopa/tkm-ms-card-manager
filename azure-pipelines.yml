@@ -25,30 +25,30 @@ variables:
   isUAT: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))]
   isPROD: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
 
-  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release/sit') }}:
+  ${{ if eq(variables.isSIT, true) }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: 'cstaruatregistry.azurecr.io'
     enviroment: sit
     imagePullSecret: 'tkmsitregistry-auth'
-  ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')) }}:
+  ${{ if eq(variables.isUAT, true) }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: 'cstaruatregistry.azurecr.io'
     enviroment: uat
     imagePullSecret: 'tkmuatregistry-auth'
-  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+  ${{ if eq(variables.isPROD, true) }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: ''
     imagePullSecret: ''
     enviroment: prod
-  ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
+  ${{ if and(ne(variables.isSIT, true), ne(variables.isUAT, true), ne(variables.isPROD, true)) }}:
     dockerRegistryServiceConnection: ''
     enviroment: sit
 
   maven_cache_folder: $(Pipeline.Workspace)/.m2/repository
 
 stages:
-  - stage: Test_Develop
-    displayName: Test Develop
+  - stage: Test_Develop_Release
+    displayName: Test Develop and Prepare Release
     condition: or(eq(variables.isPullRequest, true), and(ne(variables.isSIT, true), ne(variables.isUAT, true), ne(variables.isPROD, true)))
     jobs:
       - job: Test
@@ -75,7 +75,7 @@ stages:
             inputs:
               mavenPomFile: 'pom.xml'
               goals: 'package'
-              options: '-B -s $(settingsxml.secureFilePath) -T1C -DskipTests=false  -Dmaven.repo.local=$(maven_cache_folder)'
+              options: '-B -s $(settingsxml.secureFilePath) -T1C -Dmaven.repo.local=$(maven_cache_folder)'
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.8'
               mavenVersionOption: 'Default'
@@ -84,9 +84,111 @@ stages:
               effectivePomSkip: true
               sonarQubeRunAnalysis: false
 
+      - job: Release
+        displayName: Prepare release
+        dependsOn: Test
+        pool:
+          vmImage: $(vmImageNameDefault)
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - task: DownloadSecureFile@1
+            displayName: 'download settings.xml for Maven'
+            name: settingsxml
+            inputs:
+              secureFile: 'settings_v2.xml'
+              retryCount: '2'
+          - task: Cache@2
+            displayName: Cache Maven
+            inputs:
+              key: 'maven | "$(Agent.OS)" | tkmcardmanager'
+              restoreKeys: |
+                maven | "$(Agent.OS)" | tkmcardmanager
+                maven | "$(Agent.OS)"
+                maven
+              path: $(maven_cache_folder)
+
+          - task: Bash@3
+            displayName: Git config
+            name: setgitconfig
+            inputs:
+              targetType: 'inline'
+              script: |
+                git config user.name "tkm_build_service"
+              failOnStderr: true
+
+          - task: Bash@3
+            displayName: Git checkout
+            name: gitcheckout
+            inputs:
+              targetType: 'inline'
+              script: |
+                git checkout -q ${{ variables['Build.SourceBranchName'] }}
+              failOnStderr: true
+
+          - task: Bash@3
+            displayName: Get release version
+            name: getreleaseversion
+            inputs:
+              targetType: 'inline'
+              script: |
+                releaseVersion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
+                releaseVersion=${releaseVersion/-SNAPSHOT/}
+                echo "##vso[task.setvariable variable=version;isOutput=true]$releaseVersion"
+                echo "Current Release Version ${releaseVersion}"
+              failOnStderr: true
+
+          - task: Maven@3
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'release:clean release:prepare '
+              options: '--batch-mode -DscmCommentPrefix="[skip ci]" -s $(settingsxml.secureFilePath) -T1C -Darguments=-DskipTests -Dmaven.repo.local=$(maven_cache_folder)'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.8'
+              mavenVersionOption: 'Default'
+              mavenOptions: '-Xmx3072m'
+              mavenAuthenticateFeed: false
+              effectivePomSkip: true
+              sonarQubeRunAnalysis: false
+
+          - task: Bash@3
+            displayName: Git push on develop branch
+            name: gitpushdev
+            inputs:
+              targetType: 'inline'
+              script: |
+                git push -q origin ${{ variables['Build.SourceBranchName'] }}
+              failOnStderr: true
+
+          - task: Bash@3
+            displayName: Git push on tag
+            name: gitpushtag
+            inputs:
+              targetType: 'inline'
+              script: |
+                git push -q origin --tags
+              failOnStderr: true
+
+          - task: Bash@3
+            displayName: Git create tmp branch
+            name: gitcreatetmp
+            inputs:
+              targetType: 'inline'
+              script: |
+                git checkout -q -b tmp/$(getreleaseversion.version) card-manager-$(getreleaseversion.version)
+              failOnStderr: true
+
+          - task: Bash@3
+            displayName: Git push on tmp branch
+            name: gitpushtmp
+            inputs:
+              targetType: 'inline'
+              script: |
+                git push -q --set-upstream origin tmp/$(getreleaseversion.version)
+
   - stage: POM
     displayName: POM
-    condition: eq(variables.isToDeploy, true)
+    condition: and(eq(variables.isToDeploy, true),or(eq(variables.isSIT, true),eq(variables.isUAT, true),eq(variables.isPROD, true)))
     jobs:
       - job: POM
         displayName: POM
@@ -260,48 +362,48 @@ stages:
                     command: apply
                     useConfigurationFile: true
                     configuration: $(tkmmscardmanager.secureFilePath)
-                #      - task: KubernetesManifest@0
-                #        displayName: "Create secret tkm-card-manager-kv-store-creds"
-                #        inputs:
-                #          action: createSecret
-                #          secretType: generic
-                #          secretName: tkm-card-manager-kv-store-creds
-                #          secretArguments: --from-literal=clientid=$(AZURE_KEYVAULT_CLIENT_ID) --from-literal=clientsecret=$(parameters.clientsecret)
-                #          kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
-                #          namespace: tkm-sit
-                - task: Kubernetes@1
-                  displayName: "Create spc tkm-card-manager-spc"
-                  inputs:
-                    connectionType: Kubernetes Service Connection
-                    kubernetesServiceEndpoint: 'ddsakstest-self-connection-tkm-sit'
-                    namespace: tkm-sit
-                    command: apply
-                    useConfigurationFile: true
-                    inline: |
-                      apiVersion: secrets-store.csi.x-k8s.io/v1
-                      kind: SecretProviderClass
-                      metadata:
-                        name: tkm-card-manager-spc
-                      spec:
-                        provider: azure
-                        parameters:
-                          usePodIdentity: "false"
-                          useVMManagedIdentity: "false"
-                          userAssignedIdentityID: ""
-                          keyvaultName: "kmn-tkm-pagopa-test"
-                          tenantId: "375b6ea7-a878-46bc-9a34-281c7b9e8d3d"
-                          objects: |
-                            array:
-                              - |
-                                objectName: test-tkm-kv
-                                objectType: secret
-                                objectVersion: ""
-                        secretObjects:
-                          - secretName: name-secret-name
-                            type: Opaque
-                            data:
-                              - key: NOME_ENV_VAR
-                                objectName: test-tkm-kv
+#                      - task: KubernetesManifest@0
+#                        displayName: "Create secret tkm-card-manager-kv-store-creds"
+#                        inputs:
+#                          action: createSecret
+#                          secretType: generic
+#                          secretName: tkm-card-manager-kv-store-creds
+#                          secretArguments: --from-literal=clientid=$(AZURE_KEYVAULT_CLIENT_ID) --from-literal=clientsecret=$(parameters.clientsecret)
+#                          kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
+#                          namespace: tkm-sit
+#                - task: Kubernetes@1
+#                  displayName: "Create spc tkm-card-manager-spc"
+#                  inputs:
+#                    connectionType: Kubernetes Service Connection
+#                    kubernetesServiceEndpoint: 'ddsakstest-self-connection-tkm-sit'
+#                    namespace: tkm-sit
+#                    command: apply
+#                    useConfigurationFile: true
+#                    inline: |
+#                      apiVersion: secrets-store.csi.x-k8s.io/v1
+#                      kind: SecretProviderClass
+#                      metadata:
+#                        name: tkm-card-manager-spc
+#                      spec:
+#                        provider: azure
+#                        parameters:
+#                          usePodIdentity: "false"
+#                          useVMManagedIdentity: "false"
+#                          userAssignedIdentityID: ""
+#                          keyvaultName: "kmn-tkm-pagopa-test"
+#                          tenantId: "375b6ea7-a878-46bc-9a34-281c7b9e8d3d"
+#                          objects: |
+#                            array:
+#                              - |
+#                                objectName: test-tkm-kv
+#                                objectType: secret
+#                                objectVersion: ""
+#                        secretObjects:
+#                          - secretName: name-secret-name
+#                            type: Opaque
+#                            data:
+#                              - key: NOME_ENV_VAR
+#                                objectName: test-tkm-kv
                 - task: KubernetesManifest@0
                   displayName: Deploy to Kubernetes cluster
                   inputs:
@@ -316,6 +418,7 @@ stages:
                       $(imagePullSecret)
                     containers: |
                       $(containerRegistry)/$(imageRepository):$(pomversion)
+
   - stage: UAT
     displayName: UAT
     dependsOn: POM
