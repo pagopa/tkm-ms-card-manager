@@ -288,7 +288,7 @@ stages:
 
       - deployment: Deploy
         displayName: Deploy
-        dependsOn: Publish
+        dependsOn: Build
         condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
         pool:
           name: uat_agent_pool
