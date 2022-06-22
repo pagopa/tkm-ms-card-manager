@@ -12,8 +12,6 @@ trigger:
 pr: none
 
 variables:
-  System.Debug: true
-
   dockerfileRelativePath: 'Dockerfile'
 
   # Agent VM image name for Build
@@ -27,22 +25,22 @@ variables:
   isUAT: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))]
   isPROD: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
 
-  ${{ if eq(variables.isSIT, true) }}:
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release/sit') }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: 'cstaruatregistry.azurecr.io'
     enviroment: sit
     imagePullSecret: 'tkmsitregistry-auth'
-  ${{ if eq(variables.isUAT, true) }}:
+  ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')) }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: 'cstaruatregistry.azurecr.io'
     enviroment: uat
     imagePullSecret: 'tkmuatregistry-auth'
-  ${{ if eq(variables.isPROD, true) }}:
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: ''
     imagePullSecret: ''
     enviroment: prod
-  ${{ if and(ne(variables.isSIT, true), ne(variables.isUAT, true), ne(variables.isPROD, true)) }}:
+  ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
     dockerRegistryServiceConnection: ''
     enviroment: sit
 
