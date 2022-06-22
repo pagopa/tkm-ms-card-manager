@@ -12,6 +12,8 @@ trigger:
 pr: none
 
 variables:
+  System.Debug: true
+
   dockerfileRelativePath: 'Dockerfile'
 
   # Agent VM image name for Build
@@ -252,20 +254,17 @@ stages:
               mavenAuthenticateFeed: false
               effectivePomSkip: true
               sonarQubeRunAnalysis: false
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
-            inputs:
-              targetPath: '$(Build.Repository.LocalPath)/manifests'
-              artifact: 'manifests'
-              publishLocation: 'pipeline'
 
-      - job: Publish
-        displayName: Publish
-        dependsOn: Build
-        pool:
-          vmImage: $(vmImageNameDefault)
-        steps:
+          - task: Bash@3
+            displayName: PrintInfo
+            name: PrintInfo
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "$(dockerRegistryServiceConnection)"
+                echo "$(imageRepository)"
+              failOnStderr: true
+
           - task: Docker@2
             displayName: Build and push an image to container registry
             condition: succeeded()
