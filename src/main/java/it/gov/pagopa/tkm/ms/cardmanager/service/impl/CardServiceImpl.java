@@ -126,7 +126,7 @@ public class CardServiceImpl implements CardService {
                 // there is already a card in DB with the same PAR of input one but different hpan
                 // the card in DB should be a "fake" card used to temporary store tokens
 
-                log.info("Also found card by par " + par + " with id " + cardByPar.getId() + " and hpan " + cardByPar.getHpan() + "merging");
+                log.info("Also found card by par " + par + " with id " + cardByPar.getId() + " and hpan " + cardByPar.getHpan() + " merging");
                 log.trace(cardByPar);
 
                 // if the card in the DB has a different not null hpan throw exception
