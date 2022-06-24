@@ -252,7 +252,38 @@ stages:
               mavenAuthenticateFeed: false
               effectivePomSkip: true
               sonarQubeRunAnalysis: false
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Atrifact manifests'
+            condition: and(succeeded(), eq(variables.isToDeploy, true))
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/manifests'
+              artifact: 'manifests'
+              publishLocation: 'pipeline'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Atrifact target'
+            condition: and(succeeded(), eq(variables.isToDeploy, true))
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/target'
+              artifact: 'target'
+              publishLocation: 'pipeline'
 
+      - job: Push
+        displayName: Push
+        dependsOn: Build
+        condition: succeeded()
+        pool:
+          vmImage: $(vmImageNameDefault)
+        steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'current'
+              artifactName: 'manifests'
+              targetPath: '$(Pipeline.Workspace)/manifests'
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'current'
+              artifactName: 'target'
+              targetPath: '$(Pipeline.Workspace)/target'
           - task: Bash@3
             displayName: PrintInfo
             name: PrintInfo
@@ -262,31 +293,22 @@ stages:
                 echo "$(dockerRegistryServiceConnection)"
                 echo "$(imageRepository)"
               failOnStderr: true
-
           - task: Docker@2
             displayName: Build and push an image to container registry
-            condition: succeeded()
             inputs:
               containerRegistry: '$(dockerRegistryServiceConnection)'
               repository: '$(imageRepository)'
               command: 'buildAndPush'
-              Dockerfile: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)'
-              buildContext: '$(Build.Repository.LocalPath)'
+              Dockerfile: '$(Pipeline.Workspace)/$(dockerfileRelativePath)'
+              buildContext: '$(Pipeline.Workspace)'
               tags: |
                 $(Build.BuildId)
                 latest
                 $(pomversion)
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
-            inputs:
-              targetPath: '$(Build.Repository.LocalPath)/manifests'
-              artifact: 'manifests'
-              publishLocation: 'pipeline'
 
       - deployment: Deploy
         displayName: Deploy
-        dependsOn: Build
+        dependsOn: Push
         condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
         pool:
           name: uat_agent_pool
@@ -309,70 +331,70 @@ stages:
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
                     manifests: |
                       $(Pipeline.Workspace)/manifests/namespace-$(enviroment).yml
-                - task: DownloadSecureFile@1
-                  displayName: 'download keyvault-connection-informations.yaml'
-                  name: keyvaultconnectioninformations
-                  inputs:
-                    secureFile: keyvault-connection-informations-$(enviroment).yaml
-                    retryCount: '2'
-                - task: DownloadSecureFile@1
-                  displayName: 'download jvm.yaml'
-                  name: jvm
-                  inputs:
-                    secureFile: jvm-$(enviroment).yaml
-                    retryCount: '2'
-                - task: DownloadSecureFile@1
-                  displayName: 'download kafka-log-configuration.yaml'
-                  name: kafkalogconfiguration
-                  inputs:
-                    secureFile: kafka-log-configuration-$(enviroment).yaml
-                    retryCount: '2'
-                - task: DownloadSecureFile@1
-                  displayName: 'download tkmmscardmanager.yaml'
-                  name: tkmmscardmanager
-                  inputs:
-                    secureFile: tkmmscardmanager-$(enviroment).yaml
-                    retryCount: '2'
-                - task: Kubernetes@1
-                  displayName: 'apply keyvault-connection-informations.yaml'
-                  inputs:
-                    connectionType: Azure Resource Manager
-                    azureSubscriptionEndpoint: 'PM-subscription-sit'
-                    azureResourceGroup: 'DDS-Kubernetes'
-                    kubernetesCluster: 'ddsakstest'
-                    command: apply
-                    useConfigurationFile: true
-                    configuration: $(keyvaultconnectioninformations.secureFilePath)
-                - task: Kubernetes@1
-                  displayName: 'apply jvm.yaml'
-                  inputs:
-                    connectionType: Azure Resource Manager
-                    azureSubscriptionEndpoint: 'PM-subscription-sit'
-                    azureResourceGroup: 'DDS-Kubernetes'
-                    kubernetesCluster: 'ddsakstest'
-                    command: apply
-                    useConfigurationFile: true
-                    configuration: $(jvm.secureFilePath)
-                - task: Kubernetes@1
-                  displayName: 'apply kafka-log-configuration.yaml'
-                  inputs:
-                    connectionType: Azure Resource Manager
-                    azureSubscriptionEndpoint: 'PM-subscription-sit'
-                    azureResourceGroup: 'DDS-Kubernetes'
-                    kubernetesCluster: 'ddsakstest'
-                    command: apply
-                    useConfigurationFile: true
-                    configuration: $(kafkalogconfiguration.secureFilePath)
-                - task: Kubernetes@1
-                  displayName: 'apply tkmmscardmanager.yaml'
-                  inputs:
-                    connectionType: Azure Resource Manager
-                    azureSubscriptionEndpoint: 'PM-subscription-sit'
-                    azureResourceGroup: 'DDS-Kubernetes'
-                    kubernetesCluster: 'ddsakstest'
-                    command: apply
-                    useConfigurationFile: true
-                    configuration: $(tkmmscardmanager.secureFilePath)
+#                - task: DownloadSecureFile@1
+#                  displayName: 'download keyvault-connection-informations.yaml'
+#                  name: keyvaultconnectioninformations
+#                  inputs:
+#                    secureFile: keyvault-connection-informations-$(enviroment).yaml
+#                    retryCount: '2'
+#                - task: DownloadSecureFile@1
+#                  displayName: 'download jvm.yaml'
+#                  name: jvm
+#                  inputs:
+#                    secureFile: jvm-$(enviroment).yaml
+#                    retryCount: '2'
+#                - task: DownloadSecureFile@1
+#                  displayName: 'download kafka-log-configuration.yaml'
+#                  name: kafkalogconfiguration
+#                  inputs:
+#                    secureFile: kafka-log-configuration-$(enviroment).yaml
+#                    retryCount: '2'
+#                - task: DownloadSecureFile@1
+#                  displayName: 'download tkmmscardmanager.yaml'
+#                  name: tkmmscardmanager
+#                  inputs:
+#                    secureFile: tkmmscardmanager-$(enviroment).yaml
+#                    retryCount: '2'
+#                - task: Kubernetes@1
+#                  displayName: 'apply keyvault-connection-informations.yaml'
+#                  inputs:
+#                    connectionType: Azure Resource Manager
+#                    azureSubscriptionEndpoint: 'PM-subscription-sit'
+#                    azureResourceGroup: 'DDS-Kubernetes'
+#                    kubernetesCluster: 'ddsakstest'
+#                    command: apply
+#                    useConfigurationFile: true
+#                    configuration: $(keyvaultconnectioninformations.secureFilePath)
+#                - task: Kubernetes@1
+#                  displayName: 'apply jvm.yaml'
+#                  inputs:
+#                    connectionType: Azure Resource Manager
+#                    azureSubscriptionEndpoint: 'PM-subscription-sit'
+#                    azureResourceGroup: 'DDS-Kubernetes'
+#                    kubernetesCluster: 'ddsakstest'
+#                    command: apply
+#                    useConfigurationFile: true
+#                    configuration: $(jvm.secureFilePath)
+#                - task: Kubernetes@1
+#                  displayName: 'apply kafka-log-configuration.yaml'
+#                  inputs:
+#                    connectionType: Azure Resource Manager
+#                    azureSubscriptionEndpoint: 'PM-subscription-sit'
+#                    azureResourceGroup: 'DDS-Kubernetes'
+#                    kubernetesCluster: 'ddsakstest'
+#                    command: apply
+#                    useConfigurationFile: true
+#                    configuration: $(kafkalogconfiguration.secureFilePath)
+#                - task: Kubernetes@1
+#                  displayName: 'apply tkmmscardmanager.yaml'
+#                  inputs:
+#                    connectionType: Azure Resource Manager
+#                    azureSubscriptionEndpoint: 'PM-subscription-sit'
+#                    azureResourceGroup: 'DDS-Kubernetes'
+#                    kubernetesCluster: 'ddsakstest'
+#                    command: apply
+#                    useConfigurationFile: true
+#                    configuration: $(tkmmscardmanager.secureFilePath)
                 - task: AzureKeyVault@2
                   inputs:
                     azureSubscription: 'TKM-Subscription-sit'
@@ -412,15 +434,174 @@ stages:
                           objects: |
                             array:
                               - |
-                                objectName: test-tkm-kv
+                                objectName: sit-tz
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-appender-bootstrap-servers
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-enable-file-appender
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-enable-kafka-appender
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-log-file
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-appender-bootstrap-servers
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-azure-keyvault-profile
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-azure-keyvault-client-id
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-azure-keyvault-client-key
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-azure-keyvault-tenant-id
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-azure-keyvault-uri
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-consent-manager-url
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-db-server
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-delete-queue-group
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-delete-queue-topic
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-dlt-max-number-of-threads
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-dlt-queue-group
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-dlt-queue-topic
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-dlt-read-cron
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-group-id
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-read-queue-group
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-read-queue-topic
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-write-queue-group
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-write-queue-topic
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-rtd-hashing-url
+                                objectType: secret
+                                objectVersion: ""
+                              - |
+                                objectName: sit-kafka-cstar-bootstrap-servers
                                 objectType: secret
                                 objectVersion: ""
                         secretObjects:
-                          - secretName: name-secret-name
+                          - secretName: jvm
                             type: Opaque
                             data:
-                              - key: NOME_ENV_VAR
-                                objectName: test-tkm-kv
+                              - key: TZ
+                                objectName: sit-tz
+                          - secretName: kafka-log-configuration
+                            type: Opaque
+                            data:
+                              - key: KAFKA_APPENDER_BOOTSTRAP_SERVERS
+                                objectName: sit-kafka-appender-bootstrap-servers
+                              - key: ENABLE_FILE_APPENDER
+                                objectName: sit-enable-file-appender
+                              - key: ENABLE_KAFKA_APPENDER
+                                objectName: sit-enable-kafka-appender
+                              - key: LOG_FILE
+                                objectName: sit-log-file
+                              - key: KAFKA_APPENDER_TOPIC
+                                objectName: sit-kafka-appender-topic
+                          - secretName: keyvault-connection-informations
+                            type: Opaque
+                            data:
+                              - key: AZURE_KEYVAULT_PROFILE
+                                objectName: sit-azure-keyvault-profile
+                              - key: AZURE_KEYVAULT_CLIENT_ID
+                                objectName: sit-azure-keyvault-client-id
+                              - key: AZURE_KEYVAULT_CLIENT_KEY
+                                objectName: sit-azure-keyvault-client-key
+                              - key: AZURE_KEYVAULT_TENANT_ID
+                                objectName: sit-azure-keyvault-tenant-id
+                              - key: AZURE_KEYVAULT_URI
+                                objectName: sit-azure-keyvault-uri
+                          - secretName: tkmmscardmanager
+                            type: Opaque
+                            data:
+                              - key: CONSENT_MANAGER_URL
+                                objectName: sit-consent-manager-url
+                              - key: DB_SERVER
+                                objectName: sit-db-server
+                              - key: KAFKA_DELETE_QUEUE_GROUP
+                                objectName: sit-kafka-delete-queue-group
+                              - key: KAFKA_DELETE_QUEUE_TOPIC
+                                objectName: sit-kafka-delete-queue-topic
+                              - key: KAFKA_DLT_MAX_NUMBER_OF_THREADS
+                                objectName: sit-kafka-dlt-max-number-of-threads
+                              - key: KAFKA_DLT_QUEUE_GROUP
+                                objectName: sit-kafka-dlt-queue-group
+                              - key: KAFKA_DLT_QUEUE_TOPIC
+                                objectName: sit-kafka-dlt-queue-topic
+                              - key: KAFKA_DLT_READ_CRON
+                                objectName: sit-kafka-dlt-read-cron
+                              - key: KAFKA_GROUP_ID
+                                objectName: sit-kafka-group-id
+                              - key: KAFKA_READ_QUEUE_GROUP
+                                objectName: sit-kafka-read-queue-group
+                              - key: KAFKA_READ_QUEUE_TOPIC
+                                objectName: sit-kafka-read-queue-topic
+                              - key: KAFKA_WRITE_QUEUE_GROUP
+                                objectName: sit-kafka-write-queue-group
+                              - key: KAFKA_WRITE_QUEUE_TOPIC
+                                objectName: sit-kafka-write-queue-topic
+                              - key: RTD_HASHING_URL
+                                objectName: sit-rtd-hashing-url
+                              - key: KAFKA_CSTAR_BOOTSTRAP_SERVERS
+                                objectName: sit-kafka-cstar-bootstrap-servers
                 - task: KubernetesManifest@0
                   displayName: Deploy to Kubernetes cluster
                   inputs:
