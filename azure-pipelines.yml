@@ -260,15 +260,21 @@ stages:
                     command: apply
                     useConfigurationFile: true
                     configuration: $(tkmmscardmanager.secureFilePath)
-                #      - task: KubernetesManifest@0
-                #        displayName: "Create secret tkm-card-manager-kv-store-creds"
-                #        inputs:
-                #          action: createSecret
-                #          secretType: generic
-                #          secretName: tkm-card-manager-kv-store-creds
-                #          secretArguments: --from-literal=clientid=$(AZURE_KEYVAULT_CLIENT_ID) --from-literal=clientsecret=$(parameters.clientsecret)
-                #          kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
-                #          namespace: tkm-sit
+                - task: AzureKeyVault@2
+                  inputs:
+                    azureSubscription: 'TKM-Subscription-sit'
+                    KeyVaultName: 'kmn-tkm-pagopa-test'
+                    SecretsFilter: '*'
+                    RunAsPreJob: false
+                - task: KubernetesManifest@0
+                  displayName: "Create secret tkm-card-manager-kv-store-creds"
+                  inputs:
+                    action: createSecret
+                    secretType: generic
+                    secretName: tkm-card-manager-kv-store-creds
+                    secretArguments: --from-literal=clientid=$(sit-clientid) --from-literal=clientsecret=$(sit-clientsecret)
+                    kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
+                    namespace: tkm-sit
                 - task: Kubernetes@1
                   displayName: "Create spc tkm-card-manager-spc"
                   inputs:
@@ -289,7 +295,7 @@ stages:
                           useVMManagedIdentity: "false"
                           userAssignedIdentityID: ""
                           keyvaultName: "kmn-tkm-pagopa-test"
-                          tenantId: "375b6ea7-a878-46bc-9a34-281c7b9e8d3d"
+                          tenantId: $(sit-tenantid)
                           objects: |
                             array:
                               - |
