@@ -33,8 +33,8 @@ spec:
             readOnly: true
             volumeAttributes:
               secretProviderClass: tkm-card-manager-spc
-            #nodePublishSecretRef:
-            #  name: tkm-card-manager-kv-store-creds
+            nodePublishSecretRef:
+              name: tkm-card-manager-kv-store-creds
       containers:
         - name: tkmmscardmanagersit
           image: cstaruatregistry.azurecr.io/tkmmscardmanager
