@@ -40,15 +40,15 @@ spec:
           image: cstaruatregistry.azurecr.io/tkmmscardmanager
           ports:
             - containerPort: 8080
-          envFrom:
-            - secretRef:
-                name: keyvault-connection-informations
-            - configMapRef:
-                name: kafka-log-configuration
-            - configMapRef:
-                name: tkmmscardmanager
-            - configMapRef:
-                name: jvm
+#          envFrom:
+#            - secretRef:
+#                name: keyvault-connection-informations
+#            - configMapRef:
+#                name: kafka-log-configuration
+#            - configMapRef:
+#                name: tkmmscardmanager
+#            - configMapRef:
+#                name: jvm
           resources:
             requests:
               memory: 4Gi
@@ -67,11 +67,136 @@ spec:
               drop:
                 - all
           env:
-            - name: NOME_ENV_VAR
+            - name: TZ
               valueFrom:
                 secretKeyRef:
-                  key: NOME_ENV_VAR
-                  name: name-secret-name
+                  key: TZ
+                  name: jvm
+            - name: KAFKA_APPENDER_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_APPENDER_BOOTSTRAP_SERVERS
+                  name: kafka-log-configuration
+            - name: ENABLE_FILE_APPENDER
+              valueFrom:
+                secretKeyRef:
+                  key: ENABLE_FILE_APPENDER
+                  name: kafka-log-configuration
+            - name: ENABLE_KAFKA_APPENDER
+              valueFrom:
+                secretKeyRef:
+                  key: ENABLE_KAFKA_APPENDER
+                  name: kafka-log-configuration
+            - name: LOG_FILE
+              valueFrom:
+                secretKeyRef:
+                  key: LOG_FILE
+                  name: kafka-log-configuration
+            - name: KAFKA_APPENDER_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_APPENDER_TOPIC
+                  name: kafka-log-configuration
+            - name: AZURE_KEYVAULT_PROFILE
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_PROFILE
+                  name: keyvault-connection-informations
+            - name: AZURE_KEYVAULT_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_CLIENT_ID
+                  name: keyvault-connection-informations
+            - name: AZURE_KEYVAULT_CLIENT_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_CLIENT_KEY
+                  name: keyvault-connection-informations
+            - name: AZURE_KEYVAULT_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_TENANT_ID
+                  name: keyvault-connection-informations
+            - name: AZURE_KEYVAULT_URI
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_URI
+                  name: keyvault-connection-informations
+            - name: CONSENT_MANAGER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: CONSENT_MANAGER_URL
+                  name: tkmmscardmanager
+            - name: DB_SERVER
+              valueFrom:
+                secretKeyRef:
+                  key: DB_SERVER
+                  name: tkmmscardmanager
+            - name: KAFKA_DELETE_QUEUE_GROUP
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DELETE_QUEUE_GROUP
+                  name: tkmmscardmanager
+            - name: KAFKA_DELETE_QUEUE_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DELETE_QUEUE_TOPIC
+                  name: tkmmscardmanager
+            - name: KAFKA_DLT_MAX_NUMBER_OF_THREADS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DLT_MAX_NUMBER_OF_THREADS
+                  name: tkmmscardmanager
+            - name: KAFKA_DLT_QUEUE_GROUP
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DLT_QUEUE_GROUP
+                  name: tkmmscardmanager
+            - name: KAFKA_DLT_QUEUE_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DLT_QUEUE_TOPIC
+                  name: tkmmscardmanager
+            - name: KAFKA_DLT_READ_CRON
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DLT_READ_CRON
+                  name: tkmmscardmanager
+            - name: KAFKA_GROUP_ID
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_GROUP_ID
+                  name: tkmmscardmanager
+            - name: KAFKA_READ_QUEUE_GROUP
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_READ_QUEUE_GROUP
+                  name: tkmmscardmanager
+            - name: KAFKA_READ_QUEUE_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_READ_QUEUE_TOPIC
+                  name: tkmmscardmanager
+            - name: KAFKA_WRITE_QUEUE_GROUP
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_WRITE_QUEUE_GROUP
+                  name: tkmmscardmanager
+            - name: KAFKA_WRITE_QUEUE_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_WRITE_QUEUE_TOPIC
+                  name: tkmmscardmanager
+            - name: RTD_HASHING_URL
+              valueFrom:
+                secretKeyRef:
+                  key: RTD_HASHING_URL
+                  name: tkmmscardmanager
+            - name: KAFKA_CSTAR_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_CSTAR_BOOTSTRAP_SERVERS
+                  name: tkmmscardmanager
           livenessProbe:
             httpGet:
               path: /actuator/health
