@@ -299,7 +299,7 @@ stages:
               containerRegistry: '$(dockerRegistryServiceConnection)'
               repository: '$(imageRepository)'
               command: 'buildAndPush'
-              Dockerfile: '$(Pipeline.Workspace)/$(dockerfileRelativePath)'
+              Dockerfile: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)'
               buildContext: '$(Pipeline.Workspace)'
               tags: |
                 $(Build.BuildId)
