@@ -252,7 +252,38 @@ stages:
               mavenAuthenticateFeed: false
               effectivePomSkip: true
               sonarQubeRunAnalysis: false
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Atrifact manifests'
+            condition: and(succeeded(), eq(variables.isToDeploy, true))
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/manifests'
+              artifact: 'manifests'
+              publishLocation: 'pipeline'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Atrifact target'
+            condition: and(succeeded(), eq(variables.isToDeploy, true))
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/target'
+              artifact: 'target'
+              publishLocation: 'pipeline'
 
+      - job: Push
+        displayName: Push
+        dependsOn: Build
+        condition: succeeded()
+        pool:
+          vmImage: $(vmImageNameDefault)
+        steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'current'
+              artifactName: 'manifests'
+              targetPath: '$(Pipeline.Workspace)/manifests'
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'current'
+              artifactName: 'target'
+              targetPath: '$(Pipeline.Workspace)/target'
           - task: Bash@3
             displayName: PrintInfo
             name: PrintInfo
@@ -262,31 +293,22 @@ stages:
                 echo "$(dockerRegistryServiceConnection)"
                 echo "$(imageRepository)"
               failOnStderr: true
-
           - task: Docker@2
             displayName: Build and push an image to container registry
-            condition: succeeded()
             inputs:
               containerRegistry: '$(dockerRegistryServiceConnection)'
               repository: '$(imageRepository)'
               command: 'buildAndPush'
-              Dockerfile: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)'
-              buildContext: '$(Build.Repository.LocalPath)'
+              Dockerfile: '$(Pipeline.Workspace)/$(dockerfileRelativePath)'
+              buildContext: '$(Pipeline.Workspace)'
               tags: |
                 $(Build.BuildId)
                 latest
                 $(pomversion)
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
-            inputs:
-              targetPath: '$(Build.Repository.LocalPath)/manifests'
-              artifact: 'manifests'
-              publishLocation: 'pipeline'
 
       - deployment: Deploy
         displayName: Deploy
-        dependsOn: Build
+        dependsOn: Push
         condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
         pool:
           name: uat_agent_pool
