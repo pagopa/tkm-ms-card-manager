@@ -605,21 +605,21 @@ stages:
 #                              - key: KAFKA_CSTAR_BOOTSTRAP_SERVERS
 #                                objectName: sit-kafka-cstar-bootstrap-servers
                 - template: 'templates/env-configurations-common.yml'
-                    parameters:
-                      azureSubscription: 'TKM-Subscription-sit'
-                      KeyVaultName: 'kmn-tkm-pagopa-test'
-                      secretName: 'tkm-common-kv-store-creds'
-                      spcClassName: 'tkm-common-spc'
-                      env: 'sit'
-                      kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
+                  parameters:
+                    azureSubscription: 'TKM-Subscription-sit'
+                    KeyVaultName: 'kmn-tkm-pagopa-test'
+                    secretName: 'tkm-common-kv-store-creds'
+                    spcClassName: 'tkm-common-spc'
+                    env: 'sit'
+                    kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
                 - template: 'templates/env-configurations-card-manager.yml'
-                    parameters:
-                      azureSubscription: 'TKM-Subscription-sit'
-                      KeyVaultName: 'kmn-tkm-pagopa-test'
-                      secretName: 'tkm-card-manager-kv-store-creds'
-                      spcClassName: 'tkm-card-manager-spc'
-                      env: 'sit'
-                      kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
+                  parameters:
+                    azureSubscription: 'TKM-Subscription-sit'
+                    KeyVaultName: 'kmn-tkm-pagopa-test'
+                    secretName: 'tkm-card-manager-kv-store-creds'
+                    spcClassName: 'tkm-card-manager-spc'
+                    env: 'sit'
+                    kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
                 - task: KubernetesManifest@0
                   displayName: Deploy to Kubernetes cluster
                   inputs:
