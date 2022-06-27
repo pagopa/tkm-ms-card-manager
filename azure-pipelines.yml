@@ -395,213 +395,231 @@ stages:
 #                    command: apply
 #                    useConfigurationFile: true
 #                    configuration: $(tkmmscardmanager.secureFilePath)
-                - task: AzureKeyVault@2
-                  inputs:
+
+
+#                - task: AzureKeyVault@2
+#                  inputs:
+#                    azureSubscription: 'TKM-Subscription-sit'
+#                    KeyVaultName: 'kmn-tkm-pagopa-test'
+#                    SecretsFilter: '*'
+#                    RunAsPreJob: false
+#                - task: KubernetesManifest@0
+#                  displayName: "Create secret tkm-card-manager-kv-store-creds"
+#                  inputs:
+#                    action: createSecret
+#                    secretType: generic
+#                    secretName: tkm-card-manager-kv-store-creds
+#                    secretArguments: --from-literal=clientid=$(sit-clientid) --from-literal=clientsecret=$(sit-clientsecret)
+#                    kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
+#                    namespace: tkm-sit
+#                - task: Kubernetes@1
+#                  displayName: "Create spc tkm-card-manager-spc"
+#                  inputs:
+#                    connectionType: Kubernetes Service Connection
+#                    kubernetesServiceEndpoint: 'ddsakstest-self-connection-tkm-sit'
+#                    namespace: tkm-sit
+#                    command: apply
+#                    useConfigurationFile: true
+#                    inline: |
+#                      apiVersion: secrets-store.csi.x-k8s.io/v1
+#                      kind: SecretProviderClass
+#                      metadata:
+#                        name: tkm-card-manager-spc
+#                      spec:
+#                        provider: azure
+#                        parameters:
+#                          usePodIdentity: "false"
+#                          useVMManagedIdentity: "false"
+#                          userAssignedIdentityID: ""
+#                          keyvaultName: "kmn-tkm-pagopa-test"
+#                          tenantId: $(sit-tenantid)
+#                          objects: |
+#                            array:
+#                              - |
+#                                objectName: sit-tz
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-appender-bootstrap-servers
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-enable-file-appender
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-enable-kafka-appender
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-log-file
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-appender-topic
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-azure-keyvault-profile
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-azure-keyvault-client-id
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-azure-keyvault-client-key
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-azure-keyvault-tenant-id
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-azure-keyvault-uri
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-consent-manager-url
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-db-server
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-delete-queue-group
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-delete-queue-topic
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-dlt-max-number-of-threads
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-dlt-queue-group
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-dlt-queue-topic
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-dlt-read-cron
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-group-id
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-read-queue-group
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-read-queue-topic
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-write-queue-group
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-write-queue-topic
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-rtd-hashing-url
+#                                objectType: secret
+#                                objectVersion: ""
+#                              - |
+#                                objectName: sit-kafka-cstar-bootstrap-servers
+#                                objectType: secret
+#                                objectVersion: ""
+#                        secretObjects:
+#                          - secretName: jvm
+#                            type: Opaque
+#                            data:
+#                              - key: TZ
+#                                objectName: sit-tz
+#                          - secretName: kafka-log-configuration
+#                            type: Opaque
+#                            data:
+#                              - key: KAFKA_APPENDER_BOOTSTRAP_SERVERS
+#                                objectName: sit-kafka-appender-bootstrap-servers
+#                              - key: ENABLE_FILE_APPENDER
+#                                objectName: sit-enable-file-appender
+#                              - key: ENABLE_KAFKA_APPENDER
+#                                objectName: sit-enable-kafka-appender
+#                              - key: LOG_FILE
+#                                objectName: sit-log-file
+#                              - key: KAFKA_APPENDER_TOPIC
+#                                objectName: sit-kafka-appender-topic
+#                          - secretName: keyvault-connection-informations
+#                            type: Opaque
+#                            data:
+#                              - key: AZURE_KEYVAULT_PROFILE
+#                                objectName: sit-azure-keyvault-profile
+#                              - key: AZURE_KEYVAULT_CLIENT_ID
+#                                objectName: sit-azure-keyvault-client-id
+#                              - key: AZURE_KEYVAULT_CLIENT_KEY
+#                                objectName: sit-azure-keyvault-client-key
+#                              - key: AZURE_KEYVAULT_TENANT_ID
+#                                objectName: sit-azure-keyvault-tenant-id
+#                              - key: AZURE_KEYVAULT_URI
+#                                objectName: sit-azure-keyvault-uri
+#                          - secretName: tkmmscardmanager
+#                            type: Opaque
+#                            data:
+#                              - key: CONSENT_MANAGER_URL
+#                                objectName: sit-consent-manager-url
+#                              - key: DB_SERVER
+#                                objectName: sit-db-server
+#                              - key: KAFKA_DELETE_QUEUE_GROUP
+#                                objectName: sit-kafka-delete-queue-group
+#                              - key: KAFKA_DELETE_QUEUE_TOPIC
+#                                objectName: sit-kafka-delete-queue-topic
+#                              - key: KAFKA_DLT_MAX_NUMBER_OF_THREADS
+#                                objectName: sit-kafka-dlt-max-number-of-threads
+#                              - key: KAFKA_DLT_QUEUE_GROUP
+#                                objectName: sit-kafka-dlt-queue-group
+#                              - key: KAFKA_DLT_QUEUE_TOPIC
+#                                objectName: sit-kafka-dlt-queue-topic
+#                              - key: KAFKA_DLT_READ_CRON
+#                                objectName: sit-kafka-dlt-read-cron
+#                              - key: KAFKA_GROUP_ID
+#                                objectName: sit-kafka-group-id
+#                              - key: KAFKA_READ_QUEUE_GROUP
+#                                objectName: sit-kafka-read-queue-group
+#                              - key: KAFKA_READ_QUEUE_TOPIC
+#                                objectName: sit-kafka-read-queue-topic
+#                              - key: KAFKA_WRITE_QUEUE_GROUP
+#                                objectName: sit-kafka-write-queue-group
+#                              - key: KAFKA_WRITE_QUEUE_TOPIC
+#                                objectName: sit-kafka-write-queue-topic
+#                              - key: RTD_HASHING_URL
+#                                objectName: sit-rtd-hashing-url
+#                              - key: KAFKA_CSTAR_BOOTSTRAP_SERVERS
+#                                objectName: sit-kafka-cstar-bootstrap-servers
+                - template: 'templates/env-configurations-common.yml'
+                  parameters:
                     azureSubscription: 'TKM-Subscription-sit'
                     KeyVaultName: 'kmn-tkm-pagopa-test'
-                    SecretsFilter: '*'
-                    RunAsPreJob: false
-                - task: KubernetesManifest@0
-                  displayName: "Create secret tkm-card-manager-kv-store-creds"
-                  inputs:
-                    action: createSecret
-                    secretType: generic
-                    secretName: tkm-card-manager-kv-store-creds
-                    secretArguments: --from-literal=clientid=$(sit-clientid) --from-literal=clientsecret=$(sit-clientsecret)
+                    secretName: 'tkm-common-kv-store-creds'
+                    spcClassName: 'tkm-common-spc'
+                    env: 'sit'
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
-                    namespace: tkm-sit
-                - task: Kubernetes@1
-                  displayName: "Create spc tkm-card-manager-spc"
-                  inputs:
-                    connectionType: Kubernetes Service Connection
-                    kubernetesServiceEndpoint: 'ddsakstest-self-connection-tkm-sit'
-                    namespace: tkm-sit
-                    command: apply
-                    useConfigurationFile: true
-                    inline: |
-                      apiVersion: secrets-store.csi.x-k8s.io/v1
-                      kind: SecretProviderClass
-                      metadata:
-                        name: tkm-card-manager-spc
-                      spec:
-                        provider: azure
-                        parameters:
-                          usePodIdentity: "false"
-                          useVMManagedIdentity: "false"
-                          userAssignedIdentityID: ""
-                          keyvaultName: "kmn-tkm-pagopa-test"
-                          tenantId: $(sit-tenantid)
-                          objects: |
-                            array:
-                              - |
-                                objectName: sit-tz
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-appender-bootstrap-servers
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-enable-file-appender
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-enable-kafka-appender
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-log-file
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-appender-topic
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-azure-keyvault-profile
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-azure-keyvault-client-id
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-azure-keyvault-client-key
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-azure-keyvault-tenant-id
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-azure-keyvault-uri
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-consent-manager-url
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-db-server
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-delete-queue-group
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-delete-queue-topic
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-dlt-max-number-of-threads
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-dlt-queue-group
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-dlt-queue-topic
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-dlt-read-cron
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-group-id
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-read-queue-group
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-read-queue-topic
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-write-queue-group
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-write-queue-topic
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-rtd-hashing-url
-                                objectType: secret
-                                objectVersion: ""
-                              - |
-                                objectName: sit-kafka-cstar-bootstrap-servers
-                                objectType: secret
-                                objectVersion: ""
-                        secretObjects:
-                          - secretName: jvm
-                            type: Opaque
-                            data:
-                              - key: TZ
-                                objectName: sit-tz
-                          - secretName: kafka-log-configuration
-                            type: Opaque
-                            data:
-                              - key: KAFKA_APPENDER_BOOTSTRAP_SERVERS
-                                objectName: sit-kafka-appender-bootstrap-servers
-                              - key: ENABLE_FILE_APPENDER
-                                objectName: sit-enable-file-appender
-                              - key: ENABLE_KAFKA_APPENDER
-                                objectName: sit-enable-kafka-appender
-                              - key: LOG_FILE
-                                objectName: sit-log-file
-                              - key: KAFKA_APPENDER_TOPIC
-                                objectName: sit-kafka-appender-topic
-                          - secretName: keyvault-connection-informations
-                            type: Opaque
-                            data:
-                              - key: AZURE_KEYVAULT_PROFILE
-                                objectName: sit-azure-keyvault-profile
-                              - key: AZURE_KEYVAULT_CLIENT_ID
-                                objectName: sit-azure-keyvault-client-id
-                              - key: AZURE_KEYVAULT_CLIENT_KEY
-                                objectName: sit-azure-keyvault-client-key
-                              - key: AZURE_KEYVAULT_TENANT_ID
-                                objectName: sit-azure-keyvault-tenant-id
-                              - key: AZURE_KEYVAULT_URI
-                                objectName: sit-azure-keyvault-uri
-                          - secretName: tkmmscardmanager
-                            type: Opaque
-                            data:
-                              - key: CONSENT_MANAGER_URL
-                                objectName: sit-consent-manager-url
-                              - key: DB_SERVER
-                                objectName: sit-db-server
-                              - key: KAFKA_DELETE_QUEUE_GROUP
-                                objectName: sit-kafka-delete-queue-group
-                              - key: KAFKA_DELETE_QUEUE_TOPIC
-                                objectName: sit-kafka-delete-queue-topic
-                              - key: KAFKA_DLT_MAX_NUMBER_OF_THREADS
-                                objectName: sit-kafka-dlt-max-number-of-threads
-                              - key: KAFKA_DLT_QUEUE_GROUP
-                                objectName: sit-kafka-dlt-queue-group
-                              - key: KAFKA_DLT_QUEUE_TOPIC
-                                objectName: sit-kafka-dlt-queue-topic
-                              - key: KAFKA_DLT_READ_CRON
-                                objectName: sit-kafka-dlt-read-cron
-                              - key: KAFKA_GROUP_ID
-                                objectName: sit-kafka-group-id
-                              - key: KAFKA_READ_QUEUE_GROUP
-                                objectName: sit-kafka-read-queue-group
-                              - key: KAFKA_READ_QUEUE_TOPIC
-                                objectName: sit-kafka-read-queue-topic
-                              - key: KAFKA_WRITE_QUEUE_GROUP
-                                objectName: sit-kafka-write-queue-group
-                              - key: KAFKA_WRITE_QUEUE_TOPIC
-                                objectName: sit-kafka-write-queue-topic
-                              - key: RTD_HASHING_URL
-                                objectName: sit-rtd-hashing-url
-                              - key: KAFKA_CSTAR_BOOTSTRAP_SERVERS
-                                objectName: sit-kafka-cstar-bootstrap-servers
+                - template: 'templates/env-configurations-card-manager.yml'
+                  parameters:
+                    azureSubscription: 'TKM-Subscription-sit'
+                    KeyVaultName: 'kmn-tkm-pagopa-test'
+                    secretName: 'tkm-card-manager-kv-store-creds'
+                    spcClassName: 'tkm-card-manager-spc'
+                    env: 'sit'
+                    kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
                 - task: KubernetesManifest@0
                   displayName: Deploy to Kubernetes cluster
                   inputs:

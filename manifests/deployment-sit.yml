@@ -27,7 +27,15 @@ spec:
           hostnames:
             - "cstar-d-evh-ns.servicebus.windows.net"
       volumes:
-        - name: secrets-store-inline
+        - name: secrets-store-inline-common
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: tkm-common-spc
+            nodePublishSecretRef:
+              name: tkm-common-kv-store-creds
+        - name: secrets-store-inline-card-manager
           csi:
             driver: secrets-store.csi.k8s.io
             readOnly: true
@@ -57,7 +65,10 @@ spec:
               memory: 8Gi
               cpu: 1000m
           volumeMounts:
-            - name: secrets-store-inline
+            - name: secrets-store-inline-common
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            - name: secrets-store-inline-card-manager
               mountPath: /mnt/secrets-store
               readOnly: true
           securityContext:

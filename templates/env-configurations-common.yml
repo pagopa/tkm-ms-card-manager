@@ -1,0 +1,129 @@
+parameters:
+  - name: azureSubscription
+    default: ''
+  - name: KeyVaultName
+    default: ''
+  - name: secretName
+    default: ''
+  - name: spcClassName
+    default: ''
+  - name: env
+    default: ''
+  - name: kubernetesServiceConnection
+    default: ''
+
+steps:
+  - task: AzureKeyVault@2
+    inputs:
+      azureSubscription: ${{ parameters.azureSubscription }}
+      KeyVaultName: ${{ parameters.KeyVaultName }}
+      SecretsFilter: '*'
+      RunAsPreJob: false
+  - task: KubernetesManifest@0
+    displayName: Create secret ${{ parameters.secretName }}
+    inputs:
+      action: createSecret
+      secretType: generic
+      secretName: ${{ parameters.secretName }}
+      secretArguments: --from-literal=clientid=$(${{ parameters.env }}-clientid) --from-literal=clientsecret=$(${{ parameters.env }}-clientsecret)
+      kubernetesServiceConnection: ${{ parameters.kubernetesServiceConnection }}
+      namespace: tkm-${{ parameters.env }}
+  - task: Kubernetes@1
+    displayName: Create spc ${{ parameters.spcClassName }}
+    inputs:
+      connectionType: Kubernetes Service Connection
+      kubernetesServiceEndpoint: ${{ parameters.kubernetesServiceConnection }}
+      namespace: tkm-${{ parameters.env }}
+      command: apply
+      useConfigurationFile: true
+      inline: |
+        apiVersion: secrets-store.csi.x-k8s.io/v1
+        kind: SecretProviderClass
+        metadata:
+          name: ${{ parameters.spcClassName }}
+        spec:
+          provider: azure
+          parameters:
+            usePodIdentity: "false"
+            useVMManagedIdentity: "false"
+            userAssignedIdentityID: ""
+            keyvaultName: ${{ parameters.keyvaultName }}
+            tenantId: $(${{ parameters.env }}-tenantid)
+            objects: |
+              array:
+                - |
+                  objectName: ${{ parameters.env }}-tz
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-kafka-appender-bootstrap-servers
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-enable-file-appender
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-enable-kafka-appender
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-log-file
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-kafka-appender-topic
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-azure-keyvault-profile
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-azure-keyvault-client-id
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-azure-keyvault-client-key
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-azure-keyvault-tenant-id
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-azure-keyvault-uri
+                  objectType: secret
+                  objectVersion: ""
+          secretObjects:
+            - secretName: jvm
+              type: Opaque
+              data:
+                - key: TZ
+                  objectName: ${{ parameters.env }}-tz
+            - secretName: kafka-log-configuration
+              type: Opaque
+              data:
+                - key: KAFKA_APPENDER_BOOTSTRAP_SERVERS
+                  objectName: ${{ parameters.env }}-kafka-appender-bootstrap-servers
+                - key: ENABLE_FILE_APPENDER
+                  objectName: ${{ parameters.env }}-enable-file-appender
+                - key: ENABLE_KAFKA_APPENDER
+                  objectName: ${{ parameters.env }}-enable-kafka-appender
+                - key: LOG_FILE
+                  objectName: ${{ parameters.env }}-log-file
+                - key: KAFKA_APPENDER_TOPIC
+                  objectName: ${{ parameters.env }}-kafka-appender-topic
+            - secretName: keyvault-connection-informations
+              type: Opaque
+              data:
+                - key: AZURE_KEYVAULT_PROFILE
+                  objectName: ${{ parameters.env }}-azure-keyvault-profile
+                - key: AZURE_KEYVAULT_CLIENT_ID
+                  objectName: ${{ parameters.env }}-azure-keyvault-client-id
+                - key: AZURE_KEYVAULT_CLIENT_KEY
+                  objectName: ${{ parameters.env }}-azure-keyvault-client-key
+                - key: AZURE_KEYVAULT_TENANT_ID
+                  objectName: ${{ parameters.env }}-azure-keyvault-tenant-id
+                - key: AZURE_KEYVAULT_URI
+                  objectName: ${{ parameters.env }}-azure-keyvault-uri
