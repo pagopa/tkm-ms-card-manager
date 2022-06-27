@@ -20,7 +20,7 @@ steps:
       SecretsFilter: '*'
       RunAsPreJob: false
   - task: KubernetesManifest@0
-    displayName: "Create secret " ${{ parameters.secretName }}
+    displayName: Create secret ${{ parameters.secretName }}
     inputs:
       action: createSecret
       secretType: generic
@@ -29,7 +29,7 @@ steps:
       kubernetesServiceConnection: ${{ parameters.kubernetesServiceConnection }}
       namespace: tkm-${{ parameters.env }}
   - task: Kubernetes@1
-    displayName: "Create spc " ${{ parameters.spcClassName }}
+    displayName: Create spc ${{ parameters.spcClassName }}
     inputs:
       connectionType: Kubernetes Service Connection
       kubernetesServiceEndpoint: ${{ parameters.kubernetesServiceConnection }}
