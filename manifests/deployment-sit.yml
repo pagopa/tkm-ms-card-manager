@@ -27,36 +27,19 @@ spec:
           hostnames:
             - "cstar-d-evh-ns.servicebus.windows.net"
       volumes:
-        - name: secrets-store-inline-common
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: tkm-common-spc
-            nodePublishSecretRef:
-              name: tkm-common-kv-store-creds
         - name: secrets-store-inline-card-manager
           csi:
             driver: secrets-store.csi.k8s.io
             readOnly: true
             volumeAttributes:
-              secretProviderClass: tkm-card-manager-spc
+              secretProviderClass: tkm-card-manager-spc-sit
             nodePublishSecretRef:
-              name: tkm-card-manager-kv-store-creds
+              name: tkm-card-manager-kv-store-creds-sit
       containers:
         - name: tkmmscardmanagersit
           image: cstaruatregistry.azurecr.io/tkmmscardmanager
           ports:
             - containerPort: 8080
-#          envFrom:
-#            - secretRef:
-#                name: keyvault-connection-informations
-#            - configMapRef:
-#                name: kafka-log-configuration
-#            - configMapRef:
-#                name: tkmmscardmanager
-#            - configMapRef:
-#                name: jvm
           resources:
             requests:
               memory: 4Gi
@@ -65,9 +48,6 @@ spec:
               memory: 8Gi
               cpu: 1000m
           volumeMounts:
-            - name: secrets-store-inline-common
-              mountPath: /mnt/secrets-store
-              readOnly: true
             - name: secrets-store-inline-card-manager
               mountPath: /mnt/secrets-store
               readOnly: true
