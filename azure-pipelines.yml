@@ -401,7 +401,7 @@ stages:
                       $(Pipeline.Workspace)/manifests/namespace-$(enviroment).yml
                 - template: 'templates/env-configurations-card-manager.yml'
                   parameters:
-                    azureSubscription: 'TKM-Subscription-sit'
+                    azureSubscription: 'U87-PagoPa-PCI-uat'
                     KeyVaultName: 'u87-kmn-tkm-pci-uat'
                     secretName: 'tkm-card-manager-kv-store-creds-uat'
                     spcClassName: 'tkm-card-manager-spc-uat'
