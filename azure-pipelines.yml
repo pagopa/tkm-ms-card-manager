@@ -308,7 +308,9 @@ stages:
 
   - stage: SIT_Deploy
     displayName: SIT Deploy
-    dependsOn: SIT_Build
+    dependsOn:
+    - POM
+    - SIT_Build
     condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
