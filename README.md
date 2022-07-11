@@ -33,12 +33,15 @@ The following ENVIRONMENT variables are needed to deploy and run the application
 
 ## How to start SIT azure pipeline
 
-1. Move into:
-> develop
+1. Merge **feature branch** into **develop**<br>
+   Pipeline starts automatically and do maven prepare release.<br>
+   At the end, the pipeline create branch tmp/<version><br>
 
-1. Run:<br>
+   If you have to do manually, run:<br>
    `$version=??` for poweshell or `version=??` for gitbash<br>
-   `mvn --batch-mode release:clean release:prepare`<br>
+   `mvn --batch-mode release:clean release:prepare -DscmCommentPrefix="[skip ci]"`<br>
+   `git push origin develop`<br>
+   `git push origin --tags`<br>
    `git checkout -b tmp/${version} card-manager-${version}`<br>
    `git push --set-upstream origin tmp/${version}`<br>
 
