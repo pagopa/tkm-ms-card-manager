@@ -11,6 +11,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentEntityEnum;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.ConsentResponse;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CircuitBreakerManager;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,9 @@ import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_RT
 @Service
 @Log4j2
 public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
+
+    @Value("${keyvault.ocpApimSubscriptionKeyTkm}")
+    private String apimSubscriptionKey;
 
     @CircuitBreaker(name = "rtdForHashCircuitBreaker", fallbackMethod = "getRtdForHashFallback")
     public String callRtdForHash(RtdHashingClient rtdHashingClient, String toHash, String apimRtdSubscriptionKey) {
@@ -40,7 +44,7 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
     @CircuitBreaker(name = "consentClientGetConsentCircuitBreaker", fallbackMethod = "consentClientGetConsentFallback")
     public ConsentResponse consentClientGetConsent(ConsentClient consentClient, String taxCode, String hpan) {
         try {
-            return consentClient.getConsent(taxCode, hpan, null);
+            return consentClient.getConsent(taxCode, hpan, null, apimSubscriptionKey);
         } catch (FeignException fe) {
             if (fe.status() == HttpStatus.NOT_FOUND.value()) {
                 log.info("Consent not found for card");

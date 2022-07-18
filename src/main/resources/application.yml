@@ -125,6 +125,7 @@ keyvault:
   tkmDeleteCardProducerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDeleteCardProducerSaslJaasConfig:}
   tkmDltProducerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDltProducerSaslJaasConfig:}
   tkmDltConsumerSaslJaasConfig: ${${AZURE_KEYVAULT_PROFILE:prod}-tkmDltConsumerSaslJaasConfig:}
+  ocpApimSubscriptionKeyTkm: ${${AZURE_KEYVAULT_PROFILE:prod}-ocpApimSubscriptionKeyTkm:}
 
 client-urls:
   consent-manager: ${CONSENT_MANAGER_URL}
