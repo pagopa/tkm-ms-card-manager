@@ -22,7 +22,7 @@ import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.CALL_TO_RT
 @Log4j2
 public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
 
-    @Value("${keyvault.ocpApimSubscriptionKeyTkm}")
+    @Value("${keyvault.ocpApimSubscriptionKeyTkmInternal}")
     private String apimSubscriptionKey;
 
     @CircuitBreaker(name = "rtdForHashCircuitBreaker", fallbackMethod = "getRtdForHashFallback")
