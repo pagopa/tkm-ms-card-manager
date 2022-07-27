@@ -3,7 +3,6 @@ package it.gov.pagopa.tkm.ms.cardmanager.client.internal.consentmanager;
 import it.gov.pagopa.tkm.ms.cardmanager.model.request.*;
 import org.springframework.cloud.openfeign.*;
 import org.springframework.web.bind.annotation.*;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 import static it.gov.pagopa.tkm.ms.cardmanager.constant.ApiParams.*;
 
@@ -14,7 +13,8 @@ public interface ConsentClient {
     ConsentResponse getConsent(
             @RequestHeader(TAX_CODE_HEADER) String taxCode,
             @RequestParam(value = HPAN_QUERY_PARAM, required = false) String hpan,
-            @RequestParam(value = SERVICES_QUERY_PARAM, required = false) String[] services
+            @RequestParam(value = SERVICES_QUERY_PARAM, required = false) String[] services,
+            @RequestHeader(value = OCP_APIM_SUBSCRIPTION_KEY_HEADER) String apimSubscriptionKey
     );
 
 
