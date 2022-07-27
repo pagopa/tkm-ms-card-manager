@@ -54,14 +54,14 @@ class TestCircuitBreakerManager {
     @Test
     void callConsent_success() {
         ConsentResponse consentResponse = ConsentResponse.builder().taxCode("taxCode").consent(ConsentEntityEnum.Allow).build();
-        Mockito.when(consentClient.getConsent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenReturn(consentResponse);
+        Mockito.when(consentClient.getConsent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any())).thenReturn(consentResponse);
         ConsentResponse consentResponseCircuit = circuitBreakerManager.consentClientGetConsent(consentClient, "taxCode", "hash");
         Assertions.assertEquals(consentResponse, consentResponseCircuit);
     }
 
     @Test
     void callConsent_exceptionFeign() {
-        Mockito.when(consentClient.getConsent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenThrow(FeignException.class);
+        Mockito.when(consentClient.getConsent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any())).thenThrow(FeignException.class);
         CardException cardException = Assertions.assertThrows(CardException.class, () -> circuitBreakerManager.consentClientGetConsent(consentClient, "taxCode", "hash"));
         Assertions.assertEquals(CALL_TO_CONSENT_MANAGER_FAILED, cardException.getErrorCode());
     }
@@ -69,7 +69,7 @@ class TestCircuitBreakerManager {
     @Test
     void callConsent_404() {
         FeignException.NotFound notFound = new FeignException.NotFound("", mock(Request.class), null);
-        Mockito.when(consentClient.getConsent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenThrow(notFound);
+        Mockito.when(consentClient.getConsent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any())).thenThrow(notFound);
         ConsentResponse consentResponseCircuit = circuitBreakerManager.consentClientGetConsent(consentClient, "taxCode", "hash");
         Assertions.assertEquals(ConsentResponse.builder().consent(ConsentEntityEnum.Deny).build(), consentResponseCircuit);
     }
