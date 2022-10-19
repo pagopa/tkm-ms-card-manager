@@ -193,6 +193,13 @@ spec:
                 secretKeyRef:
                   key: KAFKA_CSTAR_BOOTSTRAP_SERVERS
                   name: tkmmscardmanager
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: APPLICATIONINSIGHTS_CONNECTION_STRING
+                  name: applicationinsights
+            - name: APPLICATIONINSIGHTS_ROLE_NAME
+              value: tkmmscardmanageruat
           livenessProbe:
             httpGet:
               path: /actuator/health
