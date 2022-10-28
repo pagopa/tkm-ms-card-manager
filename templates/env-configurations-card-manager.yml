@@ -155,6 +155,10 @@ steps:
                   objectName: ${{ parameters.env }}-kafka-cstar-bootstrap-servers
                   objectType: secret
                   objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-applicationinsights-connection-string
+                  objectType: secret
+                  objectVersion: ""
           secretObjects:
             - secretName: jvm
               type: Opaque
@@ -220,3 +224,8 @@ steps:
                   objectName: ${{ parameters.env }}-rtd-hashing-url
                 - key: KAFKA_CSTAR_BOOTSTRAP_SERVERS
                   objectName: ${{ parameters.env }}-kafka-cstar-bootstrap-servers
+            - secretName: applicationinsights
+              type: Opaque
+              data:
+                - key: APPLICATIONINSIGHTS_CONNECTION_STRING
+                  objectName: ${{ parameters.env }}-applicationinsights-connection-string
