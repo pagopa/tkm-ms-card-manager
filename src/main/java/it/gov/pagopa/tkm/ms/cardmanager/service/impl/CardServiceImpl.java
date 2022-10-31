@@ -62,6 +62,9 @@ public class CardServiceImpl implements CardService {
     @Value("${keyvault.apimSubscriptionTkmRtd}")
     private String apimRtdSubscriptionKey;
 
+    @Value("${CONSENT_ENABLED}")
+    private Boolean consentEnabled;
+
     @Autowired
     private CardTokenRepository cardTokenRepository;
 
@@ -514,7 +517,7 @@ public class CardServiceImpl implements CardService {
             return;
         }
         String taxCode = citizenCard.getCitizen().getTaxCode();
-        if (!getConsentForCard(card, taxCode)) {
+        if (consentEnabled && !getConsentForCard(card, taxCode)) {
             return;
         }
         try {
