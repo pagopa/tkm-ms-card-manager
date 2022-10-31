@@ -7,6 +7,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.DeleteQueueMessage;
 import it.gov.pagopa.tkm.ms.cardmanager.service.ConsumerService;
 import it.gov.pagopa.tkm.ms.cardmanager.service.MessageValidatorService;
 import it.gov.pagopa.tkm.ms.cardmanager.service.ReaderQueueService;
+import it.gov.pagopa.tkm.util.*;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,16 +60,15 @@ public class ConsumerServiceImpl implements ConsumerService {
             properties = {"sasl.jaas.config:${spring.kafka.topics.delete-queue.jaas.config.consumer}"},
             concurrency = "${spring.kafka.topics.delete-queue.concurrency}")
     public void consumeDelete(String message) {
-        log.debug("Delete message not parsed " + message);
+        log.debug("Delete message not parsed");
         try {
             DeleteQueueMessage deleteQueueMessage = mapper.readValue(message, DeleteQueueMessage.class);
-            log.debug("Delete message  parsed " + deleteQueueMessage);
+            log.debug("Delete message parsed ");
             validatorService.validateMessage(deleteQueueMessage);
             deleteCardService.deleteCard(deleteQueueMessage);
-            log.info("Card Deleted: " + deleteQueueMessage.getHpan());
+            log.info("Card Deleted: " + ObfuscationUtils.obfuscateHpan(deleteQueueMessage.getHpan()));
         } catch (CardException | JsonProcessingException e) {
-            log.error("Invalid message " + message, e);
-
+            log.error("Invalid message", e);
         }
     }
 

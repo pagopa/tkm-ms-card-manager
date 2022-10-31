@@ -9,6 +9,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.WriteQueueToken;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.*;
 import it.gov.pagopa.tkm.ms.cardmanager.service.ConsentUpdateService;
+import it.gov.pagopa.tkm.util.*;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,10 +35,10 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
     @Override
     public void updateConsent(ConsentResponse consent) {
         String taxCode = consent.getTaxCode();
-        log.info("Updating consent for taxCode " + taxCode + " with value " + consent.getConsent());
+        log.info("Updating consent for taxCode " + ObfuscationUtils.obfuscateTaxCode(taxCode) + " with value " + consent.getConsent());
         TkmCitizen citizen = citizenRepository.findByTaxCode(taxCode);
         if (citizen == null) {
-            log.info("A citizen with taxCode " + taxCode + " does not exist, aborting");
+            log.info("A citizen with taxCode " + ObfuscationUtils.obfuscateTaxCode(taxCode) + " does not exist, aborting");
             return;
         }
         List<TkmCard> citizenCards = citizen.getCitizenCards().stream().map(TkmCitizenCard::getCard).collect(Collectors.toList());
@@ -45,7 +46,7 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
             citizenCards.stream().filter(c -> consent.retrieveHpans().contains(c.getHpan())).collect(Collectors.toList())
             : citizenCards;
         cardsToUpdate = cardsToUpdate.stream().filter(c -> c.getPar() != null).collect(Collectors.toList());
-        log.info("Cards to update: " + cardsToUpdate.stream().map(TkmCard::getHpan).collect(Collectors.joining(", ")));
+        log.info("Cards to update: " + cardsToUpdate.stream().map(c -> ObfuscationUtils.obfuscateHpan(c.getHpan())).collect(Collectors.joining(", ")));
         if (!CollectionUtils.isEmpty(cardsToUpdate)) {
             writeOnQueueIfComplete(cardsToUpdate, consent);
         }
