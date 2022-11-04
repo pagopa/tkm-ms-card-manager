@@ -354,7 +354,7 @@ public class CardServiceImpl implements CardService {
         String hpan = card.getHpan();
         String par = card.getPar();
         if (hpan != null) {
-            log.info("Searching citizen card by taxCode " + ObfuscationUtils.obfuscateTaxCode(taxCode) + " and hpan " + ObfuscationUtils.obfuscateHpan(hpan));
+            log.info("Searching citizen card by taxCode and hpan " + ObfuscationUtils.obfuscateHpan(hpan));
             citizenCard = citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(taxCode, hpan);
         }
         if (citizenCard == null && par != null) {
@@ -541,7 +541,7 @@ public class CardServiceImpl implements CardService {
     }
 
     private boolean getConsentForCard(TkmCard card, String taxCode) {
-        log.info("Calling Consent Manager for card with taxCode " + ObfuscationUtils.obfuscateTaxCode(taxCode) + " and hpan " + ObfuscationUtils.obfuscateHpan(card.getHpan()));
+        log.info("Calling Consent Manager for card with taxCode and hpan " + ObfuscationUtils.obfuscateHpan(card.getHpan()));
         ConsentResponse consentResponse = circuitBreakerManager.consentClientGetConsent(consentClient, taxCode, card.getHpan());
         boolean hasConsent = consentResponse.cardHasConsent(card.getHpan());
         log.info("Card has consent? " + hasConsent);

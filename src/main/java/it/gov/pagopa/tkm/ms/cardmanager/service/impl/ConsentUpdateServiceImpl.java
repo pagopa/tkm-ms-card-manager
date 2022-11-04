@@ -35,10 +35,10 @@ public class ConsentUpdateServiceImpl implements ConsentUpdateService {
     @Override
     public void updateConsent(ConsentResponse consent) {
         String taxCode = consent.getTaxCode();
-        log.info("Updating consent for taxCode " + ObfuscationUtils.obfuscateTaxCode(taxCode) + " with value " + consent.getConsent());
+        log.info("Updating consent for given taxCode with value " + consent.getConsent());
         TkmCitizen citizen = citizenRepository.findByTaxCode(taxCode);
         if (citizen == null) {
-            log.info("A citizen with taxCode " + ObfuscationUtils.obfuscateTaxCode(taxCode) + " does not exist, aborting");
+            log.info("A citizen with given taxCode does not exist, aborting");
             return;
         }
         List<TkmCard> citizenCards = citizen.getCitizenCards().stream().map(TkmCitizenCard::getCard).collect(Collectors.toList());
