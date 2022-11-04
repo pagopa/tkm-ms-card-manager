@@ -40,11 +40,10 @@ public class ReaderQueueServiceImpl implements ReaderQueueService {
     @Async
     @Transactional
     public Future<Void> workOnMessage(String message) {
-        log.debug("Reading message from queue: " + message);
+        log.debug("Reading message from queue");
         String decryptedMessage;
         try {
             decryptedMessage = PgpStaticUtils.decrypt(message, tkmReadTokenParPanPvtPgpKey, tkmReadTokenParPanPvtPgpKeyPassphrase);
-            log.trace("Decrypted message from queue: " + decryptedMessage);
             ReadQueue readQueue = mapper.readValue(decryptedMessage, ReadQueue.class);
             validatorService.validateMessage(readQueue);
             cardService.updateOrCreateCard(readQueue);

@@ -20,6 +20,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CardService;
 import it.gov.pagopa.tkm.ms.cardmanager.service.CircuitBreakerManager;
+import it.gov.pagopa.tkm.util.*;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -103,18 +104,18 @@ public class CardServiceImpl implements CardService {
     }
 
     private void manageParAndHpan(String par, String hpan, CircuitEnum circuit) {
-        log.info("manageParAndHpan with par " + par + " and hpan " + hpan);
+        log.info("manageParAndHpan with par " + ObfuscationUtils.obfuscatePar(par) + " and hpan " + ObfuscationUtils.obfuscateHpan(hpan));
         TkmCard cardByHpanAndPar = cardRepository.findByHpanAndPar(hpan, par);
         if (cardByHpanAndPar != null) {
             cardByHpanAndPar.setCircuit(circuit);
             cardRepository.save(cardByHpanAndPar);
-            log.info("Card found by par " + par + " and hpan " + hpan + " aborting");
+            log.info("Card found by par " + ObfuscationUtils.obfuscatePar(par) + " and hpan " + ObfuscationUtils.obfuscateHpan(hpan) + " aborting");
             return;
         }
         TkmCard cardByHpan = cardRepository.findByHpan(hpan);
         TkmCard cardByPar = cardRepository.findByPar(par);
         if (cardByHpan != null) {
-            log.info("Found card by hpan " + hpan + ", updating " + cardByHpan.getId() + " - old PAR is " + cardByHpan.getPar());
+            log.info("Found card by hpan " + ObfuscationUtils.obfuscateHpan(hpan) + ", updating " + cardByHpan.getId() + " - old PAR is " + ObfuscationUtils.obfuscatePar(cardByHpan.getPar()));
             log.trace(cardByHpan);
 
             // if the card in the DB has a different not null PAR throw exception
@@ -126,7 +127,7 @@ public class CardServiceImpl implements CardService {
                 // there is already a card in DB with the same PAR of input one but different hpan
                 // the card in DB should be a "fake" card used to temporary store tokens
 
-                log.info("Also found card by par " + par + " with id " + cardByPar.getId() + " and hpan " + cardByPar.getHpan() + ", merging");
+                log.info("Also found card by par " + ObfuscationUtils.obfuscatePar(par) + " with id " + cardByPar.getId() + " and hpan " + ObfuscationUtils.obfuscateHpan(cardByPar.getHpan()) + ", merging");
                 log.trace(cardByPar);
 
                 // if the card in the DB has a different not null hpan throw exception
@@ -155,7 +156,7 @@ public class CardServiceImpl implements CardService {
             writeOnQueueIfCompleteForUpdatedCard(cardByHpan, cardByHpan.getTokens());
 
         } else if (cardByPar != null) {
-            log.info("Found card by par " + par + ", updating");
+            log.info("Found card by par " + ObfuscationUtils.obfuscatePar(par) + ", updating");
 
             // in this case we receive a couple hpan/par not null
             // there is already a card in DB with the same PAR of input
@@ -172,7 +173,7 @@ public class CardServiceImpl implements CardService {
             cardByPar.setCircuit(circuit);
             cardRepository.save(cardByPar);
         } else {
-            log.info("No existing cards found, creating one for par " + par + " and hpan " + hpan);
+            log.info("No existing cards found, creating one for par " + ObfuscationUtils.obfuscatePar(par) + " and hpan " + ObfuscationUtils.obfuscateHpan(hpan));
             TkmCard card = TkmCard.builder().hpan(hpan).par(par).circuit(circuit).creationDate(Instant.now()).build();
             cardRepository.save(card);
         }
@@ -192,7 +193,7 @@ public class CardServiceImpl implements CardService {
         String htoken = getHash(token, readQueueToken.getHToken());
         TkmCardToken byHtokenAndDeletedFalse = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
         if (byHtokenAndDeletedFalse == null) {
-            log.debug("Adding htoken:" + htoken);
+            log.debug("Adding htoken:" + ObfuscationUtils.obfuscateHtoken(htoken));
             TkmCard fakeCard = TkmCard.builder().circuit(circuit).creationDate(Instant.now()).build();
             TkmCardToken build = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).card(fakeCard).creationDate(Instant.now()).build();
             fakeCard.setTokens(new HashSet<>(Collections.singleton(build)));
@@ -205,31 +206,28 @@ public class CardServiceImpl implements CardService {
     private void manageParAndToken(String par, CircuitEnum circuit, List<ReadQueueToken> tokens) {
         ReadQueueToken readQueueToken = tokens.get(0);
         String token = readQueueToken.getToken();
-        log.info("manageParAndToken with par " + par);
+        log.info("manageParAndToken with par " + ObfuscationUtils.obfuscatePar(par));
         String htoken = getHash(token, readQueueToken.getHToken());
         TkmCardToken byHtoken = cardTokenRepository.findByHtokenAndDeletedFalse(htoken);
         if (byHtoken == null) {
-            log.info("Token not found by htoken " + htoken);
+            log.info("Token not found by htoken " + ObfuscationUtils.obfuscateHtoken(htoken));
             byHtoken = TkmCardToken.builder().htoken(htoken).token(cryptoService.encrypt(token)).creationDate(Instant.now()).build();
         } else {
-            log.info("Token found by htoken " + htoken + " " + byHtoken.getId());
+            log.info("Token found by htoken " + ObfuscationUtils.obfuscateHtoken(htoken) + " - id: " + byHtoken.getId());
             byHtoken.setLastUpdateDate(Instant.now());
         }
         //Looking for the row with the par or with the token. If they exist I'll merge them
         TkmCard cardToSave = TkmCard.builder().par(par).circuit(circuit).creationDate(Instant.now()).build();
         TkmCard tokenCard = byHtoken.getCard();
 
-        log.info("TokenCard by htoken " + htoken + " " + (tokenCard != null ? tokenCard.getId() : "not found"));
+        log.info("TokenCard by htoken " + ObfuscationUtils.obfuscateHtoken(htoken) + " - id: " + (tokenCard != null ? tokenCard.getId() : "not found"));
 
         if (tokenCard != null && StringUtils.isNotBlank(tokenCard.getPar())) {
-            log.info("Skip: Card Already Updated " + tokenCard.getPar());
+            log.info("Skip: Card Already Updated " + ObfuscationUtils.obfuscatePar(tokenCard.getPar()));
             return;
         }
-
         TkmCard parCard = cardRepository.findByPar(par);
-        log.trace("ParCard: " + parCard);
-
-        log.info("ParCard by par " + par + " " + (parCard != null ? parCard.getId() : "not found - htoken " + htoken));
+        log.info("ParCard by par " + ObfuscationUtils.obfuscatePar(par) + " - id: " + (parCard != null ? parCard.getId() : "not found - htoken " + ObfuscationUtils.obfuscateHtoken(htoken)));
 
         //I prefer the row with the par and delete the one without
         if (parCard != null) {
@@ -252,7 +250,7 @@ public class CardServiceImpl implements CardService {
     private void writeOnQueueIfCompleteForUpdatedCard(TkmCard cardToSave, Set<TkmCardToken> tokensToUpdate) {
         List<TkmCitizenCard> citizenCards = citizenCardRepository.findByCardId(cardToSave.getId());
 
-        log.info("Write on queue for update card hpan " + cardToSave.getHpan() + " par " + cardToSave.getPar() + " - citizen to update " + citizenCards.size());
+        log.info("Write on queue for update card hpan " + ObfuscationUtils.obfuscateHpan(cardToSave.getHpan()) + " par " + ObfuscationUtils.obfuscatePar(cardToSave.getPar()) + " - " + citizenCards.size() + " citizen cards to update");
 
         citizenCards.forEach(c -> writeOnQueueIfComplete(c, tokensToUpdate, true));
     }
@@ -309,7 +307,7 @@ public class CardServiceImpl implements CardService {
         Set<TkmCardToken> oldTokens = new HashSet<>(card.getTokens());
         boolean merged = mergeCards(card, pan, hpan, par, htokens, citizen);
         manageAndEncryptTokens(card, tokens);
-        log.info("Merged tokens: " + card.getTokens().stream().map(TkmCardToken::getHtoken).collect(Collectors.joining(", ")));
+        log.info("Merged tokens: " + card.getTokens().stream().map(c -> ObfuscationUtils.obfuscateHtoken(c.getHtoken())).collect(Collectors.joining(", ")));
         TkmCitizenCard citizenCard = getOrCreateCitizenCard(taxCode, card, citizen);
         citizenCardRepository.save(citizenCard);
         writeOnQueueIfComplete(citizenCard, oldTokens, merged);
@@ -329,11 +327,11 @@ public class CardServiceImpl implements CardService {
     private TkmCard getOrCreateCard(String hpan, String par, String pan, CircuitEnum circuit) {
         TkmCard card = null;
         if (hpan != null) {
-            log.info("Searching for card with hpan " + hpan);
+            log.info("Searching for card with hpan " + ObfuscationUtils.obfuscateHpan(hpan));
             card = cardRepository.findByHpan(hpan);
         }
         if (card == null && par != null) {
-            log.info("Card not found by hpan, searching by par " + par);
+            log.info("Card not found by hpan, searching by par " + ObfuscationUtils.obfuscatePar(par));
             card = cardRepository.findByPar(par);
         }
         if (card == null) {
@@ -356,11 +354,11 @@ public class CardServiceImpl implements CardService {
         String hpan = card.getHpan();
         String par = card.getPar();
         if (hpan != null) {
-            log.info("Searching citizen card by taxCode " + taxCode + " and hpan " + hpan);
+            log.info("Searching citizen card by taxCode and hpan " + ObfuscationUtils.obfuscateHpan(hpan));
             citizenCard = citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(taxCode, hpan);
         }
         if (citizenCard == null && par != null) {
-            log.info("Citizen card not found by hpan, searching by par " + par);
+            log.info("Citizen card not found by hpan, searching by par " + ObfuscationUtils.obfuscatePar(par));
             citizenCard = citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Par(taxCode, par);
         }
         if (citizenCard == null) {
@@ -383,7 +381,7 @@ public class CardServiceImpl implements CardService {
     private boolean mergeCardsByToken(TkmCard survivingCard, List<String> htokens, TkmCitizen citizen) {
         boolean toMerge = false;
         List<TkmCardToken> preexistingTokens = cardTokenRepository.findByHtokenIn(htokens);
-        log.trace("Preexisting tokens: " + preexistingTokens);
+        log.debug("Preexisting tokens: " + preexistingTokens.stream().map(t -> ObfuscationUtils.obfuscateHtoken(t.getHtoken())).collect(Collectors.joining(", ")));
         if (CollectionUtils.isNotEmpty(preexistingTokens)) {
             List<TkmCard> cardsToDelete = preexistingTokens.stream().map(TkmCardToken::getCard).filter(card -> !card.equals(survivingCard)).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(cardsToDelete)) {
@@ -428,7 +426,7 @@ public class CardServiceImpl implements CardService {
             toMerge = true;
         }
         if (preexistingCard != null) {
-            log.info("Preexisting card found with " + (par != null ? "par " + par : "hpan " + hpan) + ", merging");
+            log.info("Preexisting card found with " + (par != null ? "par " + ObfuscationUtils.obfuscatePar(par) : "hpan " + ObfuscationUtils.obfuscateHpan(hpan)) + ", merging");
             mergeTokens(preexistingCard.getTokens(), survivingCard.getTokens());
             updateCitizenCardsAfterMergeForIssuer(survivingCard, Collections.singletonList(preexistingCard), citizen);
             cardRepository.delete(preexistingCard);
@@ -531,7 +529,7 @@ public class CardServiceImpl implements CardService {
             );
             producerService.sendMessage(writeQueue);
         } catch (Exception e) {
-            log.error("Error writing to queue for card hpan " + card.getHpan() + " par " + card.getPar(), e);
+            log.error("Error writing to queue for card hpan " + ObfuscationUtils.obfuscateHpan(card.getHpan()) + " par " + ObfuscationUtils.obfuscatePar(card.getPar()), e);
             throw new CardException(MESSAGE_WRITE_FAILED);
         }
     }
@@ -543,7 +541,7 @@ public class CardServiceImpl implements CardService {
     }
 
     private boolean getConsentForCard(TkmCard card, String taxCode) {
-        log.info("Calling Consent Manager for card with taxCode " + taxCode + " and hpan " + card.getHpan());
+        log.info("Calling Consent Manager for card with taxCode and hpan " + ObfuscationUtils.obfuscateHpan(card.getHpan()));
         ConsentResponse consentResponse = circuitBreakerManager.consentClientGetConsent(consentClient, taxCode, card.getHpan());
         boolean hasConsent = consentResponse.cardHasConsent(card.getHpan());
         log.info("Card has consent? " + hasConsent);
