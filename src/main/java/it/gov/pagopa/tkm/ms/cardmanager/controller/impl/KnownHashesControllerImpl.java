@@ -72,7 +72,6 @@ public class KnownHashesControllerImpl implements KnownHashesController {
                 response.setNextHtokenOffset(tkmCardTokenSubSetFull.stream().mapToLong(TkmCardTokenSubSet::getId).max().orElse(htokenOffset));
             }
         }
-        log.trace(response);
         return response;
     }
 
