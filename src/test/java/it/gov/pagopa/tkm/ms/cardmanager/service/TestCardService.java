@@ -80,6 +80,7 @@ class TestCardService {
         testBeans = new DefaultBeans();
         instantMockedStatic.when(Instant::now).thenReturn(DefaultBeans.INSTANT);
         ReflectionTestUtils.setField(cardService, "apimRtdSubscriptionKey", "key");
+        ReflectionTestUtils.setField(cardService, "consentEnabled", "true");
     }
 
     @AfterAll
