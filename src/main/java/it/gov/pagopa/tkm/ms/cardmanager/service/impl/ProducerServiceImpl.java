@@ -36,7 +36,7 @@ public class ProducerServiceImpl implements ProducerService {
 
     public void sendMessage(WriteQueue writeQueue) throws JsonProcessingException {
         String message = mapper.writeValueAsString(writeQueue);
-        log.info("Writing card to queue: " + message);
+        log.info("Writing card to queue");
         dltWriteProducer.send(writeQueueTopic, message);
     }
 
