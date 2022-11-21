@@ -30,7 +30,6 @@ spec:
         - ip: "10.70.73.37"
           hostnames:
             - "u87-evh-pci-uat.servicebus.windows.net"
-            - "U87-EVH-pci-uat.servicebus.windows.net"
         - ip: "10.70.73.38"
           hostnames:
             - "tkmstorageblobuatpci.blob.core.windows.net"
