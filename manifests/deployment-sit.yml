@@ -200,6 +200,11 @@ spec:
                   name: applicationinsights
             - name: APPLICATIONINSIGHTS_ROLE_NAME
               value: tkmmscardmanagersit
+            - name: CONSENT_ENABLED_TEST
+              valueFrom:
+                secretKeyRef:
+                  key: CONSENT_ENABLED_TEST
+                  name: tkmmscardmanager
           livenessProbe:
             httpGet:
               path: /actuator/health
