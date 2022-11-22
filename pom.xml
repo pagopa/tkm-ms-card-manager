@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>card-manager</artifactId>
-    <version>1.1.68.test</version>
+    <version>1.1.68.test_1</version>
     <packaging>jar</packaging>
 
     <parent>

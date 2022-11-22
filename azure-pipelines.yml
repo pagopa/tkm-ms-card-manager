@@ -311,7 +311,7 @@ stages:
     dependsOn:
     - POM
     - SIT_Build
-    condition: and(succeeded(),eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
