@@ -163,6 +163,10 @@ steps:
                   objectName: ${{ parameters.env }}-consent-enabled
                   objectType: secret
                   objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-consent-enabled-test
+                  objectType: secret
+                  objectVersion: ""
           secretObjects:
             - secretName: jvm
               type: Opaque
