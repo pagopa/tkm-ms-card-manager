@@ -236,6 +236,8 @@ steps:
                   objectName: ${{ parameters.env }}-consent-enabled
                 - key: CONSENT_ENABLED_TEST
                   objectName: ${{ parameters.env }}-consent-enabled-test
+                - key: CONSENT_ENABLED_TEST_2
+                  objectName: ${{ parameters.env }}-consent-enabled-test
             - secretName: applicationinsights
               type: Opaque
               data:
