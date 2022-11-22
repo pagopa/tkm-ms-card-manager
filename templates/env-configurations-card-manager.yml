@@ -19,6 +19,7 @@ steps:
       KeyVaultName: ${{ parameters.KeyVaultName }}
       SecretsFilter: '*'
       RunAsPreJob: false
+
   - task: KubernetesManifest@0
     displayName: Create secret ${{ parameters.secretName }}
     inputs:
@@ -28,6 +29,16 @@ steps:
       secretArguments: --from-literal=clientid=$(${{ parameters.env }}-clientid) --from-literal=clientsecret=$(${{ parameters.env }}-clientsecret)
       kubernetesServiceConnection: ${{ parameters.kubernetesServiceConnection }}
       namespace: tkm-${{ parameters.env }}
+
+  - task: Kubernetes@1
+    displayName: Add label to secret map
+    inputs:
+      connectionType: Kubernetes Service Connection
+      kubernetesServiceEndpoint: ${{ parameters.kubernetesServiceConnection }}
+      namespace: tkm-${{ parameters.env }}
+      command: label
+      arguments: "secret ${{ parameters.secretName }} secrets-store.csi.k8s.io/used=true"
+
   - task: Kubernetes@1
     displayName: Create spc ${{ parameters.spcClassName }}
     inputs:
@@ -236,7 +247,7 @@ steps:
                   objectName: ${{ parameters.env }}-consent-enabled
                 - key: CONSENT_ENABLED_TEST
                   objectName: ${{ parameters.env }}-consent-enabled-test
-                - key: CONSENT_ENABLED_TEST_2
+                - key: CONSENT_ENABLED_TEST_3
                   objectName: ${{ parameters.env }}-consent-enabled-test
             - secretName: applicationinsights
               type: Opaque

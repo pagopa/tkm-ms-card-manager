@@ -205,10 +205,10 @@ spec:
                 secretKeyRef:
                   key: CONSENT_ENABLED_TEST
                   name: tkmmscardmanager
-            - name: CONSENT_ENABLED_TEST_2
+            - name: CONSENT_ENABLED_TEST_3
               valueFrom:
                 secretKeyRef:
-                  key: CONSENT_ENABLED_TEST_2
+                  key: CONSENT_ENABLED_TEST_3
                   name: tkmmscardmanager
           livenessProbe:
             httpGet:
