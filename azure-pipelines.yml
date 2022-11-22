@@ -428,7 +428,6 @@ stages:
                       $(imagePullSecret)
                     containers: |
                       $(containerRegistry)/$(imageRepository):$(pomversion)
-                    rolloutStatusTimeout: 900
   # - stage: PROD
   #   displayName: PROD
   #   dependsOn: POM
