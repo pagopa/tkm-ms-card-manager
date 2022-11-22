@@ -430,6 +430,14 @@ stages:
                     spcClassName: 'tkm-card-manager-spc-uat'
                     env: 'uat'
                     kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
+                - task: Kubernetes@1
+                  displayName: Delete secret map
+                  inputs:
+                    connectionType: Kubernetes Service Connection
+                    kubernetesServiceEndpoint: 'u87-aks-pci-uat-self-connection-tkm'
+                    namespace: tkm-uat
+                    command: delete
+                    arguments: "secrets tkmmscardmanager"
                 - task: KubernetesManifest@0
                   displayName: Deploy to Kubernetes cluster
                   inputs:
@@ -444,6 +452,15 @@ stages:
                       $(imagePullSecret)
                     containers: |
                       $(containerRegistry)/$(imageRepository):$(pomversion)
+                - task: Kubernetes@1
+                  displayName: Add label to secret map
+                  inputs:
+                    connectionType: Kubernetes Service Connection
+                    kubernetesServiceEndpoint: 'u87-aks-pci-uat-self-connection-tkm'
+                    namespace: tkm-uat
+                    command: label
+                    arguments: "secret tkmmscardmanager secrets-store.csi.k8s.io/used=true"
+
   # - stage: PROD
   #   displayName: PROD
   #   dependsOn: POM
