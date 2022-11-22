@@ -174,10 +174,6 @@ steps:
                   objectName: ${{ parameters.env }}-consent-enabled
                   objectType: secret
                   objectVersion: ""
-                - |
-                  objectName: ${{ parameters.env }}-consent-enabled-test
-                  objectType: secret
-                  objectVersion: ""
           secretObjects:
             - secretName: jvm
               type: Opaque
@@ -245,10 +241,6 @@ steps:
                   objectName: ${{ parameters.env }}-kafka-cstar-bootstrap-servers
                 - key: CONSENT_ENABLED
                   objectName: ${{ parameters.env }}-consent-enabled
-                - key: CONSENT_ENABLED_TEST
-                  objectName: ${{ parameters.env }}-consent-enabled-test
-                - key: CONSENT_ENABLED_TEST_3
-                  objectName: ${{ parameters.env }}-consent-enabled-test
             - secretName: applicationinsights
               type: Opaque
               data:
