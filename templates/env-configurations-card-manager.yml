@@ -241,6 +241,8 @@ steps:
                   objectName: ${{ parameters.env }}-kafka-cstar-bootstrap-servers
                 - key: CONSENT_ENABLED
                   objectName: ${{ parameters.env }}-consent-enabled
+                - key: TEST
+                  objectName: ${{ parameters.env }}-consent-enabled
             - secretName: applicationinsights
               type: Opaque
               data:
