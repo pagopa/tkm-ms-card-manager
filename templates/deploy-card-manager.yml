@@ -1,0 +1,41 @@
+parameters:
+  - name: env
+    default: ''
+  - name: kubernetesServiceConnection
+    default: ''
+  - name: imagePullSecret
+    default: ''
+  - name: container
+    default: ''
+
+steps:
+  - task: Kubernetes@1
+    displayName: Delete secret map
+    inputs:
+      connectionType: Kubernetes Service Connection
+      kubernetesServiceEndpoint: ${{ parameters.kubernetesServiceConnection }}
+      namespace: tkm-${{ parameters.env }}
+      command: delete
+      arguments: "secrets tkmmscardmanager"
+  - task: KubernetesManifest@0
+    displayName: Deploy to Kubernetes cluster
+    inputs:
+      namespace: tkm-${{ parameters.env }}
+      action: deploy
+      kubernetesServiceConnection: ${{ parameters.kubernetesServiceConnection }}
+      manifests: |
+        $(Pipeline.Workspace)/manifests/deployment-${{ parameters.env }}.yml
+        $(Pipeline.Workspace)/manifests/service-${{ parameters.env }}.yml
+        $(Pipeline.Workspace)/manifests/ingress-${{ parameters.env }}.yml
+      imagePullSecrets: |
+        ${{ parameters.imagePullSecret }}
+      containers: |
+        ${{ parameters.container }}
+  - task: Kubernetes@1
+    displayName: Add label to secret map
+    inputs:
+      connectionType: Kubernetes Service Connection
+      kubernetesServiceEndpoint: ${{ parameters.kubernetesServiceConnection }}
+      namespace: tkm-${{ parameters.env }}
+      command: label
+      arguments: "secret tkmmscardmanager secrets-store.csi.k8s.io/used=true"

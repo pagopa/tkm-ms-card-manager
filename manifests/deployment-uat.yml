@@ -67,57 +67,57 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: TZ
-                  name: jvm
+                  name: tkmmscardmanager
             - name: KAFKA_APPENDER_BOOTSTRAP_SERVERS
               valueFrom:
                 secretKeyRef:
                   key: KAFKA_APPENDER_BOOTSTRAP_SERVERS
-                  name: kafka-log-configuration
+                  name: tkmmscardmanager
             - name: ENABLE_FILE_APPENDER
               valueFrom:
                 secretKeyRef:
                   key: ENABLE_FILE_APPENDER
-                  name: kafka-log-configuration
+                  name: tkmmscardmanager
             - name: ENABLE_KAFKA_APPENDER
               valueFrom:
                 secretKeyRef:
                   key: ENABLE_KAFKA_APPENDER
-                  name: kafka-log-configuration
+                  name: tkmmscardmanager
             - name: LOG_FILE
               valueFrom:
                 secretKeyRef:
                   key: LOG_FILE
-                  name: kafka-log-configuration
+                  name: tkmmscardmanager
             - name: KAFKA_APPENDER_TOPIC
               valueFrom:
                 secretKeyRef:
                   key: KAFKA_APPENDER_TOPIC
-                  name: kafka-log-configuration
+                  name: tkmmscardmanager
             - name: AZURE_KEYVAULT_PROFILE
               valueFrom:
                 secretKeyRef:
                   key: AZURE_KEYVAULT_PROFILE
-                  name: keyvault-connection-informations
+                  name: tkmmscardmanager
             - name: AZURE_KEYVAULT_CLIENT_ID
               valueFrom:
                 secretKeyRef:
                   key: AZURE_KEYVAULT_CLIENT_ID
-                  name: keyvault-connection-informations
+                  name: tkmmscardmanager
             - name: AZURE_KEYVAULT_CLIENT_KEY
               valueFrom:
                 secretKeyRef:
                   key: AZURE_KEYVAULT_CLIENT_KEY
-                  name: keyvault-connection-informations
+                  name: tkmmscardmanager
             - name: AZURE_KEYVAULT_TENANT_ID
               valueFrom:
                 secretKeyRef:
                   key: AZURE_KEYVAULT_TENANT_ID
-                  name: keyvault-connection-informations
+                  name: tkmmscardmanager
             - name: AZURE_KEYVAULT_URI
               valueFrom:
                 secretKeyRef:
                   key: AZURE_KEYVAULT_URI
-                  name: keyvault-connection-informations
+                  name: tkmmscardmanager
             - name: CONSENT_MANAGER_URL
               valueFrom:
                 secretKeyRef:
@@ -202,14 +202,9 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: APPLICATIONINSIGHTS_CONNECTION_STRING
-                  name: applicationinsights
+                  name: tkmmscardmanager
             - name: APPLICATIONINSIGHTS_ROLE_NAME
               value: tkmmscardmanageruat
-            - name: TEST
-              valueFrom:
-                secretKeyRef:
-                  key: TEST
-                  name: tkmmscardmanager
           livenessProbe:
             httpGet:
               path: /actuator/health
