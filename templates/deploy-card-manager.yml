@@ -9,6 +9,17 @@ parameters:
     default: ''
 
 steps:
+  - task: Bash@3
+    displayName: PrintInfo
+    name: PrintInfo
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "${{ parameters.env }}"
+        echo "${{ parameters.imagePullSecret }}"
+        echo "${{ parameters.container }}"
+      failOnStderr: true
+
   - task: Kubernetes@1
     displayName: Delete secret map
     inputs:
