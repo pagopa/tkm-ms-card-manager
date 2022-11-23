@@ -9,17 +9,6 @@ parameters:
     default: ''
 
 steps:
-  - task: Bash@3
-    displayName: PrintInfo
-    name: PrintInfo
-    inputs:
-      targetType: 'inline'
-      script: |
-        echo "${{ parameters.env }}"
-        echo "${{ parameters.imagePullSecret }}"
-        echo "${{ parameters.container }}"
-      failOnStderr: true
-
   - task: Kubernetes@1
     displayName: Delete secret map
     inputs:
@@ -39,7 +28,7 @@ steps:
         $(Pipeline.Workspace)/manifests/service-${{ parameters.env }}.yml
         $(Pipeline.Workspace)/manifests/ingress-${{ parameters.env }}.yml
       imagePullSecrets: |
-        'tkmsitregistry-auth'
+        ${{ parameters.imagePullSecret }}
       containers: |
         ${{ parameters.container }}
   - task: Kubernetes@1
