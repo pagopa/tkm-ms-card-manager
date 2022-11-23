@@ -20,7 +20,7 @@ steps:
   - task: KubernetesManifest@0
     displayName: Deploy to Kubernetes cluster
     inputs:
-      namespace: tkm--${{ parameters.env }}
+      namespace: tkm-${{ parameters.env }}
       action: deploy
       kubernetesServiceConnection: ${{ parameters.kubernetesServiceConnection }}
       manifests: |
