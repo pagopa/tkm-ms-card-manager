@@ -274,6 +274,7 @@ stages:
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
+          - checkout: none
           - task: DownloadPipelineArtifact@2
             inputs:
               buildType: 'current'
@@ -311,7 +312,7 @@ stages:
     dependsOn:
     - POM
     - SIT_Build
-    condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(succeeded('SIT_Build'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -330,6 +331,7 @@ stages:
                     buildType: 'current'
                     artifactName: 'manifests'
                     targetPath: '$(Pipeline.Workspace)/manifests'
+
                 - task: KubernetesManifest@0
                   displayName: 'Create Namespace'
                   inputs:
@@ -338,6 +340,7 @@ stages:
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
                     manifests: |
                       $(Pipeline.Workspace)/manifests/namespace-$(enviroment).yml
+
                 - template: 'templates/env-configurations-card-manager.yml'
                   parameters:
                     azureSubscription: 'TKM-Subscription-sit'
@@ -346,36 +349,13 @@ stages:
                     spcClassName: 'tkm-card-manager-spc-sit'
                     env: 'sit'
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
-                - task: Kubernetes@1
-                  displayName: Delete secret map
-                  inputs:
-                    connectionType: Kubernetes Service Connection
-                    kubernetesServiceEndpoint: 'ddsakstest-self-connection-tkm-sit'
-                    namespace: tkm-sit
-                    command: delete
-                    arguments: "secrets tkmmscardmanager"
-                - task: KubernetesManifest@0
-                  displayName: Deploy to Kubernetes cluster
-                  inputs:
-                    namespace: tkm-sit
-                    action: deploy
+
+                - template: 'templates/deploy-card-manager.yml'
+                  parameters:
+                    env: 'sit'
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
-                    manifests: |
-                      $(Pipeline.Workspace)/manifests/deployment-$(enviroment).yml
-                      $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
-                      $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
-                    imagePullSecrets: |
-                      $(imagePullSecret)
-                    containers: |
-                      $(containerRegistry)/$(imageRepository):$(pomversion)
-                - task: Kubernetes@1
-                  displayName: Add label to secret map
-                  inputs:
-                    connectionType: Kubernetes Service Connection
-                    kubernetesServiceEndpoint: 'ddsakstest-self-connection-tkm-sit'
-                    namespace: tkm-sit
-                    command: label
-                    arguments: "secret tkmmscardmanager secrets-store.csi.k8s.io/used=true"
+                    imagePullSecret: $(imagePullSecret)
+                    container: $(containerRegistry)/$(imageRepository):$(pomversion)
 
   - stage: UAT
     displayName: UAT
@@ -414,6 +394,7 @@ stages:
                     buildType: 'current'
                     artifactName: 'manifests'
                     targetPath: '$(Pipeline.Workspace)/manifests'
+
                 - task: KubernetesManifest@0
                   displayName: 'Create Namespace'
                   inputs:
@@ -422,6 +403,7 @@ stages:
                     kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
                     manifests: |
                       $(Pipeline.Workspace)/manifests/namespace-$(enviroment).yml
+
                 - template: 'templates/env-configurations-card-manager.yml'
                   parameters:
                     azureSubscription: 'U87-PagoPa-PCI-uat'
@@ -430,36 +412,13 @@ stages:
                     spcClassName: 'tkm-card-manager-spc-uat'
                     env: 'uat'
                     kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
-                - task: Kubernetes@1
-                  displayName: Delete secret map
-                  inputs:
-                    connectionType: Kubernetes Service Connection
-                    kubernetesServiceEndpoint: 'u87-aks-pci-uat-self-connection-tkm'
-                    namespace: tkm-uat
-                    command: delete
-                    arguments: "secrets tkmmscardmanager"
-                - task: KubernetesManifest@0
-                  displayName: Deploy to Kubernetes cluster
-                  inputs:
-                    namespace: tkm-uat
-                    action: deploy
+
+                - template: 'templates/deploy-card-manager.yml'
+                  parameters:
+                    env: 'sit'
                     kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
-                    manifests: |
-                      $(Pipeline.Workspace)/manifests/deployment-$(enviroment).yml
-                      $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
-                      $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
-                    imagePullSecrets: |
-                      $(imagePullSecret)
-                    containers: |
-                      $(containerRegistry)/$(imageRepository):$(pomversion)
-                - task: Kubernetes@1
-                  displayName: Add label to secret map
-                  inputs:
-                    connectionType: Kubernetes Service Connection
-                    kubernetesServiceEndpoint: 'u87-aks-pci-uat-self-connection-tkm'
-                    namespace: tkm-uat
-                    command: label
-                    arguments: "secret tkmmscardmanager secrets-store.csi.k8s.io/used=true"
+                    imagePullSecret: $(imagePullSecret)
+                    container: $(containerRegistry)/$(imageRepository):$(pomversion)
 
   # - stage: PROD
   #   displayName: PROD
