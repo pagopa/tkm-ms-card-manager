@@ -39,7 +39,7 @@ steps:
         $(Pipeline.Workspace)/manifests/service-${{ parameters.env }}.yml
         $(Pipeline.Workspace)/manifests/ingress-${{ parameters.env }}.yml
       imagePullSecrets: |
-        ${{ parameters.imagePullSecret }}
+        'tkmsitregistry-auth'
       containers: |
         ${{ parameters.container }}
   - task: Kubernetes@1
