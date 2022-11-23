@@ -414,7 +414,7 @@ stages:
 
                 - template: 'templates/deploy-card-manager.yml'
                   parameters:
-                    env: 'sit'
+                    env: 'uat'
                     kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
                     imagePullSecret: $(imagePullSecret)
                     container: $(containerRegistry)/$(imageRepository):$(pomversion)
