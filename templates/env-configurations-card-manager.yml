@@ -175,14 +175,12 @@ steps:
                   objectType: secret
                   objectVersion: ""
           secretObjects:
-            - secretName: jvm
+            - secretName: tkmmscardmanager
               type: Opaque
               data:
                 - key: TZ
                   objectName: ${{ parameters.env }}-tz
-            - secretName: kafka-log-configuration
-              type: Opaque
-              data:
+
                 - key: KAFKA_APPENDER_BOOTSTRAP_SERVERS
                   objectName: ${{ parameters.env }}-kafka-appender-bootstrap-servers
                 - key: ENABLE_FILE_APPENDER
@@ -193,9 +191,7 @@ steps:
                   objectName: ${{ parameters.env }}-log-file
                 - key: KAFKA_APPENDER_TOPIC
                   objectName: ${{ parameters.env }}-kafka-appender-topic
-            - secretName: keyvault-connection-informations
-              type: Opaque
-              data:
+
                 - key: AZURE_KEYVAULT_PROFILE
                   objectName: ${{ parameters.env }}-azure-keyvault-profile
                 - key: AZURE_KEYVAULT_CLIENT_ID
@@ -206,9 +202,7 @@ steps:
                   objectName: ${{ parameters.env }}-azure-keyvault-tenant-id
                 - key: AZURE_KEYVAULT_URI
                   objectName: ${{ parameters.env }}-azure-keyvault-uri
-            - secretName: tkmmscardmanager
-              type: Opaque
-              data:
+
                 - key: CONSENT_MANAGER_URL
                   objectName: ${{ parameters.env }}-consent-manager-url
                 - key: DB_SERVER
@@ -241,8 +235,6 @@ steps:
                   objectName: ${{ parameters.env }}-kafka-cstar-bootstrap-servers
                 - key: CONSENT_ENABLED
                   objectName: ${{ parameters.env }}-consent-enabled
-            - secretName: applicationinsights
-              type: Opaque
-              data:
+
                 - key: APPLICATIONINSIGHTS_CONNECTION_STRING
                   objectName: ${{ parameters.env }}-applicationinsights-connection-string
