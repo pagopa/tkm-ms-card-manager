@@ -174,6 +174,102 @@ steps:
                   objectName: ${{ parameters.env }}-consent-enabled
                   objectType: secret
                   objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-database-pool-max-pool
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-database-pool-min-idle
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-kafka-max-poll-records
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-auto-offset-reset
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-kafka-security-protocol
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-kafka-sasl-mechanism
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-kafka-read-max-number-of-threads
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-kafka-delete-max-number-of-threads
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-kafka-dlt-max-poll-records
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-logging-level
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-logging-level-hibernate
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-netty-logging-level
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-logging-pattern
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-thread-core-pool-size
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-thread-max-pool-size
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-thread-known-hashes
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-minimum-number-of-calls
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-sliding-window-size
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-ring-buffer-size-in-closed-state
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-ring-buffer-size-in-halfopen-state
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-failure-rate-threshold
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-wait-duration-in-openstate
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-retry-max-attempts
+                  objectType: secret
+                  objectVersion: ""
+                - |
+                  objectName: ${{ parameters.env }}-card-manager-retry-wait-duration
+                  objectType: secret
+                  objectVersion: ""
           secretObjects:
             - secretName: tkmmscardmanager
               type: Opaque
@@ -235,6 +331,54 @@ steps:
                   objectName: ${{ parameters.env }}-kafka-cstar-bootstrap-servers
                 - key: CONSENT_ENABLED
                   objectName: ${{ parameters.env }}-consent-enabled
+                - key: DATABASE_POOL_MAX_POOL
+                  objectName: ${{ parameters.env }}-card-manager-database-pool-max-pool
+                - key: DATABASE_POOL_MIN_IDLE
+                  objectName: ${{ parameters.env }}-card-manager-database-pool-min-idle
+                - key: KAFKA_MAX_POLL_RECORDS
+                  objectName: ${{ parameters.env }}-card-manager-kafka-max-poll-records
+                - key: AUTO_OFFSET_RESET
+                  objectName: ${{ parameters.env }}-card-manager-auto-offset-reset
+                - key: KAFKA_SECURITY_PROTOCOL
+                  objectName: ${{ parameters.env }}-kafka-security-protocol
+                - key: KAFKA_SASL_MECHANISM
+                  objectName: ${{ parameters.env }}-kafka-sasl-mechanism
+                - key: KAFKA_READ_MAX_NUMBER_OF_THREADS
+                  objectName: ${{ parameters.env }}-card-manager-kafka-read-max-number-of-threads
+                - key: KAFKA_DELETE_MAX_NUMBER_OF_THREADS
+                  objectName: ${{ parameters.env }}-card-manager-kafka-delete-max-number-of-threads
+                - key: KAFKA_DLT_MAX_POLL_RECORDS
+                  objectName: ${{ parameters.env }}-card-manager-kafka-dlt-max-poll-records
+                - key: LOGGING_LEVEL
+                  objectName: ${{ parameters.env }}-card-manager-logging-level
+                - key: LOGGING_LEVEL_HIBERNATE
+                  objectName: ${{ parameters.env }}-card-manager-logging-level-hibernate
+                - key: NETTY_LOGGING_LEVEL
+                  objectName: ${{ parameters.env }}-card-manager-netty-logging-level
+                - key: LOGGING_PATTERN
+                  objectName: ${{ parameters.env }}-card-manager-logging-pattern
+                - key: THREAD_CORE_POOL_SIZE
+                  objectName: ${{ parameters.env }}-card-manager-thread-core-pool-size
+                - key: THREAD_MAX_POOL_SIZE
+                  objectName: ${{ parameters.env }}-card-manager-thread-max-pool-size
+                - key: THREAD_KNOWN_HASHES
+                  objectName: ${{ parameters.env }}-card-manager-thread-known-hashes
+                - key: MINIMUM_NUMBER_OF_CALLS
+                  objectName: ${{ parameters.env }}-card-manager-minimum-number-of-calls
+                - key: SLIDING_WINDOW_SIZE
+                  objectName: ${{ parameters.env }}-card-manager-sliding-window-size
+                - key: RING_BUFFER_SIZE_IN_CLOSED_STATE
+                  objectName: ${{ parameters.env }}-card-manager-ring-buffer-size-in-closed-state
+                - key: RING_BUFFER_SIZE_IN_HALFOPEN_STATE
+                  objectName: ${{ parameters.env }}-card-manager-ring-buffer-size-in-halfopen-state
+                - key: FAILURE_RATE_THRESHOLD
+                  objectName: ${{ parameters.env }}-card-manager-failure-rate-threshold
+                - key: WAIT_DURATION_IN_OPENSTATE
+                  objectName: ${{ parameters.env }}-card-manager-wait-duration-in-openstate
+                - key: RETRY_MAX_ATTEMPTS
+                  objectName: ${{ parameters.env }}-card-manager-retry-max-attempts
+                - key: RETRY_WAIT_DURATION
+                  objectName: ${{ parameters.env }}-card-manager-retry-wait-duration
 
                 - key: APPLICATIONINSIGHTS_CONNECTION_STRING
                   objectName: ${{ parameters.env }}-applicationinsights-connection-string

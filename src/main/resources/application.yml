@@ -149,14 +149,14 @@ batch:
 resilience4j.circuitbreaker:
   instances:
     rtdForHashCircuitBreaker:
-      minimumNumberOfCalls: ${MINUMUM_NUMBER_OF_CALLS:20}
+      minimumNumberOfCalls: ${MINIMUM_NUMBER_OF_CALLS:20}
       slidingWindowSize: ${SLIDING_WINDOW_SIZE:40}
       ringBufferSizeInClosedState: ${RING_BUFFER_SIZE_IN_CLOSED_STATE:20}
       ringBufferSizeInHalfOpenState: ${RING_BUFFER_SIZE_IN_HALFOPEN_STATE:20}
       failureRateThreshold: ${FAILURE_RATE_THRESHOLD:50}
       waitDurationInOpenState: ${WAIT_DURATION_IN_OPENSTATE:20s}
     consentClientGetConsentCircuitBreaker:
-      minimumNumberOfCalls: ${MINUMUM_NUMBER_OF_CALLS:20}
+      minimumNumberOfCalls: ${MINIMUM_NUMBER_OF_CALLS:20}
       slidingWindowSize: ${SLIDING_WINDOW_SIZE:40}
       ringBufferSizeInClosedState: ${RING_BUFFER_SIZE_IN_CLOSED_STATE:20}
       ringBufferSizeInHalfOpenState: ${RING_BUFFER_SIZE_IN_HALFOPEN_STATE:20}
