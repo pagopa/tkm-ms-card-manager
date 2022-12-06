@@ -1,0 +1,23 @@
+version: '3'
+services:
+    db-card-manager:
+        image: "postgres:alpine"
+        container_name: postgress-card-manager
+        volumes:
+            - './postgresinit:/docker-entrypoint-initdb.d/'
+        ports:
+            - "5001:5432"
+        environment:
+            POSTGRES_PASSWORD: tkm_card_manager
+            POSTGRES_DB: tkm_card_manager
+            POSTGRES_USER: tkm_card_manager
+        networks:
+            - tkmnet
+
+    liquibase-card-manager:
+        build: ./devops/db/liquibase
+        container_name: liquibase-card-manager
+
+networks:
+    tkmnet:
+        name: card_manager_network

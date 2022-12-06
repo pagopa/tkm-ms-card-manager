@@ -1,4 +1,4 @@
-DB_SERVER: localhost:5000/tkm_card_manager
+DB_SERVER: localhost:5001/tkm_card_manager
 SERVER_PORT: 8745
 ENABLE_KAFKA_APPENDER: FALSE
 RTD_HASHING_URL: http://localhost:4561/hashing/evaluate

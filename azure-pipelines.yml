@@ -306,11 +306,26 @@ stages:
                 latest
                 $(pomversion)
 
+  - stage: stage_deploy_SIT_liquibase
+    displayName: SIT Deploy - Liquibase
+    dependsOn:
+      - POM
+      - SIT_Build
+    condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    jobs:
+      - template: templates/upgrade-db.yml
+        parameters:
+          poolName: uat_agent_pool
+          azureSubscription: $(azureSubscription)
+          KeyVaultName: $(KeyVaultName)
+          ENV: 'SIT'
+          env: 'sit'
+          contexts: "tag,baseline,incremental,insert-sit"
+
   - stage: SIT_Deploy
     displayName: SIT Deploy
     dependsOn:
-    - POM
-    - SIT_Build
+      - stage_deploy_SIT_liquibase
     condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
@@ -361,8 +376,8 @@ stages:
                     containers: |
                       $(containerRegistry)/$(imageRepository):$(pomversion)
 
-  - stage: UAT
-    displayName: UAT
+  - stage: UAT_Build
+    displayName: UAT Build
     dependsOn: POM
     condition: and(eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
@@ -375,16 +390,38 @@ stages:
         steps:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
-            condition: eq(variables.isToDeploy, true)
+            condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/manifests'
               artifact: 'manifests'
               publishLocation: 'pipeline'
 
+  - stage: stage_deploy_UAT_liquibase
+    displayName: UAT Deploy - Liquibase
+    dependsOn:
+      - POM
+      - UAT_Build
+    condition: and(eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    jobs:
+      - template: templates/upgrade-db.yml
+        parameters:
+          poolName: pagopa-agent-pool-uat
+          azureSubscription: $(azureSubscription)
+          KeyVaultName: $(KeyVaultName)
+          ENV: 'UAT'
+          env: 'uat'
+          contexts: "tag,incremental-uat,insert-uat"
+
+  - stage: UAT_Deploy
+    displayName: UAT Deploy
+    dependsOn:
+      - stage_deploy_UAT_liquibase
+    condition: and(eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    variables:
+      pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
+    jobs:
       - deployment: Deploy
-        dependsOn: Build
         displayName: Deploy
-        condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
         pool:
           name: pagopa-agent-pool-uat
         environment: 'uat'

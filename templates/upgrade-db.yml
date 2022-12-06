@@ -1,0 +1,116 @@
+parameters:
+  - name: dependsOn
+    type: object
+    default: []
+  - name: version
+  - name: poolName
+  - name: azureSubscription
+  - name: KeyVaultName
+  - name: definitionId
+  - name: ENV
+  - name: env
+  - name: contexts
+
+jobs:
+  - job: prepare_args_from_keyvault
+    displayName: "Set liquibase args from keyvault"
+    pool:
+      vmImage: 'ubuntu-latest'
+    ${{ if parameters.dependsOn }}:
+      dependsOn: ${{ parameters.dependsOn }}
+    condition: succeeded()
+    steps:
+      - checkout: none
+      - download: none
+      - template: ./liquibase-keyvault-args.yml
+        parameters:
+          azureSubscription: ${{ parameters.azureSubscription }}
+          KeyVaultName: ${{ parameters.KeyVaultName }}
+          argsValueToRetrieveFromKeyVault: ""
+          argsNameToSet: ""
+
+  - deployment: upgrade_db
+    displayName: "Upgrade DB"
+    pool:
+      name: ${{ parameters.poolName }}
+    dependsOn: prepare_args_from_keyvault
+    environment: ${{ parameters.ENV }}
+    variables:
+      argsFromKeyvault: $[ dependencies.prepare_args_from_keyvault.outputs['scriptArgsFromKeyvault.args'] ]
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: none
+
+            - script: echo ${{ parameters.version }}
+              displayName: Branch Version
+
+            - script: |
+                ls -la $(Pipeline.Workspace)/${{ parameters.version }}-liquibase-script
+                rm -rf $(Pipeline.Workspace)/${{ parameters.version }}-liquibase-script
+              displayName: "Clean old cached files ${{ parameters.version }}-liquibase-script"
+
+            - task: DownloadPipelineArtifact@2
+              displayName: Download Artifact
+              inputs:
+                source: 'specific'
+                project: 'TKM'
+                pipeline: ${{ parameters.definitionId }}
+                runVersion: 'latestFromBranch'
+                runBranch: 'refs/heads/releases/${{parameters.version}}'
+                allowPartiallySucceededBuilds: true
+                artifact: '${{parameters.version}}-liquibase-script'
+                path: '$(Pipeline.Workspace)/${{parameters.version}}-liquibase-script'
+
+            - script: |
+                apt-get update
+                apt-get -y install wget
+                wget -h
+                cd $(Pipeline.Workspace)
+                mkdir java-11
+                cd java-11
+                wget -c https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
+              displayName: "Download JAVA 11"
+
+            - task: AzureKeyVault@2
+              inputs:
+                azureSubscription: ${{ parameters.azureSubscription }}
+                KeyVaultName: ${{ parameters.KeyVaultName }}
+                SecretsFilter: '*'
+                RunAsPreJob: false
+
+            - task: JavaToolInstaller@0
+              inputs:
+                versionSpec: "11"
+                jdkArchitectureOption: x64
+                jdkSourceOption: LocalDirectory
+                jdkFile: "$(Pipeline.Workspace)/java-11/openjdk-11.0.2_linux-x64_bin.tar.gz"
+                jdkDestinationDirectory: "$(Pipeline.Workspace)/java-11/extract"
+                cleanDestinationDirectory: true
+              displayName: "Installing JAVA 11"
+
+            - script: |
+                cd $(Pipeline.Workspace)
+                mkdir liquibase-app
+                wget -c https://github.com/liquibase/liquibase/releases/download/v4.8.0/liquibase-4.8.0.tar.gz
+                tar -xzf liquibase-4.8.0.tar.gz -C liquibase-app
+                rm -rf liquibase-4.8.0.tar.gz
+                echo "##vso[task.prependpath]$(Pipeline.Workspace)/liquibase-app"
+              displayName: "Install Liquibase"
+
+            - template: ../liquibase-update.yml
+              parameters:
+                url: $(${{ parameters.env }}-db-card-manager-url-simple)
+                username: $(${{ parameters.env }}-db-card-manager-username)
+                password: $(${{ parameters.env }}-db-card-manager-password)
+                classpath: $(Pipeline.Workspace)/${{ parameters.version }}-liquibase-script/changelogs/card-manager
+                liquibaseSchemaName: $(${{ parameters.env }}-db-card-manager-schema)
+                defaultSchemaName: $(${{ parameters.env }}-db-card-manager-schema)
+                schema: $(${{ parameters.env }}-db-card-manager-schema)
+                args: "-Dversion=${{ parameters.version }} $(argsFromKeyvault)"
+                liquibaseTablespaceName: $(${{ parameters.env }}-db-card-manager-tablespace)
+                title: "Update DB tkm_card_manager - ${{ parameters.ENV }}"
+                databaseChangelogLockTableName: "DATABASECHANGELOGLOCK"
+                databaseChangelogTableName: "DATABASECHANGELOG"
+                contexts: ${{ parameters.contexts }}
