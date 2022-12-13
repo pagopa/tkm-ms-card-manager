@@ -383,4 +383,10 @@ public class DefaultBeans {
 
     public ConsumerRecords<String, String> CONSUMER_RECORDS = createConsumerRecords();
 
+    public CardDetailsResponse CARD_DETAILS = new CardDetailsResponse(
+            HPAN_1,
+            PAR_1,
+            new HashSet<>(Arrays.asList(HTOKEN_1, HTOKEN_2))
+    );
+
 }
