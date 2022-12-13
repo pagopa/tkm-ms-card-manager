@@ -14,6 +14,30 @@ tags:
   - name: restricted
     description: only for internal use
 paths:
+  /cards:
+    get:
+      summary: Get instrument par/token info
+      operationId: getInstrumentInfo
+      parameters:
+        - in: header
+          name: hpan
+          description: Payment instrument hpan
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDetailsResponse'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
   /parless-cards:
     get:
       tags:
@@ -188,6 +212,19 @@ paths:
               required: true
 components:
   schemas:
+    CardDetailsResponse:
+      type: object
+      required:
+        - hpan
+      properties:
+        hpan:
+          type: string
+        par:
+          type: string
+        htokens:
+          type: array
+          items:
+            type: string
     ParlessCardListResponse:
       type: array
       items:
