@@ -33,4 +33,10 @@ public class ErrorHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorCodeEnum> handleMissingHeadersException(MissingRequestHeaderException he) {
+        log.error(he.getMessage());
+        return ResponseEntity.badRequest().body(ErrorCodeEnum.MISSING_HEADERS);
+    }
+
 }

@@ -62,6 +62,11 @@ class TestCardDetailsController {
     }
 
     @Test
+    void givenNoHpan_return400() throws Exception {
+        mockMvc.perform(get(ApiEndpoints.BASE_PATH_CARDS)).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void givenNonexistentHpan_return404() throws Exception {
         when(cardRepository.findByHpan(testBeans.HPAN_1)).thenReturn(null);
         mockMvc.perform(
