@@ -219,7 +219,7 @@ stages:
   - stage: SIT_Build
     displayName: SIT Build
     dependsOn: POM
-    condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -314,7 +314,7 @@ stages:
     dependsOn:
       - POM
       - SIT_Build
-    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(succeeded('SIT_Build'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -333,7 +333,7 @@ stages:
     dependsOn:
       - POM
       - stage_deploy_SIT_liquibase
-    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(succeeded('stage_deploy_SIT_liquibase'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -386,7 +386,7 @@ stages:
   - stage: UAT_Build
     displayName: UAT Build
     dependsOn: POM
-    condition: and(eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -408,7 +408,7 @@ stages:
     dependsOn:
       - POM
       - UAT_Build
-    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    condition: and(succeeded('UAT_Build'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -427,7 +427,7 @@ stages:
     dependsOn:
       - POM
       - stage_deploy_UAT_liquibase
-    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    condition: and(succeeded('stage_deploy_UAT_liquibase'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
