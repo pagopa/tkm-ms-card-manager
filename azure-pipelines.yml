@@ -320,7 +320,7 @@ stages:
           KeyVaultName: $(KeyVaultName)
           ENV: 'SIT'
           env: 'sit'
-          contexts: "tag,baseline,incremental,insert-sit"
+          contexts: "tag,incremental,incremental-sit,insert,insert-sit"
 
   - stage: SIT_Deploy
     displayName: SIT Deploy
@@ -410,7 +410,7 @@ stages:
           KeyVaultName: $(KeyVaultName)
           ENV: 'UAT'
           env: 'uat'
-          contexts: "tag,incremental-uat,insert-uat"
+          contexts: "tag,incremental,incremental-uat,insert,insert-uat"
 
   - stage: UAT_Deploy
     displayName: UAT Deploy
