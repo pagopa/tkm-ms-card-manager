@@ -312,9 +312,12 @@ stages:
       - POM
       - SIT_Build
     condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    variables:
+      pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
       - template: templates/upgrade-db.yml
         parameters:
+          version: $(pomversion)
           poolName: uat_agent_pool
           azureSubscription: $(azureSubscription)
           KeyVaultName: $(KeyVaultName)
@@ -325,6 +328,7 @@ stages:
   - stage: SIT_Deploy
     displayName: SIT Deploy
     dependsOn:
+      - POM
       - stage_deploy_SIT_liquibase
     condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
@@ -402,9 +406,12 @@ stages:
       - POM
       - UAT_Build
     condition: and(eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    variables:
+      pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
       - template: templates/upgrade-db.yml
         parameters:
+          version: $(pomversion)
           poolName: pagopa-agent-pool-uat
           azureSubscription: $(azureSubscription)
           KeyVaultName: $(KeyVaultName)
@@ -415,6 +422,7 @@ stages:
   - stage: UAT_Deploy
     displayName: UAT Deploy
     dependsOn:
+      - POM
       - stage_deploy_UAT_liquibase
     condition: and(eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
