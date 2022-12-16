@@ -17,8 +17,6 @@ public class ApiParams {
     public static final String HPAN_OFFSET_PARAM = "hpanOffset";
     public static final String HTOKEN_OFFSET_PARAM = "htokenOffset";
     public static final String REQUEST_ID_HEADER = "Request-Id";
-
-    // Kafka queue
-    public static final String FROM_ISSUER_HEADER = "From-Issuer";
+    public static final String HPAN_HEADER = "Hpan";
 
 }
