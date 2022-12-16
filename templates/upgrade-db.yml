@@ -7,8 +7,8 @@ parameters:
   - name: azureSubscription
   - name: KeyVaultName
   - name: definitionId
-  - name: ENV
   - name: env
+  - name: envkv
   - name: contexts
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
     pool:
       name: ${{ parameters.poolName }}
     dependsOn: prepare_args_from_keyvault
-    environment: ${{ parameters.ENV }}
+    environment: ${{ parameters.env }}
     variables:
       argsFromKeyvault: $[ dependencies.prepare_args_from_keyvault.outputs['scriptArgsFromKeyvault.args'] ]
     strategy:
@@ -101,16 +101,16 @@ jobs:
 
             - template: ../liquibase-update.yml
               parameters:
-                url: $(${{ parameters.env }}-db-card-manager-url-simple)
-                username: $(${{ parameters.env }}-db-card-manager-username)
-                password: $(${{ parameters.env }}-db-card-manager-password)
+                url: $(${{ parameters.envkv }}-db-card-manager-url-simple)
+                username: $(${{ parameters.envkv }}-db-card-manager-username)
+                password: $(${{ parameters.envkv }}-db-card-manager-password)
                 classpath: $(Pipeline.Workspace)/${{ parameters.version }}-liquibase-script/changelogs/card-manager
-                liquibaseSchemaName: $(${{ parameters.env }}-db-card-manager-schema)
-                defaultSchemaName: $(${{ parameters.env }}-db-card-manager-schema)
-                schema: $(${{ parameters.env }}-db-card-manager-schema)
+                liquibaseSchemaName: $(${{ parameters.envkv }}-db-card-manager-schema)
+                defaultSchemaName: $(${{ parameters.envkv }}-db-card-manager-schema)
+                schema: $(${{ parameters.envkv }}-db-card-manager-schema)
                 args: "-Dversion=${{ parameters.version }} $(argsFromKeyvault)"
-                liquibaseTablespaceName: $(${{ parameters.env }}-db-card-manager-tablespace)
-                title: "Update DB tkm_card_manager - ${{ parameters.ENV }}"
+                liquibaseTablespaceName: $(${{ parameters.envkv }}-db-card-manager-tablespace)
+                title: "Update DB tkm_card_manager - ${{ parameters.env }}"
                 databaseChangelogLockTableName: "DATABASECHANGELOGLOCK"
                 databaseChangelogTableName: "DATABASECHANGELOG"
                 contexts: ${{ parameters.contexts }}

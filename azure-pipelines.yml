@@ -318,8 +318,8 @@ stages:
           poolName: uat_agent_pool
           azureSubscription: $(azureSubscription)
           KeyVaultName: $(KeyVaultName)
-          ENV: 'SIT'
-          env: 'sit'
+          env: 'SIT'
+          envkv: 'sit'
           contexts: "tag,incremental,incremental-sit,insert,insert-sit"
 
   - stage: SIT_Deploy
@@ -408,8 +408,8 @@ stages:
           poolName: pagopa-agent-pool-uat
           azureSubscription: $(azureSubscription)
           KeyVaultName: $(KeyVaultName)
-          ENV: 'UAT'
-          env: 'uat'
+          env: 'UAT'
+          envkv: 'uat'
           contexts: "tag,incremental,incremental-uat,insert,insert-uat"
 
   - stage: UAT_Deploy
