@@ -6,7 +6,6 @@ parameters:
   - name: poolName
   - name: azureSubscription
   - name: KeyVaultName
-  - name: definitionId
   - name: env
   - name: envkv
   - name: contexts
@@ -52,16 +51,10 @@ jobs:
               displayName: "Clean old cached files ${{ parameters.version }}-liquibase-script"
 
             - task: DownloadPipelineArtifact@2
-              displayName: Download Artifact
               inputs:
-                source: 'specific'
-                project: 'TKM'
-                pipeline: ${{ parameters.definitionId }}
-                runVersion: 'latestFromBranch'
-                runBranch: 'refs/heads/releases/${{parameters.version}}'
-                allowPartiallySucceededBuilds: true
-                artifact: '${{parameters.version}}-liquibase-script'
-                path: '$(Pipeline.Workspace)/${{parameters.version}}-liquibase-script'
+                buildType: 'current'
+                artifactName: 'manifests'
+                targetPath: '$(Pipeline.Workspace)/manifests'
 
             - script: |
                 apt-get update
