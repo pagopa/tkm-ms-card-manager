@@ -247,6 +247,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: KAFKA_DELETE_MAX_NUMBER_OF_THREADS
+                  name: tkmmscardmanager
             - name: KAFKA_DLT_MAX_POLL_RECORDS
               valueFrom:
                 secretKeyRef:
