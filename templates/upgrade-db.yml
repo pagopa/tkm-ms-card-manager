@@ -92,7 +92,7 @@ jobs:
                 echo "##vso[task.prependpath]$(Pipeline.Workspace)/liquibase-app"
               displayName: "Install Liquibase"
 
-            - template: ../liquibase-update.yml
+            - template: ./liquibase-update.yml
               parameters:
                 url: $(${{ parameters.envkv }}-db-card-manager-url-simple)
                 username: $(${{ parameters.envkv }}-db-card-manager-username)
