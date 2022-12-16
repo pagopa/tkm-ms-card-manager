@@ -30,16 +30,19 @@ variables:
     containerRegistry: 'cstaruatregistry.azurecr.io'
     enviroment: sit
     imagePullSecret: 'tkmsitregistry-auth'
+    azureSubscription: 'TKM-Subscription-sit'
   ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')) }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: 'cstaruatregistry.azurecr.io'
     enviroment: uat
     imagePullSecret: 'tkmuatregistry-auth'
+    azureSubscription: 'U87-PagoPa-PCI-uat'
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: ''
     imagePullSecret: ''
     enviroment: prod
+    azureSubscription: ''
   ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
     dockerRegistryServiceConnection: ''
     enviroment: sit
@@ -359,7 +362,7 @@ stages:
                       $(Pipeline.Workspace)/manifests/namespace-$(enviroment).yml
                 - template: 'templates/env-configurations-card-manager.yml'
                   parameters:
-                    azureSubscription: 'TKM-Subscription-sit'
+                    azureSubscription: $(azureSubscription)
                     KeyVaultName: 'kmn-tkm-pagopa-test'
                     secretName: 'tkm-card-manager-kv-store-creds-sit'
                     spcClassName: 'tkm-card-manager-spc-sit'
@@ -453,7 +456,7 @@ stages:
                       $(Pipeline.Workspace)/manifests/namespace-$(enviroment).yml
                 - template: 'templates/env-configurations-card-manager.yml'
                   parameters:
-                    azureSubscription: 'U87-PagoPa-PCI-uat'
+                    azureSubscription: $(azureSubscription)
                     KeyVaultName: 'u87-kmn-tkm-pci-uat'
                     secretName: 'tkm-card-manager-kv-store-creds-uat'
                     spcClassName: 'tkm-card-manager-spc-uat'
