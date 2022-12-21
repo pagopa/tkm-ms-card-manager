@@ -31,18 +31,21 @@ variables:
     enviroment: sit
     imagePullSecret: 'tkmsitregistry-auth'
     azureSubscription: 'TKM-Subscription-sit'
+    KeyVaultName: 'kmn-tkm-pagopa-test'
   ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')) }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: 'cstaruatregistry.azurecr.io'
     enviroment: uat
     imagePullSecret: 'tkmuatregistry-auth'
     azureSubscription: 'U87-PagoPa-PCI-uat'
+    KeyVaultName: 'u87-kmn-tkm-pci-uat'
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
     containerRegistry: ''
-    imagePullSecret: ''
     enviroment: prod
+    imagePullSecret: ''
     azureSubscription: ''
+    KeyVaultName: ''
   ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
     dockerRegistryServiceConnection: ''
     enviroment: sit
@@ -363,7 +366,7 @@ stages:
                 - template: 'templates/env-configurations-card-manager.yml'
                   parameters:
                     azureSubscription: $(azureSubscription)
-                    KeyVaultName: 'kmn-tkm-pagopa-test'
+                    KeyVaultName: $(KeyVaultName)
                     secretName: 'tkm-card-manager-kv-store-creds-sit'
                     spcClassName: 'tkm-card-manager-spc-sit'
                     env: 'sit'
@@ -457,7 +460,7 @@ stages:
                 - template: 'templates/env-configurations-card-manager.yml'
                   parameters:
                     azureSubscription: $(azureSubscription)
-                    KeyVaultName: 'u87-kmn-tkm-pci-uat'
+                    KeyVaultName: $(KeyVaultName)
                     secretName: 'tkm-card-manager-kv-store-creds-uat'
                     spcClassName: 'tkm-card-manager-spc-uat'
                     env: 'uat'
