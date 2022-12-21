@@ -200,6 +200,8 @@ spec:
                   name: tkmmscardmanager
             - name: APPLICATIONINSIGHTS_ROLE_NAME
               value: tkmmscardmanagersit
+            - name: APPLICATIONINSIGHTS_SAMPLING_PERCENTAGE
+              value: 100
             - name: DATABASE_POOL_MAX_POOL
               valueFrom:
                 secretKeyRef:
