@@ -195,6 +195,8 @@ spec:
                   name: applicationinsights
             - name: APPLICATIONINSIGHTS_ROLE_NAME
               value: tkmmscardmanagersit
+            - name: APPLICATIONINSIGHTS_SAMPLING_PERCENTAGE
+              value: 100
           livenessProbe:
             httpGet:
               path: /actuator/health
