@@ -9,6 +9,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.DeleteCardService;
+import it.gov.pagopa.tkm.util.*;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class DeleteCardServiceImpl implements DeleteCardService {
         TkmCitizenCard tkmCitizenCard = citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(taxCode, hpan);
         Instant timestamp = deleteQueueMessage.getTimestamp();
         if (tkmCitizenCard == null) {
-            log.info(String.format("No Card found with hpan %s and taxCode %s. Creating new record", hpan, taxCode));
+            log.info("No Card found with hpan " + ObfuscationUtils.obfuscateHpan(hpan) + ". Creating new record");
             TkmCard tkmCard = getTkmCard(hpan);
             TkmCitizen tkmCitizen = getTkmCitizen(taxCode, timestamp);
             TkmCitizenCard citizenCard = TkmCitizenCard.builder().card(tkmCard).citizen(tkmCitizen).deleted(true)
@@ -46,7 +47,7 @@ public class DeleteCardServiceImpl implements DeleteCardService {
         tkmCitizenCard.setDeleted(true);
         tkmCitizenCard.setLastUpdateDate(timestamp);
         citizenCardRepository.save(tkmCitizenCard);
-        log.info(String.format("Deleted card with hpan %s and taxCode %s", hpan, taxCode));
+        log.info("Deleted card with hpan " + ObfuscationUtils.obfuscateHpan(hpan));
     }
 
     private TkmCard getTkmCard(String hpan) {
