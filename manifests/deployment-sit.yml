@@ -26,6 +26,9 @@ spec:
         - ip: "10.230.11.68"
           hostnames:
             - "cstar-d-evh-ns.servicebus.windows.net"
+        - ip: "10.230.8.5"
+          hostnames:
+            - "api.dev.platform.pagopa.it"
       volumes:
         - name: secrets-store-inline-card-manager
           csi:
