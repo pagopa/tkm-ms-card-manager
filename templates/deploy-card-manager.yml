@@ -16,7 +16,7 @@ steps:
       kubernetesServiceEndpoint: ${{ parameters.kubernetesServiceConnection }}
       namespace: tkm-${{ parameters.env }}
       command: delete
-      arguments: "secrets tkmmscardmanager"
+      arguments: "--ignore-not-found=true secrets tkmmscardmanager"
   - task: KubernetesManifest@0
     displayName: Deploy to Kubernetes cluster
     inputs:
@@ -27,6 +27,7 @@ steps:
         $(Pipeline.Workspace)/manifests/deployment-${{ parameters.env }}.yml
         $(Pipeline.Workspace)/manifests/service-${{ parameters.env }}.yml
         $(Pipeline.Workspace)/manifests/ingress-${{ parameters.env }}.yml
+        $(Pipeline.Workspace)/manifests/autoscaling-${{ parameters.env }}.yml
       imagePullSecrets: |
         ${{ parameters.imagePullSecret }}
       containers: |
