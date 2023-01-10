@@ -15,4 +15,6 @@ public interface CitizenCardRepository extends JpaRepository<TkmCitizenCard, Lon
 
     TkmCitizenCard findByDeletedFalseAndCitizen_TaxCodeAndCard_Par(String taxCode, String par);
 
+    boolean existsByDeletedFalseAndCard_Hpan(String hpan);
+
 }
