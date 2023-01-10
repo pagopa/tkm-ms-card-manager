@@ -13,9 +13,7 @@ import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -51,10 +49,15 @@ class TestDeleteCardService {
 
     private final MockedStatic<Instant> instantMockedStatic = mockStatic(Instant.class);
 
-    @BeforeEach()
+    @BeforeEach
     void init() {
         instantMockedStatic.when(Instant::now).thenReturn(DefaultBeans.INSTANT);
         testMapper.registerModule(new JavaTimeModule());
+    }
+
+    @AfterAll
+    void close() {
+        instantMockedStatic.close();
     }
 
     @Test
