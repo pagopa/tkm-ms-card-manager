@@ -1,5 +1,6 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service;
 
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.gov.pagopa.tkm.ms.cardmanager.constant.*;
@@ -7,11 +8,11 @@ import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizen;
 import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizenCard;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.DeleteQueueMessage;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenRepository;
-import it.gov.pagopa.tkm.ms.cardmanager.service.impl.DeleteCardServiceImpl;
-import org.apache.tomcat.util.bcel.Const;
+import it.gov.pagopa.tkm.ms.cardmanager.service.impl.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -23,12 +24,14 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.*;
 
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
 class TestDeleteCardService {
+
     @InjectMocks
     private DeleteCardServiceImpl deleteCardService;
 
@@ -41,11 +44,16 @@ class TestDeleteCardService {
     @Mock
     private CitizenRepository citizenRepository;
 
+    @Mock
+    private ProducerServiceImpl producerService;
 
     private final ObjectMapper testMapper = new ObjectMapper();
 
+    private final MockedStatic<Instant> instantMockedStatic = mockStatic(Instant.class);
+
     @BeforeEach()
     void init() {
+        instantMockedStatic.when(Instant::now).thenReturn(DefaultBeans.INSTANT);
         testMapper.registerModule(new JavaTimeModule());
     }
 
@@ -138,5 +146,24 @@ class TestDeleteCardService {
         Mockito.verify(citizenCardRepository).save(citizenCard);
     }
 
+    @Test
+    void deleteCard_sendRevoke() throws JsonProcessingException {
+        Instant creationDate = Instant.now();
+        TkmCitizenCard tkmCitizenCard = TkmCitizenCard.builder().creationDate(creationDate)
+                .deleted(false)
+                .card(CardRepositoryMock.getTkmCardFull())
+                .citizen(CitizenRepositoryMock.getCitizenFull(creationDate)).build();
+
+        Instant deletedInstant = Instant.now();
+        DeleteQueueMessage build = DeleteQueueMessage.builder()
+                .timestamp(deletedInstant)
+                .hpan(tkmCitizenCard.getCard().getHpan())
+                .taxCode(tkmCitizenCard.getCitizen().getTaxCode()).build();
+
+        when(citizenCardRepository.findByDeletedFalseAndCitizen_TaxCodeAndCard_Hpan(anyString(), anyString())).thenReturn(tkmCitizenCard);
+        when(citizenCardRepository.existsByDeletedFalseAndCard_Hpan(tkmCitizenCard.getCard().getHpan())).thenReturn(false);
+        deleteCardService.deleteCard(build);
+        verify(producerService).sendMessage(new WriteQueue(null, Instant.now(), Collections.singleton(new WriteQueueCard(Constant.HASH_1, CardActionEnum.REVOKE, "par", null))));
+    }
 
 }

@@ -1,10 +1,10 @@
 package it.gov.pagopa.tkm.ms.cardmanager.service.impl;
 
 import it.gov.pagopa.tkm.ms.cardmanager.constant.CircuitEnum;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCard;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizen;
-import it.gov.pagopa.tkm.ms.cardmanager.model.entity.TkmCitizenCard;
+import it.gov.pagopa.tkm.ms.cardmanager.exception.*;
+import it.gov.pagopa.tkm.ms.cardmanager.model.entity.*;
 import it.gov.pagopa.tkm.ms.cardmanager.model.topic.delete.DeleteQueueMessage;
+import it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.*;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenCardRepository;
 import it.gov.pagopa.tkm.ms.cardmanager.repository.CitizenRepository;
@@ -15,6 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.*;
+
+import static it.gov.pagopa.tkm.ms.cardmanager.constant.ErrorCodeEnum.MESSAGE_WRITE_FAILED;
+import static it.gov.pagopa.tkm.ms.cardmanager.model.topic.write.CardActionEnum.REVOKE;
 
 @Log4j2
 @Service
@@ -29,6 +33,9 @@ public class DeleteCardServiceImpl implements DeleteCardService {
     @Autowired
     private CitizenRepository citizenRepository;
 
+    @Autowired
+    private ProducerServiceImpl producerService;
+
     @Override
     public void deleteCard(DeleteQueueMessage deleteQueueMessage) {
         String taxCode = deleteQueueMessage.getTaxCode();
@@ -39,8 +46,7 @@ public class DeleteCardServiceImpl implements DeleteCardService {
             log.info("No Card found with hpan " + ObfuscationUtils.obfuscateHpan(hpan) + ". Creating new record");
             TkmCard tkmCard = getTkmCard(hpan);
             TkmCitizen tkmCitizen = getTkmCitizen(taxCode, timestamp);
-            TkmCitizenCard citizenCard = TkmCitizenCard.builder().card(tkmCard).citizen(tkmCitizen).deleted(true)
-                    .lastUpdateDate(timestamp).creationDate(timestamp).build();
+            TkmCitizenCard citizenCard = TkmCitizenCard.builder().card(tkmCard).citizen(tkmCitizen).deleted(true).lastUpdateDate(timestamp).creationDate(timestamp).build();
             citizenCardRepository.save(citizenCard);
             return;
         }
@@ -48,6 +54,10 @@ public class DeleteCardServiceImpl implements DeleteCardService {
         tkmCitizenCard.setLastUpdateDate(timestamp);
         citizenCardRepository.save(tkmCitizenCard);
         log.info("Deleted card with hpan " + ObfuscationUtils.obfuscateHpan(hpan));
+        if (!citizenCardRepository.existsByDeletedFalseAndCard_Hpan(hpan)) {
+            log.info("This card is no longer associated with any citizen, sending REVOKE to write queue...");
+            writeOnQueue(tkmCitizenCard);
+        }
     }
 
     private TkmCard getTkmCard(String hpan) {
@@ -66,4 +76,26 @@ public class DeleteCardServiceImpl implements DeleteCardService {
         }
         return byTaxCode;
     }
+
+    private void writeOnQueue(TkmCitizenCard citizenCard) {
+        TkmCard card = citizenCard.getCard();
+        try {
+            WriteQueueCard writeQueueCard = new WriteQueueCard(
+                    card.getHpan(),
+                    REVOKE,
+                    card.getPar(),
+                    null
+            );
+            WriteQueue writeQueue = new WriteQueue(
+                    null,
+                    Instant.now(),
+                    Collections.singleton(writeQueueCard)
+            );
+            producerService.sendMessage(writeQueue);
+        } catch (Exception e) {
+            log.error("Error writing to queue for card hpan " + ObfuscationUtils.obfuscateHpan(card.getHpan()) + " par " + ObfuscationUtils.obfuscatePar(card.getPar()), e);
+            throw new CardException(MESSAGE_WRITE_FAILED);
+        }
+    }
+
 }
