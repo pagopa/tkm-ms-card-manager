@@ -46,14 +46,14 @@ public class DeleteCardServiceImpl implements DeleteCardService {
             log.info("No Card found with hpan " + ObfuscationUtils.obfuscateHpan(hpan) + ". Creating new record");
             TkmCard tkmCard = getTkmCard(hpan);
             TkmCitizen tkmCitizen = getTkmCitizen(taxCode, timestamp);
-            TkmCitizenCard citizenCard = TkmCitizenCard.builder().card(tkmCard).citizen(tkmCitizen).deleted(true).lastUpdateDate(timestamp).creationDate(timestamp).build();
-            citizenCardRepository.save(citizenCard);
-            return;
+            tkmCitizenCard = TkmCitizenCard.builder().card(tkmCard).citizen(tkmCitizen).deleted(true).lastUpdateDate(timestamp).creationDate(timestamp).build();
+            citizenCardRepository.save(tkmCitizenCard);
+        } else {
+            tkmCitizenCard.setDeleted(true);
+            tkmCitizenCard.setLastUpdateDate(timestamp);
+            citizenCardRepository.save(tkmCitizenCard);
+            log.info("Deleted card with hpan " + ObfuscationUtils.obfuscateHpan(hpan));
         }
-        tkmCitizenCard.setDeleted(true);
-        tkmCitizenCard.setLastUpdateDate(timestamp);
-        citizenCardRepository.save(tkmCitizenCard);
-        log.info("Deleted card with hpan " + ObfuscationUtils.obfuscateHpan(hpan));
         if (!citizenCardRepository.existsByDeletedFalseAndCard_Hpan(hpan)) {
             log.info("This card is no longer associated with any citizen, sending REVOKE to write queue...");
             writeOnQueue(tkmCitizenCard);
