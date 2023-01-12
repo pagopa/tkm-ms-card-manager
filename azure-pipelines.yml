@@ -51,6 +51,7 @@ variables:
     enviroment: sit
 
   maven_cache_folder: $(Pipeline.Workspace)/.m2/repository
+  liquibaseFolderScript: '$(Build.SourcesDirectory)/devops/db/liquibase'
 
 stages:
   - stage: Test_Develop_Release
@@ -272,6 +273,17 @@ stages:
               targetPath: '$(Build.Repository.LocalPath)/target'
               artifact: 'target'
               publishLocation: 'pipeline'
+          - publish: $(liquibaseFolderScript)
+            artifact: $(pomversion)-liquibase-script
+            displayName: Publish Liquibase Scripts
+          - script: |
+              echo $(pomversion) > $(Pipeline.Workspace)/build_version
+            displayName: "Create build_version file"
+          - task: PublishBuildArtifacts@1
+            displayName: Publish build_version file
+            inputs:
+              pathToPublish: '$(Pipeline.Workspace)/build_version'
+              artifactName: 'build_version'
 
       - job: Push
         displayName: Push
@@ -323,7 +335,6 @@ stages:
     jobs:
       - template: templates/upgrade-db.yml
         parameters:
-          version: $(pomversion)
           poolName: uat_agent_pool
           azureSubscription: $(azureSubscription)
           KeyVaultName: $(KeyVaultName)
@@ -417,7 +428,6 @@ stages:
     jobs:
       - template: templates/upgrade-db.yml
         parameters:
-          version: $(pomversion)
           poolName: pagopa-agent-pool-uat
           azureSubscription: $(azureSubscription)
           KeyVaultName: $(KeyVaultName)

@@ -2,7 +2,6 @@ parameters:
   - name: dependsOn
     type: object
     default: []
-  - name: version
   - name: poolName
   - name: azureSubscription
   - name: KeyVaultName
@@ -41,20 +40,7 @@ jobs:
         deploy:
           steps:
             - checkout: none
-
-            - script: echo ${{ parameters.version }}
-              displayName: Branch Version
-
-            - script: |
-                ls -la $(Pipeline.Workspace)/${{ parameters.version }}-liquibase-script
-                rm -rf $(Pipeline.Workspace)/${{ parameters.version }}-liquibase-script
-              displayName: "Clean old cached files ${{ parameters.version }}-liquibase-script"
-
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                buildType: 'current'
-                artifactName: 'manifests'
-                targetPath: '$(Pipeline.Workspace)/manifests'
+            - download: none
 
             - script: |
                 apt-get update
@@ -92,17 +78,35 @@ jobs:
                 echo "##vso[task.prependpath]$(Pipeline.Workspace)/liquibase-app"
               displayName: "Install Liquibase"
 
+            - template: ./clean-and-download.yml
+              parameters:
+                artifact: 'build_version'
+
+            - script: |
+                read buildVersion < $(Pipeline.Workspace)/build_version/build_version
+                dirName=${buildVersion}-liquibase-script
+                echo $dirName
+                echo $buildVersion
+                echo "##vso[task.setvariable variable=dirName;isOutput=true]$dirName"
+                echo "##vso[task.setvariable variable=buildVersion;isOutput=true]$buildVersion"
+              name: var
+              displayName: read buildVersion
+
+            - template: ./clean-and-download.yml
+              parameters:
+                artifact: $(var.dirName)
+
             - template: ./liquibase-update.yml
               parameters:
-                url: $(${{ parameters.envkv }}-db-card-manager-url-simple)
-                username: $(${{ parameters.envkv }}-db-card-manager-username)
-                password: $(${{ parameters.envkv }}-db-card-manager-password)
-                classpath: $(Pipeline.Workspace)/${{ parameters.version }}-liquibase-script/changelogs/card-manager
-                liquibaseSchemaName: $(${{ parameters.envkv }}-db-card-manager-schema)
-                defaultSchemaName: $(${{ parameters.envkv }}-db-card-manager-schema)
-                schema: $(${{ parameters.envkv }}-db-card-manager-schema)
-                args: "-Dversion=${{ parameters.version }} $(argsFromKeyvault)"
-                liquibaseTablespaceName: $(${{ parameters.envkv }}-db-card-manager-tablespace)
+                url: "jdbc:postgresql://$(${{ parameters.envkv }}-db-server)"
+                username: $(${{ parameters.envkv }}-cardMDbUsername)
+                password: $(${{ parameters.envkv }}-cardMDbPassword)
+                classpath: $(Pipeline.Workspace)/$(var.dirName)/changelogs/card-manager
+                liquibaseSchemaName: $(${{ parameters.envkv }}-cardMDbSchema)
+                defaultSchemaName: $(${{ parameters.envkv }}-cardMDbSchema)
+                schema: $(${{ parameters.envkv }}-cardMDbSchema)
+                args: "-Dversion=$(var.buildVersion) $(argsFromKeyvault)"
+                liquibaseTablespaceName: $(${{ parameters.envkv }}-cardMDbTablespace)
                 title: "Update DB tkm_card_manager - ${{ parameters.env }}"
                 databaseChangelogLockTableName: "DATABASECHANGELOGLOCK"
                 databaseChangelogTableName: "DATABASECHANGELOG"
