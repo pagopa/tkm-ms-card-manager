@@ -416,6 +416,24 @@ stages:
               targetPath: '$(Build.Repository.LocalPath)/manifests'
               artifact: 'manifests'
               publishLocation: 'pipeline'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Atrifact target'
+            condition: and(succeeded(), eq(variables.isToDeploy, true))
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/target'
+              artifact: 'target'
+              publishLocation: 'pipeline'
+          - publish: $(liquibaseFolderScript)
+            artifact: $(pomversion)-liquibase-script
+            displayName: Publish Liquibase Scripts
+          - script: |
+              echo $(pomversion) > $(Pipeline.Workspace)/build_version
+            displayName: "Create build_version file"
+          - task: PublishBuildArtifacts@1
+            displayName: Publish build_version file
+            inputs:
+              pathToPublish: '$(Pipeline.Workspace)/build_version'
+              artifactName: 'build_version'
 
   - stage: stage_deploy_UAT_liquibase
     displayName: UAT Deploy - Liquibase
