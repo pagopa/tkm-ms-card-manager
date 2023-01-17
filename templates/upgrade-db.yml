@@ -1,0 +1,113 @@
+parameters:
+  - name: dependsOn
+    type: object
+    default: []
+  - name: poolName
+  - name: azureSubscription
+  - name: KeyVaultName
+  - name: env
+  - name: envkv
+  - name: contexts
+
+jobs:
+  - job: prepare_args_from_keyvault
+    displayName: "Set liquibase args from keyvault"
+    pool:
+      vmImage: 'ubuntu-latest'
+    ${{ if parameters.dependsOn }}:
+      dependsOn: ${{ parameters.dependsOn }}
+    condition: succeeded()
+    steps:
+      - checkout: none
+      - download: none
+      - template: ./liquibase-keyvault-args.yml
+        parameters:
+          azureSubscription: ${{ parameters.azureSubscription }}
+          KeyVaultName: ${{ parameters.KeyVaultName }}
+          argsValueToRetrieveFromKeyVault: ""
+          argsNameToSet: ""
+
+  - deployment: upgrade_db
+    displayName: "Upgrade DB"
+    pool:
+      name: ${{ parameters.poolName }}
+    dependsOn: prepare_args_from_keyvault
+    environment: ${{ parameters.env }}
+    variables:
+      argsFromKeyvault: $[ dependencies.prepare_args_from_keyvault.outputs['scriptArgsFromKeyvault.args'] ]
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: none
+            - download: none
+
+            - script: |
+                apt-get update
+                apt-get -y install wget
+                wget -h
+                cd $(Pipeline.Workspace)
+                mkdir java-11
+                cd java-11
+                wget -c https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
+              displayName: "Download JAVA 11"
+
+            - task: AzureKeyVault@2
+              inputs:
+                azureSubscription: ${{ parameters.azureSubscription }}
+                KeyVaultName: ${{ parameters.KeyVaultName }}
+                SecretsFilter: '*'
+                RunAsPreJob: false
+
+            - task: JavaToolInstaller@0
+              inputs:
+                versionSpec: "11"
+                jdkArchitectureOption: x64
+                jdkSourceOption: LocalDirectory
+                jdkFile: "$(Pipeline.Workspace)/java-11/openjdk-11.0.2_linux-x64_bin.tar.gz"
+                jdkDestinationDirectory: "$(Pipeline.Workspace)/java-11/extract"
+                cleanDestinationDirectory: true
+              displayName: "Installing JAVA 11"
+
+            - script: |
+                cd $(Pipeline.Workspace)
+                mkdir liquibase-app
+                wget -c https://github.com/liquibase/liquibase/releases/download/v4.8.0/liquibase-4.8.0.tar.gz
+                tar -xzf liquibase-4.8.0.tar.gz -C liquibase-app
+                rm -rf liquibase-4.8.0.tar.gz
+                echo "##vso[task.prependpath]$(Pipeline.Workspace)/liquibase-app"
+              displayName: "Install Liquibase"
+
+            - template: ./clean-and-download.yml
+              parameters:
+                artifact: 'build_version'
+
+            - script: |
+                read buildVersion < $(Pipeline.Workspace)/build_version/build_version
+                dirName=${buildVersion}-liquibase-script
+                echo $dirName
+                echo $buildVersion
+                echo "##vso[task.setvariable variable=dirName;isOutput=true]$dirName"
+                echo "##vso[task.setvariable variable=buildVersion;isOutput=true]$buildVersion"
+              name: var
+              displayName: read buildVersion
+
+            - template: ./clean-and-download.yml
+              parameters:
+                artifact: $(var.dirName)
+
+            - template: ./liquibase-update.yml
+              parameters:
+                url: "jdbc:postgresql://$(${{ parameters.envkv }}-db-server)"
+                username: $(${{ parameters.envkv }}-cardMDbUsername)
+                password: $(${{ parameters.envkv }}-cardMDbPassword)
+                classpath: $(Pipeline.Workspace)/$(var.dirName)/changelogs/card-manager
+                liquibaseSchemaName: $(${{ parameters.envkv }}-cardMDbSchema)
+                defaultSchemaName: $(${{ parameters.envkv }}-cardMDbSchema)
+                schema: $(${{ parameters.envkv }}-cardMDbSchema)
+                args: "-Dversion=$(var.buildVersion) $(argsFromKeyvault)"
+                liquibaseTablespaceName: $(${{ parameters.envkv }}-cardMDbTablespace)
+                title: "Update DB tkm_card_manager - ${{ parameters.env }}"
+                databaseChangelogLockTableName: "DATABASECHANGELOGLOCK"
+                databaseChangelogTableName: "DATABASECHANGELOG"
+                contexts: ${{ parameters.contexts }}

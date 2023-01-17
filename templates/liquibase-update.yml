@@ -1,0 +1,53 @@
+parameters:
+  - name: url
+    default: ''
+  - name: username
+    default: ''
+  - name: password
+    default: ''
+  - name: classpath
+    default: ''
+  - name: changeLogFile
+    default: 'master-changelog.xml'
+  - name: liquibaseSchemaName
+    default: ''
+  - name: defaultSchemaName
+    default: ''
+  - name: contexts
+    default: 'default'
+  - name: logLevel
+    default: 'debug'
+  - name: schema
+    default: ''
+  - name: title
+    default: ''
+  - name: args
+    default: ''
+  - name: liquibaseTablespaceName
+    default: ''
+  - name: databaseChangelogLockTableName
+    default: 'DATABASECHANGELOGLOCK'
+  - name: databaseChangelogTableName
+    default: 'DATABASECHANGELOG'
+
+steps:
+  - script: echo performing ${{ parameters.title }}
+    displayName: Performing Liquibase update
+
+  - script: |    
+      liquibase \
+        --driver=org.postgresql.Driver \
+        --url="${{ parameters.url }}" \
+        --username="${{ parameters.username }}" \
+        --password=${{ parameters.password }} \
+        --classpath=${{ parameters.classpath }} \
+        --changeLogFile=${{ parameters.changeLogFile }} \
+        --liquibaseSchemaName=${{ parameters.liquibaseSchemaName }} \
+        --defaultSchemaName=${{ parameters.defaultSchemaName }} \
+        --contexts=${{ parameters.contexts }} \
+        --log-level=${{ parameters.logLevel }} \
+        --liquibase-tablespace-name=${{ parameters.liquibaseTablespaceName }} \
+        --database-changelog-lock-table-name=${{ parameters.databaseChangelogLockTableName }} \
+        --database-changelog-table-name=${{ parameters.databaseChangelogTableName }} \
+        update ${{ parameters.args }}
+    displayName: ${{ parameters.title }}
