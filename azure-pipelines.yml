@@ -366,6 +366,7 @@ stages:
                     buildType: 'current'
                     artifactName: 'manifests'
                     targetPath: '$(Pipeline.Workspace)/manifests'
+
                 - task: KubernetesManifest@0
                   displayName: 'Create Namespace'
                   inputs:
@@ -374,6 +375,7 @@ stages:
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
                     manifests: |
                       $(Pipeline.Workspace)/manifests/namespace-$(enviroment).yml
+
                 - template: 'templates/env-configurations-card-manager.yml'
                   parameters:
                     azureSubscription: $(azureSubscription)
@@ -382,20 +384,13 @@ stages:
                     spcClassName: 'tkm-card-manager-spc-sit'
                     env: 'sit'
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
-                - task: KubernetesManifest@0
-                  displayName: Deploy to Kubernetes cluster
-                  inputs:
-                    namespace: tkm-sit
-                    action: deploy
+
+                - template: 'templates/deploy-card-manager.yml'
+                  parameters:
+                    env: 'sit'
                     kubernetesServiceConnection: 'ddsakstest-self-connection-tkm-sit'
-                    manifests: |
-                      $(Pipeline.Workspace)/manifests/deployment-$(enviroment).yml
-                      $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
-                      $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
-                    imagePullSecrets: |
-                      $(imagePullSecret)
-                    containers: |
-                      $(containerRegistry)/$(imageRepository):$(pomversion)
+                    imagePullSecret: $(imagePullSecret)
+                    container: $(containerRegistry)/$(imageRepository):$(pomversion)
 
   - stage: UAT_Build
     displayName: UAT Build
@@ -477,6 +472,7 @@ stages:
                     buildType: 'current'
                     artifactName: 'manifests'
                     targetPath: '$(Pipeline.Workspace)/manifests'
+
                 - task: KubernetesManifest@0
                   displayName: 'Create Namespace'
                   inputs:
@@ -485,6 +481,7 @@ stages:
                     kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
                     manifests: |
                       $(Pipeline.Workspace)/manifests/namespace-$(enviroment).yml
+
                 - template: 'templates/env-configurations-card-manager.yml'
                   parameters:
                     azureSubscription: $(azureSubscription)
@@ -493,20 +490,14 @@ stages:
                     spcClassName: 'tkm-card-manager-spc-uat'
                     env: 'uat'
                     kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
-                - task: KubernetesManifest@0
-                  displayName: Deploy to Kubernetes cluster
-                  inputs:
-                    namespace: tkm-uat
-                    action: deploy
+
+                - template: 'templates/deploy-card-manager.yml'
+                  parameters:
+                    env: 'uat'
                     kubernetesServiceConnection: 'u87-aks-pci-uat-self-connection-tkm'
-                    manifests: |
-                      $(Pipeline.Workspace)/manifests/deployment-$(enviroment).yml
-                      $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
-                      $(Pipeline.Workspace)/manifests/ingress-$(enviroment).yml
-                    imagePullSecrets: |
-                      $(imagePullSecret)
-                    containers: |
-                      $(containerRegistry)/$(imageRepository):$(pomversion)
+                    imagePullSecret: $(imagePullSecret)
+                    container: $(containerRegistry)/$(imageRepository):$(pomversion)
+
   # - stage: PROD
   #   displayName: PROD
   #   dependsOn: POM

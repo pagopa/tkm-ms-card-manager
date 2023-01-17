@@ -27,7 +27,7 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
 
     @CircuitBreaker(name = "rtdForHashCircuitBreaker", fallbackMethod = "getRtdForHashFallback")
     public String callRtdForHash(RtdHashingClient rtdHashingClient, String toHash, String apimRtdSubscriptionKey) {
-        log.trace("Calling RTD for hash of " + toHash);
+        log.trace("Calling RTD for hash");
         try {
             return rtdHashingClient.getHash(new WalletsHashingEvaluationInput(toHash), apimRtdSubscriptionKey).getHashPan();
         } catch (Exception e) {
@@ -37,7 +37,7 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
     }
 
     public String getRtdForHashFallback(RtdHashingClient rtdHashingClient, String toHash, String apimRtdSubscriptionKey, Throwable t) {
-        log.info("RTD Hash fallback for hash value %s- cause {} " + t.getMessage());
+        log.info("RTD Hash fallback - cause: " + t.getMessage());
         return "RTD Hash Error";
     }
 
@@ -56,7 +56,7 @@ public class CircuitBreakerManagerImpl implements CircuitBreakerManager {
     }
 
     public ConsentResponse consentClientGetConsentFallback(ConsentClient consentClient, String taxCode, String hpan, Throwable t) {
-        log.info("consent Client Get Consent Fallback %s- cause {} " + t.getMessage());
+        log.info("consent Client Get Consent Fallback - cause: " + t.getMessage());
         if (t instanceof FeignException) {
             FeignException e = (FeignException) t;
             if (e.status() == HttpStatus.NOT_FOUND.value()) {

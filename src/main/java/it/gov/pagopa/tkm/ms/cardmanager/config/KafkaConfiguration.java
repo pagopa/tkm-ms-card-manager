@@ -136,8 +136,8 @@ public class KafkaConfiguration {
 
                     queueElement.headers().add(ATTEMPT_COUNTER_HEADER, numberOfAttemptsString.getBytes());
                     queueElement.headers().add(ORIGINAL_TOPIC_HEADER, queueElement.topic().getBytes());
-                    log.info(String.format("Adding record [ %s ] to DeadLetterTopic from original Topic %s - " +
-                            "attempt number %s ", queueElement, queueElement.topic(), numberOfAttemptsString));
+                    log.info(String.format("Adding record to DeadLetterTopic from original Topic %s - " +
+                            "attempt number %s ", queueElement.topic(), numberOfAttemptsString));
 
                     Throwable cause = ex.getCause().getCause();
                     if (cause instanceof KafkaProcessMessageException && !isTheSameOfException(cause, queueElement.value()))
