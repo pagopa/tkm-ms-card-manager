@@ -48,7 +48,11 @@ variables:
     KeyVaultName: ''
   ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
     dockerRegistryServiceConnection: ''
+    containerRegistry: ''
     enviroment: sit
+    imagePullSecret: ''
+    azureSubscription: 'TKM-Subscription-sit'
+    KeyVaultName: ''
 
   maven_cache_folder: $(Pipeline.Workspace)/.m2/repository
   liquibaseFolderScript: '$(Build.SourcesDirectory)/devops/db/liquibase'
