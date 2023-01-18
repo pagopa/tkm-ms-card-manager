@@ -1,0 +1,15 @@
+parameters:
+  - name: artifact
+
+steps:
+  - script: |
+      ls -la $(Pipeline.Workspace)/${{ parameters.artifact }}
+      rm -rf $(Pipeline.Workspace)/${{ parameters.artifact }}
+    displayName: "Clean old cached files"
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download Artifact
+    inputs:
+      source: 'current'
+      artifact: '${{ parameters.artifact }}'
+      path: '$(Pipeline.Workspace)/${{ parameters.artifact }}'

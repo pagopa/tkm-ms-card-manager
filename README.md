@@ -4,7 +4,7 @@ This microservice holds all information about cards and the relations between ca
 ## Configuration
 The following ENVIRONMENT variables are needed to deploy and run the application.
 
-- **DB_SERVER** *The database connection i.e. localhost:5000/tkm_card_manager*
+- **DB_SERVER** *The database connection i.e. localhost:5001/tkm_card_manager*
 - **SERVER_PORT** *The spring boot port. Default value 8080*
 - **ENABLE_KAFKA_APPENDER** *Uppercase boolean value that indicates if the logs is sent to the specific queue*
 - **KAFKA_APPENDER_BOOTSTRAP_SERVERS** *The address of kafka broker connection i.e. localhost:9093*
