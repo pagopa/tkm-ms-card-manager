@@ -9,6 +9,7 @@ trigger:
       - develop
       - release/*
       - hotfix/*
+      - rollback/*
 pr: none
 
 variables:
@@ -21,32 +22,30 @@ variables:
   imageRepository: 'tkmmscardmanager'
 
   dockerRegistryServiceConnection: 'tkm-cstaruatregistry-connector'
+  containerRegistry: 'cstaruatregistry.azurecr.io'
 
   isToDeploy: $[ne(variables['Build.Reason'], 'PullRequest')]
   isSIT: $[eq(variables['Build.SourceBranch'], 'refs/heads/release/sit')]
-  isUAT: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))]
-  isPROD: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+  isUAT: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'), startsWith(variables['Build.SourceBranch'], 'refs/heads/rollback/uat'))]
+  isPROD: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), startsWith(variables['Build.SourceBranch'], 'refs/heads/rollback/prod'))]
+  isHOTFIX: $[startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')]
 
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release/sit') }}:
-    containerRegistry: 'cstaruatregistry.azurecr.io'
     enviroment: sit
     imagePullSecret: 'tkmsitregistry-auth'
     azureSubscription: 'TKM-Subscription-sit'
     KeyVaultName: 'kmn-tkm-pagopa-test'
-  ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')) }}:
-    containerRegistry: 'cstaruatregistry.azurecr.io'
+  ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/release/uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'), startsWith(variables['Build.SourceBranch'], 'refs/heads/rollback/uat')) }}:
     enviroment: uat
     imagePullSecret: 'tkmuatregistry-auth'
     azureSubscription: 'U87-PagoPa-PCI-uat'
     KeyVaultName: 'u87-kmn-tkm-pci-uat'
-  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
-    containerRegistry: ''
+  ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), startsWith(variables['Build.SourceBranch'], 'refs/heads/rollback/prod')) }}:
     enviroment: prod
     imagePullSecret: ''
     azureSubscription: ''
     KeyVaultName: ''
-  ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'))) }}:
-    containerRegistry: ''
+  ${{ if and(not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release')), ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/rollback'))) }}:
     enviroment: sit
     imagePullSecret: ''
     azureSubscription: 'TKM-Subscription-sit'
@@ -223,9 +222,9 @@ stages:
               failOnStderr: true
 
   - stage: SIT_Build
-    displayName: SIT Build
+    displayName: SIT Build & Push
     dependsOn: POM
-    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -397,7 +396,7 @@ stages:
   - stage: UAT_Build
     displayName: UAT Build
     dependsOn: POM
-    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), eq(variables.isUAT, true), or(ne(variables.isHOTFIX, true), and(eq(variables.isHOTFIX, true), succeeded('SIT_Build'))))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
