@@ -306,15 +306,26 @@ stages:
     dependsOn:
       - POM
       - Build_Docker_Image
-    condition: and(succeeded('POM'), in(dependencies.Build_Docker_Image.Build.result, 'Succeeded', 'Skipped'), in(dependencies.Build_Docker_Image.Push.result, 'Succeeded', 'Skipped'), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
+    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
+      resultStage: $[dependencies.Build_Docker_Image.result]
+      resultJob: $[stageDependencies.Build_Docker_Image.Push.result]
     jobs:
       - job: Build
         displayName: Build
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
+          - task: Bash@3
+            displayName: PrintInfo
+            name: PrintInfo
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "$(resultStage)"
+                echo "$(resultJob)"
+              failOnStderr: true
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
             condition: and(succeeded(), eq(variables.isToDeploy, true))
