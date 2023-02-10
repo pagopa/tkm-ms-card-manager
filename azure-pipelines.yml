@@ -213,7 +213,6 @@ stages:
           - task: Bash@3
             displayName: Get POM version
             name: getpomversion
-            condition:  eq(variables.isToDeploy, true)
             inputs:
               targetType: 'inline'
               script: |
@@ -264,15 +263,12 @@ stages:
               sonarQubeRunAnalysis: false
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact target'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/target'
               artifact: 'target'
               publishLocation: 'pipeline'
       - job: Push
         displayName: Push
-        dependsOn: Build
-        condition: succeeded()
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
@@ -420,7 +416,6 @@ stages:
         steps:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/manifests'
               artifact: 'manifests'
