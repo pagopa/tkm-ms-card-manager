@@ -311,19 +311,19 @@ stages:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
       result: $[stageDependencies.Build_Docker_Image.result]
     jobs:
-      - task: Bash@3
-          displayName: PrintInfo
-          name: PrintInfo
-          inputs:
-            targetType: 'inline'
-            script: |
-              echo "$(result)"
-            failOnStderr: true
       - job: Build
         displayName: Build
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
+          - task: Bash@3
+            displayName: PrintInfo
+            name: PrintInfo
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "$(result)"
+                failOnStderr: true
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
             condition: and(succeeded(), eq(variables.isToDeploy, true))
