@@ -309,7 +309,8 @@ stages:
     condition: and(succeeded('POM'), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
-      result: $[stageDependencies.Build_Docker_Image.result]
+      resultStage: $[stageDependencies.Build_Docker_Image.result]
+      resultJob: $[stageDependencies.Build_Docker_Image.Push.result]
     jobs:
       - job: Build
         displayName: Build
@@ -322,7 +323,8 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                echo "$(result)"
+                echo "$(resultStage)"
+                echo "$(resultJob)"
               failOnStderr: true
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
