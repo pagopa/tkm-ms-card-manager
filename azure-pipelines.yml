@@ -348,7 +348,7 @@ stages:
     dependsOn:
       - POM
       - stage_deploy_SIT_liquibase
-    condition: and(succeeded('stage_deploy_SIT_liquibase'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(in(dependencies.stage_deploy_SIT_liquibase.result, 'Succeeded', 'SucceededWithIssues', 'Skipped'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -449,7 +449,7 @@ stages:
     dependsOn:
       - POM
       - stage_deploy_UAT_liquibase
-    condition: and(succeeded('stage_deploy_UAT_liquibase'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    condition: and(in(dependencies.stage_deploy_UAT_liquibase.result, 'Succeeded', 'SucceededWithIssues', 'Skipped'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
