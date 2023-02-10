@@ -1,0 +1,47 @@
+parameters:
+  - name: azureSubscription
+  - name: KeyVaultName
+  - name: argsValueToRetrieveFromKeyVault
+  - name: argsNameToSet
+
+steps:
+- task: AzureCLI@2
+  name: scriptArgsFromKeyVault
+  inputs:
+    azureSubscription: ${{ parameters.azureSubscription }}
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      echo input $1
+      echo input $2
+
+      IFS="," read -a paramKeyArray <<< $1
+      IFS="," read -a paramNameArray <<< $2
+
+      echo number of parameter keys ${#paramKeyArray[@]}
+      echo number of parameter names ${#paramNameArray[@]}
+      args=""
+
+      if [ ${#paramKeyArray[@]} -ne ${#paramNameArray[@]} ]
+      then
+        echo parameter key and parameter name arrays have different size
+        exit 1
+      fi
+
+      maxVal=${#paramKeyArray[@]}
+      i=0
+      while [ $i -lt $maxVal ]
+      do
+        param=${paramKeyArray[i]}
+        argName=${paramNameArray[i]}
+        echo processing parameter $param
+
+        value=$(az keyvault secret show --vault-name ${{ parameters.KeyVaultName }} --name $param | jq '.value' | sed 's/\$/\\\$/g' | sed "s/'/\'\'/g")
+        # remove double quotes from beginning / end
+        value=${value:1:-1}
+        args="$args -D$argName=\"$value\""
+
+        i=$(( $i + 1 ))
+      done
+      echo "##vso[task.setvariable variable=args;isoutput=true]$args"
+    arguments: ${{ parameters.argsValueToRetrieveFromKeyVault }} ${{ parameters.argsNameToSet }}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.8.xsd">
+
+    <changeSet id="V2__TEST_DEV" author="liquibase" failOnError="true" context="insert-dev">
+      <sqlFile path="../scripts/data-insert/V2__TEST_DEV.sql" stripComments="true" relativeToChangelogFile="true" dbms="postgresql" encoding="UTF-8" />
+    </changeSet>
+
+</databaseChangeLog>

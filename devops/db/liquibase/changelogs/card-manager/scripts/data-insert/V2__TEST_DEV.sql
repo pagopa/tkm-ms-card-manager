@@ -1,0 +1,1 @@
+insert into CITIZEN (ID, TAX_CODE, DELETED, CREATION_DATE) values (999999999, '1', false, current_timestamp);

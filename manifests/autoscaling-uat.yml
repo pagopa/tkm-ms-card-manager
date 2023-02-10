@@ -8,7 +8,7 @@ spec:
     kind: Deployment
     name: tkmmscardmanageruat
   minReplicas: 1
-  maxReplicas: 3
+  maxReplicas: 5
   metrics:
   - type: Resource
     resource:
