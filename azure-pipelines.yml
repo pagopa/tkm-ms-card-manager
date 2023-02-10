@@ -306,7 +306,6 @@ stages:
     dependsOn:
       - POM
       - Build_Docker_Image
-    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -314,10 +313,10 @@ stages:
         displayName: Build
         pool:
           vmImage: $(vmImageNameDefault)
+        condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
         steps:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/manifests'
               artifact: 'manifests'
