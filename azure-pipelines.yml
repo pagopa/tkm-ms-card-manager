@@ -306,7 +306,7 @@ stages:
     dependsOn:
       - POM
       - Build_Docker_Image
-    condition: and(succeeded('POM'), in(variables.resultBuild,'Succeeded','Skipped'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(succeeded('POM'), eq(variables.resultBuild,'Skipped'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
       resultBuild: $[ stageDependencies.Build_Docker_Image.Build.result ]
