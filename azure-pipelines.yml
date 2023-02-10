@@ -196,7 +196,7 @@ stages:
 
   - stage: POM
     displayName: POM
-    dependsOn: Test_Develop_Release
+#    condition: and(succeeded(), eq(variables.isToDeploy, true),or(eq(variables.isSIT, true),eq(variables.isUAT, true),eq(variables.isPROD, true)))
     jobs:
       - job: POM
         displayName: POM
