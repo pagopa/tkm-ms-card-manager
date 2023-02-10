@@ -196,6 +196,7 @@ stages:
 
   - stage: POM
     displayName: POM
+    dependsOn:
     condition: and(eq(variables.isToDeploy, true),or(eq(variables.isSIT, true),eq(variables.isUAT, true),eq(variables.isPROD, true)))
     jobs:
       - job: POM
@@ -212,7 +213,6 @@ stages:
           - task: Bash@3
             displayName: Get POM version
             name: getpomversion
-            condition:  eq(variables.isToDeploy, true)
             inputs:
               targetType: 'inline'
               script: |
@@ -221,10 +221,11 @@ stages:
                 echo "Current Project Version ${version}"
               failOnStderr: true
 
-  - stage: SIT_Build
-    displayName: SIT Build & Push
-    dependsOn: POM
-    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
+  - stage: Build_Docker_Image
+    displayName: Build Docker Image
+    dependsOn:
+      - POM
+    condition: and(succeeded(), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -261,43 +262,17 @@ stages:
               effectivePomSkip: true
               sonarQubeRunAnalysis: false
           - task: PublishPipelineArtifact@1
-            displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
-            inputs:
-              targetPath: '$(Build.Repository.LocalPath)/manifests'
-              artifact: 'manifests'
-              publishLocation: 'pipeline'
-          - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact target'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/target'
               artifact: 'target'
               publishLocation: 'pipeline'
-          - publish: $(liquibaseFolderScript)
-            artifact: $(pomversion)-liquibase-script
-            displayName: Publish Liquibase Scripts
-          - script: |
-              echo $(pomversion) > $(Pipeline.Workspace)/build_version
-            displayName: "Create build_version file"
-          - task: PublishBuildArtifacts@1
-            displayName: Publish build_version file
-            inputs:
-              pathToPublish: '$(Pipeline.Workspace)/build_version'
-              artifactName: 'build_version'
-
       - job: Push
         displayName: Push
         dependsOn: Build
-        condition: succeeded()
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              buildType: 'current'
-              artifactName: 'manifests'
-              targetPath: '$(Pipeline.Workspace)/manifests'
           - task: DownloadPipelineArtifact@2
             inputs:
               buildType: 'current'
@@ -325,12 +300,44 @@ stages:
                 latest
                 $(pomversion)
 
+  - stage: SIT_Build
+    displayName: SIT Build
+    dependsOn:
+      - POM
+      - Build_Docker_Image
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    variables:
+      pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
+    jobs:
+      - job: Build
+        displayName: Build
+        pool:
+          vmImage: $(vmImageNameDefault)
+        steps:
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Atrifact manifests'
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/manifests'
+              artifact: 'manifests'
+              publishLocation: 'pipeline'
+          - publish: $(liquibaseFolderScript)
+            artifact: $(pomversion)-liquibase-script
+            displayName: Publish Liquibase Scripts
+          - script: |
+              echo $(pomversion) > $(Pipeline.Workspace)/build_version
+            displayName: "Create build_version file"
+          - task: PublishBuildArtifacts@1
+            displayName: Publish build_version file
+            inputs:
+              pathToPublish: '$(Pipeline.Workspace)/build_version'
+              artifactName: 'build_version'
+
   - stage: stage_deploy_SIT_liquibase
     displayName: SIT Deploy - Liquibase
     dependsOn:
       - POM
       - SIT_Build
-    condition: and(succeeded('SIT_Build'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -347,8 +354,9 @@ stages:
     displayName: SIT Deploy
     dependsOn:
       - POM
+      - SIT_Build
       - stage_deploy_SIT_liquibase
-    condition: and(succeeded('stage_deploy_SIT_liquibase'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -397,8 +405,8 @@ stages:
     displayName: UAT Build
     dependsOn:
       - POM
-      - SIT_Build
-    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), eq(variables.isUAT, true), or(ne(variables.isHOTFIX, true), and(eq(variables.isHOTFIX, true), succeeded('SIT_Build'))))
+      - Build_Docker_Image
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -409,7 +417,6 @@ stages:
         steps:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/manifests'
               artifact: 'manifests'
@@ -431,7 +438,7 @@ stages:
     dependsOn:
       - POM
       - UAT_Build
-    condition: and(succeeded('UAT_Build'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -448,8 +455,9 @@ stages:
     displayName: UAT Deploy
     dependsOn:
       - POM
+      - UAT_Build
       - stage_deploy_UAT_liquibase
-    condition: and(succeeded('stage_deploy_UAT_liquibase'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
