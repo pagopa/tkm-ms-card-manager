@@ -323,7 +323,7 @@ stages:
               targetType: 'inline'
               script: |
                 echo "$(result)"
-                failOnStderr: true
+              failOnStderr: true
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
             condition: and(succeeded(), eq(variables.isToDeploy, true))
