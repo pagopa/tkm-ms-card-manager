@@ -55,37 +55,8 @@ variables:
   liquibaseFolderScript: '$(Build.SourcesDirectory)/devops/db/liquibase'
 
 stages:
-  - stage: POM
-    displayName: POM
-    #    condition: and(succeeded(), eq(variables.isToDeploy, true),or(eq(variables.isSIT, true),eq(variables.isUAT, true),eq(variables.isPROD, true)))
-    jobs:
-      - job: POM
-        displayName: POM
-        pool:
-          vmImage: $(vmImageNameDefault)
-        steps:
-          - task: DownloadSecureFile@1
-            displayName: 'download settings.xml for Maven'
-            name: settingsxml
-            inputs:
-              secureFile: 'settings_v2.xml'
-              retryCount: '2'
-          - task: Bash@3
-            displayName: Get POM version
-            name: getpomversion
-            condition:  eq(variables.isToDeploy, true)
-            inputs:
-              targetType: 'inline'
-              script: |
-                version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
-                echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$version"
-                echo "Current Project Version ${version}"
-              failOnStderr: true
-
   - stage: Test_Develop_Release
     displayName: Test Develop and Prepare Release
-    dependsOn:
-      - POM
     condition: or(eq(variables.isPullRequest, true), and(ne(variables.isSIT, true), ne(variables.isUAT, true), ne(variables.isPROD, true)))
     jobs:
       - job: Test
@@ -222,6 +193,34 @@ stages:
               targetType: 'inline'
               script: |
                 git push -q --set-upstream origin tmp/$(getreleaseversion.version)
+
+  - stage: POM
+    displayName: POM
+    dependsOn:
+    condition: and(eq(variables.isToDeploy, true),or(eq(variables.isSIT, true),eq(variables.isUAT, true),eq(variables.isPROD, true)))
+    jobs:
+      - job: POM
+        displayName: POM
+        pool:
+          vmImage: $(vmImageNameDefault)
+        steps:
+          - task: DownloadSecureFile@1
+            displayName: 'download settings.xml for Maven'
+            name: settingsxml
+            inputs:
+              secureFile: 'settings_v2.xml'
+              retryCount: '2'
+          - task: Bash@3
+            displayName: Get POM version
+            name: getpomversion
+            condition:  eq(variables.isToDeploy, true)
+            inputs:
+              targetType: 'inline'
+              script: |
+                version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -s $(settingsxml.secureFilePath))
+                echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$version"
+                echo "Current Project Version ${version}"
+              failOnStderr: true
 
   - stage: Build_Docker_Image
     displayName: Build Docker Image
