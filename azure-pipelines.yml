@@ -269,6 +269,7 @@ stages:
               publishLocation: 'pipeline'
       - job: Push
         displayName: Push
+        dependsOn: Build
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
