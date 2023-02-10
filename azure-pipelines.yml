@@ -196,7 +196,8 @@ stages:
 
   - stage: POM
     displayName: POM
-    condition: and(eq(variables.isToDeploy, true),or(eq(variables.isSIT, true),eq(variables.isUAT, true),eq(variables.isPROD, true)))
+    dependsOn: Test_Develop_Release
+    condition: and(succeeded(), eq(variables.isToDeploy, true),or(eq(variables.isSIT, true),eq(variables.isUAT, true),eq(variables.isPROD, true)))
     jobs:
       - job: POM
         displayName: POM
@@ -223,8 +224,10 @@ stages:
 
   - stage: Build_Docker_Image
     displayName: Build Docker Image
-    dependsOn: POM
-    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
+    dependsOn:
+      - POM
+      - Test_Develop_Release
+    condition: and(succeeded(), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
