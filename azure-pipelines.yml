@@ -306,26 +306,15 @@ stages:
     dependsOn:
       - POM
       - Build_Docker_Image
-    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
+    condition: and(succeeded('POM'), in(dependencies.Build_Docker_Image.Build.result, 'Succeeded', 'Skipped'), in(dependencies.Build_Docker_Image.Push.result, 'Succeeded', 'Skipped'), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
-      resultStage: $[stageDependencies.Build_Docker_Image.result]
-      resultJob: $[stageDependencies.Build_Docker_Image.Push.result]
     jobs:
       - job: Build
         displayName: Build
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
-          - task: Bash@3
-            displayName: PrintInfo
-            name: PrintInfo
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "$(resultStage)"
-                echo "$(resultJob)"
-              failOnStderr: true
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
             condition: and(succeeded(), eq(variables.isToDeploy, true))
@@ -369,7 +358,7 @@ stages:
       - POM
       - SIT_Build
       - stage_deploy_SIT_liquibase
-    condition: and(succeeded('SIT_Build'), in(dependencies.stage_deploy_SIT_liquibase.result, 'Succeeded', 'SucceededWithIssues', 'Skipped'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
+    condition: and(succeeded('SIT_Build'), in(dependencies.stage_deploy_SIT_liquibase.upgrade_db.result, 'Succeeded', 'Skipped'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -419,7 +408,7 @@ stages:
     dependsOn:
       - POM
       - Build_Docker_Image
-    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), eq(variables.isUAT, true), or(ne(variables.isHOTFIX, true), and(eq(variables.isHOTFIX, true), in(dependencies.Build_Docker_Image.result, 'Succeeded', 'SucceededWithIssues', 'Skipped'))))
+    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), eq(variables.isUAT, true), or(ne(variables.isHOTFIX, true), and(eq(variables.isHOTFIX, true), in(dependencies.Build_Docker_Image.Build.result, 'Succeeded', 'Skipped'), in(dependencies.Build_Docker_Image.Push.result, 'Succeeded', 'Skipped'))))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -471,7 +460,7 @@ stages:
       - POM
       - UAT_Build
       - stage_deploy_UAT_liquibase
-    condition: and(succeeded('UAT_Build'), in(dependencies.stage_deploy_UAT_liquibase.result, 'Succeeded', 'SucceededWithIssues', 'Skipped'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
+    condition: and(succeeded('UAT_Build'), in(dependencies.stage_deploy_UAT_liquibase.upgrade_db.result, 'Succeeded', 'Skipped'), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
