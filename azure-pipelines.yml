@@ -196,6 +196,7 @@ stages:
 
   - stage: POM
     displayName: POM
+    dependsOn:
     condition: and(eq(variables.isToDeploy, true),or(eq(variables.isSIT, true),eq(variables.isUAT, true),eq(variables.isPROD, true)))
     jobs:
       - job: POM
@@ -212,7 +213,6 @@ stages:
           - task: Bash@3
             displayName: Get POM version
             name: getpomversion
-            condition:  eq(variables.isToDeploy, true)
             inputs:
               targetType: 'inline'
               script: |
@@ -223,8 +223,9 @@ stages:
 
   - stage: Build_Docker_Image
     displayName: Build Docker Image
-    dependsOn: POM
-    condition: and(succeeded('POM'), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
+    dependsOn:
+      - POM
+    condition: and(succeeded(), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -262,15 +263,12 @@ stages:
               sonarQubeRunAnalysis: false
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact target'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/target'
               artifact: 'target'
               publishLocation: 'pipeline'
       - job: Push
         displayName: Push
-        dependsOn: Build
-        condition: succeeded()
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
@@ -317,7 +315,6 @@ stages:
         steps:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/manifests'
               artifact: 'manifests'
@@ -419,7 +416,6 @@ stages:
         steps:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
-            condition: and(succeeded(), eq(variables.isToDeploy, true))
             inputs:
               targetPath: '$(Build.Repository.LocalPath)/manifests'
               artifact: 'manifests'
