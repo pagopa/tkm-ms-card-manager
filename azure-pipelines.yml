@@ -84,6 +84,8 @@ stages:
 
   - stage: Test_Develop_Release
     displayName: Test Develop and Prepare Release
+    dependsOn:
+      - POM
     condition: or(eq(variables.isPullRequest, true), and(ne(variables.isSIT, true), ne(variables.isUAT, true), ne(variables.isPROD, true)))
     jobs:
       - job: Test
@@ -225,7 +227,6 @@ stages:
     displayName: Build Docker Image
     dependsOn:
       - POM
-      - Test_Develop_Release
     condition: and(succeeded(), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
@@ -308,6 +309,7 @@ stages:
     dependsOn:
       - POM
       - Build_Docker_Image
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -315,7 +317,6 @@ stages:
         displayName: Build
         pool:
           vmImage: $(vmImageNameDefault)
-        condition: and(eq(variables.isToDeploy, true), eq(variables.isSIT, true))
         steps:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
@@ -409,6 +410,7 @@ stages:
     dependsOn:
       - POM
       - Build_Docker_Image
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isUAT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
@@ -416,7 +418,6 @@ stages:
         displayName: Build
         pool:
           vmImage: $(vmImageNameDefault)
-        condition: and(eq(variables.isToDeploy, true), eq(variables.isUAT, true))
         steps:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Atrifact manifests'
