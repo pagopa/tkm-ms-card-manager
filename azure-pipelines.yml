@@ -309,8 +309,8 @@ stages:
     condition: and(succeeded('POM'), eq(variables.isToDeploy, true), eq(variables.isSIT, true))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
-      resultBuild: stageDependencies.Build_Docker_Image.Build.result
-      resultPush: stageDependencies.Build_Docker_Image.Push.result
+      resultBuild: $[ stageDependencies.Build_Docker_Image.Build.result ]
+      resultPush: $[ stageDependencies.Build_Docker_Image.Push.result ]
     jobs:
       - job: Build
         displayName: Build
