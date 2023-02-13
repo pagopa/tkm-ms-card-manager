@@ -1,0 +1,361 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tkmmscardmanagerprod
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: tkmmscardmanagerprod
+  template:
+    metadata:
+      labels:
+        app: tkmmscardmanagerprod
+      annotations:
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: '8080'
+        prometheus.io/scrape: 'true'
+    spec:
+      nodeSelector:
+        tkm-prod: 'true'
+      hostAliases:
+#        - ip: "10.70.73.228"
+#          hostnames:
+#            - "tkm-pgsql-pci-uat.postgres.database.azure.com"
+#        - ip: "10.70.73.38"
+#          hostnames:
+#            - "tkmstorageblobuatpci.blob.core.windows.net"
+#        - ip: "10.230.9.5"
+#          hostnames:
+#            - "api.uat.platform.pagopa.it"
+#        - ip: "10.70.73.39"
+#          hostnames:
+#            - "u87-evhn-pci-uat.servicebus.windows.net"
+#        - ip: "10.230.7.68"
+#          hostnames:
+#            - "cstar-u-evh-ns.servicebus.windows.net"
+      volumes:
+        - name: secrets-store-inline-card-manager
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: tkm-card-manager-spc-prod
+            nodePublishSecretRef:
+              name: tkm-card-manager-kv-store-creds-prod
+      containers:
+        - name: tkmmscardmanagerprod
+#          image: cstaruatregistry.azurecr.io/tkmmscardmanager
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: 4Gi
+              cpu: 500m
+            limits:
+              memory: 4Gi
+              cpu: 1000m
+          volumeMounts:
+            - name: secrets-store-inline-card-manager
+              mountPath: /mnt/secrets-store
+              readOnly: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - all
+          env:
+            - name: TZ
+              valueFrom:
+                secretKeyRef:
+                  key: TZ
+                  name: tkmmscardmanager
+            - name: KAFKA_APPENDER_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_APPENDER_BOOTSTRAP_SERVERS
+                  name: tkmmscardmanager
+            - name: ENABLE_FILE_APPENDER
+              valueFrom:
+                secretKeyRef:
+                  key: ENABLE_FILE_APPENDER
+                  name: tkmmscardmanager
+            - name: ENABLE_KAFKA_APPENDER
+              valueFrom:
+                secretKeyRef:
+                  key: ENABLE_KAFKA_APPENDER
+                  name: tkmmscardmanager
+            - name: LOG_FILE
+              valueFrom:
+                secretKeyRef:
+                  key: LOG_FILE
+                  name: tkmmscardmanager
+            - name: KAFKA_APPENDER_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_APPENDER_TOPIC
+                  name: tkmmscardmanager
+            - name: AZURE_KEYVAULT_PROFILE
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_PROFILE
+                  name: tkmmscardmanager
+            - name: AZURE_KEYVAULT_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_CLIENT_ID
+                  name: tkmmscardmanager
+            - name: AZURE_KEYVAULT_CLIENT_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_CLIENT_KEY
+                  name: tkmmscardmanager
+            - name: AZURE_KEYVAULT_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_TENANT_ID
+                  name: tkmmscardmanager
+            - name: AZURE_KEYVAULT_URI
+              valueFrom:
+                secretKeyRef:
+                  key: AZURE_KEYVAULT_URI
+                  name: tkmmscardmanager
+            - name: CONSENT_MANAGER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: CONSENT_MANAGER_URL
+                  name: tkmmscardmanager
+            - name: DB_SERVER
+              valueFrom:
+                secretKeyRef:
+                  key: DB_SERVER
+                  name: tkmmscardmanager
+            - name: KAFKA_DELETE_QUEUE_GROUP
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DELETE_QUEUE_GROUP
+                  name: tkmmscardmanager
+            - name: KAFKA_DELETE_QUEUE_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DELETE_QUEUE_TOPIC
+                  name: tkmmscardmanager
+            - name: KAFKA_DLT_MAX_NUMBER_OF_THREADS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DLT_MAX_NUMBER_OF_THREADS
+                  name: tkmmscardmanager
+            - name: KAFKA_DLT_QUEUE_GROUP
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DLT_QUEUE_GROUP
+                  name: tkmmscardmanager
+            - name: KAFKA_DLT_QUEUE_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DLT_QUEUE_TOPIC
+                  name: tkmmscardmanager
+            - name: KAFKA_DLT_READ_CRON
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DLT_READ_CRON
+                  name: tkmmscardmanager
+            - name: KAFKA_GROUP_ID
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_GROUP_ID
+                  name: tkmmscardmanager
+            - name: KAFKA_READ_QUEUE_GROUP
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_READ_QUEUE_GROUP
+                  name: tkmmscardmanager
+            - name: KAFKA_READ_QUEUE_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_READ_QUEUE_TOPIC
+                  name: tkmmscardmanager
+            - name: KAFKA_WRITE_QUEUE_GROUP
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_WRITE_QUEUE_GROUP
+                  name: tkmmscardmanager
+            - name: KAFKA_WRITE_QUEUE_TOPIC
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_WRITE_QUEUE_TOPIC
+                  name: tkmmscardmanager
+            - name: RTD_HASHING_URL
+              valueFrom:
+                secretKeyRef:
+                  key: RTD_HASHING_URL
+                  name: tkmmscardmanager
+            - name: KAFKA_CSTAR_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_CSTAR_BOOTSTRAP_SERVERS
+                  name: tkmmscardmanager
+            - name: CONSENT_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  key: CONSENT_ENABLED
+                  name: tkmmscardmanager
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: APPLICATIONINSIGHTS_CONNECTION_STRING
+                  name: tkmmscardmanager
+            - name: APPLICATIONINSIGHTS_ROLE_NAME
+              value: tkmmscardmanagerprod
+            - name: APPLICATIONINSIGHTS_SAMPLING_PERCENTAGE
+              value: "100"
+            - name: DATABASE_POOL_MAX_POOL
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_POOL_MAX_POOL
+                  name: tkmmscardmanager
+            - name: DATABASE_POOL_MIN_IDLE
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_POOL_MIN_IDLE
+                  name: tkmmscardmanager
+            - name: KAFKA_MAX_POLL_RECORDS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_MAX_POLL_RECORDS
+                  name: tkmmscardmanager
+            - name: AUTO_OFFSET_RESET
+              valueFrom:
+                secretKeyRef:
+                  key: AUTO_OFFSET_RESET
+                  name: tkmmscardmanager
+            - name: KAFKA_SECURITY_PROTOCOL
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_SECURITY_PROTOCOL
+                  name: tkmmscardmanager
+            - name: KAFKA_SASL_MECHANISM
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_SASL_MECHANISM
+                  name: tkmmscardmanager
+            - name: KAFKA_READ_MAX_NUMBER_OF_THREADS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_READ_MAX_NUMBER_OF_THREADS
+                  name: tkmmscardmanager
+            - name: KAFKA_DELETE_MAX_NUMBER_OF_THREADS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DELETE_MAX_NUMBER_OF_THREADS
+                  name: tkmmscardmanager
+            - name: KAFKA_DLT_MAX_POLL_RECORDS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_DLT_MAX_POLL_RECORDS
+                  name: tkmmscardmanager
+            - name: LOGGING_LEVEL
+              valueFrom:
+                secretKeyRef:
+                  key: LOGGING_LEVEL
+                  name: tkmmscardmanager
+            - name: LOGGING_LEVEL_HIBERNATE
+              valueFrom:
+                secretKeyRef:
+                  key: LOGGING_LEVEL_HIBERNATE
+                  name: tkmmscardmanager
+            - name: NETTY_LOGGING_LEVEL
+              valueFrom:
+                secretKeyRef:
+                  key: NETTY_LOGGING_LEVEL
+                  name: tkmmscardmanager
+            - name: LOGGING_PATTERN
+              valueFrom:
+                secretKeyRef:
+                  key: LOGGING_PATTERN
+                  name: tkmmscardmanager
+            - name: THREAD_CORE_POOL_SIZE
+              valueFrom:
+                secretKeyRef:
+                  key: THREAD_CORE_POOL_SIZE
+                  name: tkmmscardmanager
+            - name: THREAD_MAX_POOL_SIZE
+              valueFrom:
+                secretKeyRef:
+                  key: THREAD_MAX_POOL_SIZE
+                  name: tkmmscardmanager
+            - name: THREAD_KNOWN_HASHES
+              valueFrom:
+                secretKeyRef:
+                  key: THREAD_KNOWN_HASHES
+                  name: tkmmscardmanager
+            - name: MINIMUM_NUMBER_OF_CALLS
+              valueFrom:
+                secretKeyRef:
+                  key: MINIMUM_NUMBER_OF_CALLS
+                  name: tkmmscardmanager
+            - name: SLIDING_WINDOW_SIZE
+              valueFrom:
+                secretKeyRef:
+                  key: SLIDING_WINDOW_SIZE
+                  name: tkmmscardmanager
+            - name: RING_BUFFER_SIZE_IN_CLOSED_STATE
+              valueFrom:
+                secretKeyRef:
+                  key: RING_BUFFER_SIZE_IN_CLOSED_STATE
+                  name: tkmmscardmanager
+            - name: RING_BUFFER_SIZE_IN_HALFOPEN_STATE
+              valueFrom:
+                secretKeyRef:
+                  key: RING_BUFFER_SIZE_IN_HALFOPEN_STATE
+                  name: tkmmscardmanager
+            - name: FAILURE_RATE_THRESHOLD
+              valueFrom:
+                secretKeyRef:
+                  key: FAILURE_RATE_THRESHOLD
+                  name: tkmmscardmanager
+            - name: WAIT_DURATION_IN_OPENSTATE
+              valueFrom:
+                secretKeyRef:
+                  key: WAIT_DURATION_IN_OPENSTATE
+                  name: tkmmscardmanager
+            - name: RETRY_MAX_ATTEMPTS
+              valueFrom:
+                secretKeyRef:
+                  key: RETRY_MAX_ATTEMPTS
+                  name: tkmmscardmanager
+            - name: RETRY_WAIT_DURATION
+              valueFrom:
+                secretKeyRef:
+                  key: RETRY_WAIT_DURATION
+                  name: tkmmscardmanager
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+              scheme: HTTP
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+              scheme: HTTP
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 20
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 30
+          imagePullPolicy: Always

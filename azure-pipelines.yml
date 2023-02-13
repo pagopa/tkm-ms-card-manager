@@ -503,82 +503,103 @@ stages:
                     imagePullSecret: $(imagePullSecret)
                     container: $(containerRegistry)/$(imageRepository):$(pomversion)
 
+  - stage: PROD_Build
+    displayName: PROD Build
+    dependsOn:
+      - POM
+      - Build_Docker_Image
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isPROD, true))
+    variables:
+      pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
+    jobs:
+      - job: Build
+        displayName: Build
+        pool:
+          vmImage: $(vmImageNameDefault)
+        steps:
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Atrifact manifests'
+            inputs:
+              targetPath: '$(Build.Repository.LocalPath)/manifests'
+              artifact: 'manifests'
+              publishLocation: 'pipeline'
+          - publish: $(liquibaseFolderScript)
+            artifact: $(pomversion)-liquibase-script
+            displayName: Publish Liquibase Scripts
+          - script: |
+              echo $(pomversion) > $(Pipeline.Workspace)/build_version
+            displayName: "Create build_version file"
+          - task: PublishBuildArtifacts@1
+            displayName: Publish build_version file
+            inputs:
+              pathToPublish: '$(Pipeline.Workspace)/build_version'
+              artifactName: 'build_version'
 
-  # - stage: PROD
-  #   displayName: PROD
-  #   dependsOn: POM
-  #   condition: and(eq(variables.isToDeploy, true), eq(variables.isPROD, true))
-  #   variables:
-  #     pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
-  #   jobs:
-  #     - job: Build
-  #       displayName: Build
-  #       pool:
-  #         vmImage: $(vmImageNameDefault)
-  #       steps:
-  #         - task: DownloadSecureFile@1
-  #           displayName: 'download settings.xml for Maven'
-  #           name: settingsxml
-  #           inputs:
-  #             secureFile: 'settings_v2.xml'
-  #             retryCount: '2'
-  #         - task: Maven@3
-  #           inputs:
-  #             mavenPomFile: 'pom.xml'
-  #             goals: 'deploy'
-  #             options: '-B -s $(settingsxml.secureFilePath) -DskipTests=true'
-  #             javaHomeOption: 'JDKVersion'
-  #             jdkVersionOption: '1.8'
-  #             mavenVersionOption: 'Default'
-  #             mavenOptions: '-Xmx3072m'
-  #             mavenAuthenticateFeed: false
-  #             effectivePomSkip: true
-  #             sonarQubeRunAnalysis: false
-  #         - task: Docker@2
-  #           displayName: Build and push an image to container registry
-  #           condition: succeeded()
-  #           inputs:
-  #             containerRegistry: '$(dockerRegistryServiceConnection)'
-  #             repository: '$(imageRepository)'
-  #             command: 'buildAndPush'
-  #             Dockerfile: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)'
-  #             buildContext: '$(Build.Repository.LocalPath)'
-  #             tags: |
-  #               $(Build.BuildId)
-  #               latest
-  #               $(pomversion)
-  #         - task: PublishPipelineArtifact@1
-  #           displayName: 'Publish Atrifact manifests'
-  #           condition: and(succeeded(), eq(variables.isToDeploy, true))
-  #           inputs:
-  #             targetPath: '$(Build.Repository.LocalPath)/manifests'
-  #             artifact: 'manifests'
-  #             publishLocation: 'pipeline'
+  - stage: stage_deploy_PROD_liquibase
+    displayName: PROD Deploy - Liquibase
+    dependsOn:
+      - POM
+      - PROD_Build
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isPROD, true))
+    variables:
+      pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
+    jobs:
+      - template: templates/upgrade-db.yml
+        parameters:
+          poolName: XXXXXXXXXX
+          azureSubscription: $(azureSubscription)
+          KeyVaultName: $(KeyVaultName)
+          env: 'PROD'
+          envkv: 'prod'
+          contexts: "tag,incremental,incremental-prod,insert,insert-prod"
 
-  #     - deployment: Deploy
-  #       displayName: Deploy
-  #       dependsOn: Build
-  #       pool:
-  #         name: prod-agent-pool
-  #       environment: 'prod'
-  #       strategy:
-  #         runOnce:
-  #           deploy:
-  #             steps:
-  #               - download: none
-  #               - task: DownloadPipelineArtifact@2
-  #                 inputs:
-  #                   buildType: 'current'
-  #                   artifactName: 'manifests'
-  #                   targetPath: '$(Pipeline.Workspace)/manifests'
-  #               - task: KubernetesManifest@0
-  #                 displayName: Deploy to Kubernetes cluster
-  #                 inputs:
-  #                   action: 'deploy'
-  #                   kubernetesServiceConnection: ''
-  #                   namespace: ''
-  #                   manifests: |
-  #                     $(Pipeline.Workspace)/manifests/$(deployment).yml
-  #                                  $(Pipeline.Workspace)/manifests/service-$(enviroment).yml
-  #                   containers: '$(containerRegistry)/$(imageRepository):$(pomversion)'
-  #                   imagePullSecrets: '$(imagePullSecret)'
+  - stage: PROD_Deploy
+    displayName: PROD Deploy
+    dependsOn:
+      - POM
+      - PROD_Build
+      - stage_deploy_PROD_liquibase
+    condition: and(succeeded(), eq(variables.isToDeploy, true), eq(variables.isPROD, true))
+    variables:
+      pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
+    jobs:
+      - deployment: Deploy
+        displayName: Deploy
+        pool:
+          name: XXXXXXXXXX
+        environment: 'prod'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: none
+                - task: DownloadPipelineArtifact@2
+                  inputs:
+                    buildType: 'current'
+                    artifactName: 'manifests'
+                    targetPath: '$(Pipeline.Workspace)/manifests'
+
+                - task: KubernetesManifest@0
+                  displayName: 'Create Namespace'
+                  inputs:
+                    namespace: tkm-prod
+                    action: deploy
+                    kubernetesServiceConnection: 'XXXXXXXXXX'
+                    manifests: |
+                      $(Pipeline.Workspace)/manifests/namespace-$(enviroment).yml
+
+                - template: 'templates/env-configurations-card-manager.yml'
+                  parameters:
+                    azureSubscription: $(azureSubscription)
+                    KeyVaultName: $(KeyVaultName)
+                    secretName: 'tkm-card-manager-kv-store-creds-prod'
+                    spcClassName: 'tkm-card-manager-spc-prod'
+                    env: 'prod'
+                    kubernetesServiceConnection: 'XXXXXXXXXX'
+
+                - template: 'templates/deploy-card-manager.yml'
+                  parameters:
+                    env: 'prod'
+                    kubernetesServiceConnection: 'XXXXXXXXXX'
+                    imagePullSecret: $(imagePullSecret)
+                    container: $(containerRegistry)/$(imageRepository):$(pomversion)
