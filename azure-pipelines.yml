@@ -225,12 +225,12 @@ stages:
     displayName: Build Docker Image
     dependsOn:
       - POM
-    condition: and(succeeded(), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
     variables:
       pomversion: $[ stageDependencies.POM.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
       - job: Build
         displayName: Build
+        condition: and(eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
@@ -270,6 +270,7 @@ stages:
       - job: Push
         displayName: Push
         dependsOn: Build
+        condition: and(succeeded(), eq(variables.isToDeploy, true), or(eq(variables.isSIT, true), eq(variables.isHOTFIX, true)))
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
