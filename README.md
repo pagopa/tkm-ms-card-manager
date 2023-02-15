@@ -54,3 +54,35 @@ The following ENVIRONMENT variables are needed to deploy and run the application
 ## How to start PROD azure pipeline
 
 1. Merge **release/uat** into **master**
+
+
+
+## How to make a fix
+
+1. Create a new branch **PM-XXXX-XXXXX** from master/production tag that need to be fixed
+2. Prepare fix and push it onto branch **PM-XXXX-XXXXX**
+   3. SIT RELEASE
+      1. Merge branch **PM-XXXX-XXXXX** into **develop**
+         Pipeline starts automatically and do maven prepare release.
+         At the end, the pipeline create branch **tmp/<version>**
+      2. Merge **tmp/${version}** into **release/sit**
+   4. UAT RELEASE
+      1. Update "X.XX.XX" POM version to "X.XX.XX-fix-vXX" into branch **PM-XXXX-XXXXX**
+      2. Create a new branch **hotfix/X.XX.XX-fix-vXX** from branch **PM-XXXX-XXXXX**
+      3. PROD RELEASE
+         1. Merge **hotfix/X.XX.XX-fix-vXX** into **master**
+
+
+## How to do a rollback
+
+UAT
+1. Create a new branch **rollback/uat/X.YY.ZZ** from tmp version **tmp/X.YY.ZZ** that need to be restored into UAT
+   ATTENTION:
+   1. DB updates are not rollbacked to version **tmp/X.YY.ZZ**
+   2. Branch **release/uat** is now out of date and will need to be realigned
+
+PROD
+1. Create a new branch **rollback/prod/X.YY.ZZ** from tmp version **tmp/X.YY.ZZ** that need to be restored into PROD
+   ATTENTION:
+   1. DB updates are not rollbacked to version **tmp/X.YY.ZZ**
+   2. Branch **master** is now out of date and will need to be realigned
